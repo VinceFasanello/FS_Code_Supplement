@@ -1,0 +1,70 @@
+---
+title: "FA_Prepare_Datasets"
+output: html_notebook
+---
+
+Prepare the fitness assay datasets from raw counts data from 500-generation flux exp evo project fitness assays (gen-0 and gen-500)
+
+***
+# Setup Script
+Prepare the workspace set global options, load packages, set directories, etc..
+```{r}
+rm(list=ls()) # clear workspace
+knitr::opts_chunk$set(tidy = TRUE) # set global knitr options.
+options(scipen = 999) # turn off scientific notation
+require(plyr, quietly = T) # load required packages
+dir_in_1 <- paste0(getwd(),"/Counts_Data/Library_1") # input: library 1 data
+dir_in_2 <- paste0(getwd(),"/Counts_Data/Library_2") # input: library 2 data
+dir_out_c <- paste0(getwd(),"/Counts_Data/Combined") # output: compbined library 1 and 2 data
+dir_in_m <- paste0(getwd(),"/Metadata") # input: metadata
+dir_out_f <- paste0(getwd(),"/Formatted_Data") # output: dataframe formatted for analysis
+
+```
+<br/><br/>
+
+
+
+***
+# Combine FA library 1 and FA library 2 data. 
+Load and prepare the shared metadata file
+```{r}
+setwd("..")
+setwd(dir_in_m)
+```
+
+Load and prepare the library 1 counts data
+```{r}
+setwd("..")
+setwd(dir_in_1)
+```
+
+
+Load and prepare the library 2 counts data
+```{r}
+setwd("..")
+setwd(dir_in_2)
+```
+
+
+Sum the library 1 and library 2 data by entry to create a combined dataset
+```{r}
+
+```
+
+
+Combine metadata with counts data
+```{r}
+
+```
+
+
+Calculate primer pair summary statistics
+```{r}
+
+```
+
+
+Save the FA combined dataset
+```{r}
+
+```
