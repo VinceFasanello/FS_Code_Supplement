@@ -36,6 +36,10 @@ Load and prepare the library 1 counts data
 ```{r}
 setwd("..")
 setwd(dir_in_1)
+load(file = "Counts_Expected.Rdata")
+ec1 <- counts.expected; rm(counts.expected)
+ec1 <- ec1 + 1 # add one pseudocount to all cells
+ec1 <- t(ec1) # transpose to match metadata format: experiments are rows
 ```
 
 
