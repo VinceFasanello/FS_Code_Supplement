@@ -36,10 +36,15 @@ Load and prepare the library 1 counts data
 ```{r}
 setwd("..")
 setwd(dir_in_1)
-load(file = "Counts_Expected.Rdata")
+load(file = "Counts_Expected.Rdata") # expected counts
 ec1 <- counts.expected; rm(counts.expected)
 ec1 <- ec1 + 1 # add one pseudocount to all cells
 ec1 <- t(ec1) # transpose to match metadata format: experiments are rows
+
+load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
+uc1 <- counts.uxpected; rm(counts.uxpected)
+uc1 <- uc1 + 1 # add one pseudocount to all cells
+uc1 <- t(uc1) # transpose to match metadata format: experiments are rows
 ```
 
 
@@ -47,6 +52,15 @@ Load and prepare the library 2 counts data
 ```{r}
 setwd("..")
 setwd(dir_in_2)
+load(file = "Counts_Expected.Rdata") # expected counts
+ec2 <- counts.expected; rm(counts.expected)
+ec2 <- ec2 + 1 # add one pseudocount to all cells
+ec2 <- t(ec2) # transpose to match metadata format: experiments are rows
+
+load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
+uc2 <- counts.uxpected; rm(counts.uxpected)
+uc2 <- uc2 + 1 # add one pseudocount to all cells
+uc2 <- t(uc2) # transpose to match metadata format: experiments are rows
 ```
 
 
