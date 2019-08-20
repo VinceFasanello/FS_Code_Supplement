@@ -42,7 +42,7 @@ ec1 <- ec1 + 1 # add one pseudocount to all cells
 ec1 <- t(ec1) # transpose to match metadata format: experiments are rows
 
 load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
-uc1 <- counts.uxpected; rm(counts.uxpected)
+uc1 <- counts.unexpected; rm(counts.unexpected)
 uc1 <- uc1 + 1 # add one pseudocount to all cells
 uc1 <- t(uc1) # transpose to match metadata format: experiments are rows
 ```
@@ -56,11 +56,14 @@ load(file = "Counts_Expected.Rdata") # expected counts
 ec2 <- counts.expected; rm(counts.expected)
 ec2 <- ec2 + 1 # add one pseudocount to all cells
 ec2 <- t(ec2) # transpose to match metadata format: experiments are rows
+ec2 <- ec2[1:(ncol(ec2)-1),]
 
 load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
-uc2 <- counts.uxpected; rm(counts.uxpected)
+uc2 <- counts.unexpected; rm(counts.unexpected)
 uc2 <- uc2 + 1 # add one pseudocount to all cells
 uc2 <- t(uc2) # transpose to match metadata format: experiments are rows
+uc2 <- uc2[1:(ncol(uc2)-1),]
+
 ```
 
 
