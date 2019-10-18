@@ -30,6 +30,7 @@ options(scipen = 999) # turn off scientific notation
 <br/><br/>
 
 
+
 Explore extinction and extirpation.
 ```{r, warning = FALSE, message=FALSE}
 load(file = "myd.Rdata")
@@ -38,6 +39,7 @@ myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1ct
 
 ```
 <br/><br/>
+
 
 
 Load datasets
@@ -65,6 +67,7 @@ my$dw[my$omit == T] <- NA # na dw data for omits
 myd <- my
 ```
 <br/><br/>
+
 
 
 Create helper functions for plotting and data transformation.
@@ -102,8 +105,18 @@ weighted.var.se <- function(x, w, na.rm=FALSE)
   out = n/((n-1)*sum(w)^2)*(sum((w*x-wbar*xWbar)^2)-2*xWbar*sum((w-wbar)*(w*x-wbar*xWbar))+xWbar^2*sum((w-wbar)^2))
   return(out)
 }
+
+# get legend function found on stack exchange ----------------------------------
+#   scrapes figure legend for later plotting in multipannel plot
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
 ```
 <br/><br/>
+
 
 
 Set color palette options for all plots
@@ -112,8 +125,12 @@ setpalette <- RColorBrewer::brewer.pal(7, "Dark2") # current preferred palette
 #setpalette <- c("#993404","#d95f0e","#fe9929","#41b6c4","#2c7fb8","#253494") # option 2
 #setpalette <- c("#8c510a","#d8b365","#f6e8c3", "#c7eae5","#5ab4ac","#01665e") # option 3
 ramppalette <- c("#006600", "#9999ff", "#6666ff", "#000066","#ff9999", "#ff6666", "#990000")
+incpalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
+incpalette_re_bl <- RColorBrewer::brewer.pal(n = 11, name = "RdYlBu")[c(11,10,8,6,4,3,2)]
+ramppalette_YlOrRd <-  RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")[c(3:9)]
 ```
 <br/><br/>
+
 
 
 Plot initial fitness
@@ -180,6 +197,7 @@ rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mypalette, myr, my
 <br/><br/>
 
 
+
 fit0 ~ treatment 
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
@@ -240,6 +258,7 @@ summary(mymod);anova(mymod)
 rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
 ```
 <br/><br/>
+
 
 dw associated with weight?
 ```{r}
@@ -356,10 +375,15 @@ rm(my, p, myc, myheight, myhighlight, mypalette, myptalpha, mys, mystroke,
 
 
 
-
-
 Test for fitness increase SALT
 ```{r}
+# BLOCK NOTES ------------------------------------------------------------------
+#  - Fitness increase data: analyze by groups externally & use in later blocks
+#  - Fitness decrease data: analyze by groups externally & use in later blocks
+#  - nleft data: use in later blocks
+#  - env specific data frames: use in later blocks
+# ------------------------------------------------------------------------------
+
 mysig <- 0.05
 
 # SALT RESULTS OUTPUT TABLES ---------------------------------------------------
@@ -516,38 +540,42 @@ tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= m
 mySALTnleft <- mySALTno  # give a clearer name. 
 rm(my, mymod, myres, tmp, i, mysig, mySALTno)
 ```
-
-
-
-
+<br/><br/>
 
 
 
 Test for fitness increase COPR
 ```{r}
+# BLOCK NOTES ------------------------------------------------------------------
+#  - Fitness increase data: analyze by groups externally & use in later blocks
+#  - Fitness decrease data: analyze by groups externally & use in later blocks
+#  - nleft data: use in later blocks
+#  - env specific data frames: use in later blocks
+# ------------------------------------------------------------------------------
+
 mysig <- 0.05
 
-# SALT RESULTS OUTPUT TABLES ---------------------------------------------------
-mySALTin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
-mySALTdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
-rownames(mySALTin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-rownames(mySALTdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-colnames(mySALTin) <- c(0.0, 0.4, 0.8, 1.2)
-colnames(mySALTdec) <- c(0.0, 0.4, 0.8, 1.2)
-mySALTno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
+# COPR RESULTS OUTPUT TABLES ---------------------------------------------------
+myCOPRin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
+myCOPRdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
+rownames(myCOPRin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(myCOPRdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+colnames(myCOPRin) <- c(0.0, 0.4, 0.8, 1.2)
+colnames(myCOPRdec) <- c(0.0, 0.4, 0.8, 1.2)
+myCOPRno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
 
 
 
-# SALT in CM -------------------------------------------------------------------
+# COPR in CM -------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0 & !is.na(my$dw),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0 & !is.na(my$dw),]
 
 # model & diagnostic plots ---------------------------------
 mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
 # hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
 # model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_000.html") # table does not have corrected p-values. 
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_000.html") # table does not have corrected p-values. 
 
 # create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
@@ -560,29 +588,29 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-inc_SALT_000 <- myres
+inc_COPR_000 <- myres
 
 # populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,1] <- nrow(tmp)
 
 
 
- # SALT in 40 ------------------------------------------------------------------
+ # COPR in 40 ------------------------------------------------------------------
 my <- myd[order(myd$bcpID),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
 
 # model & diagnostic plots ---------------------------------
 mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
 # hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
 # model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_040.html") # table does not have corrected p-values. 
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_040.html") # table does not have corrected p-values. 
 
 # create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
@@ -595,29 +623,29 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-inc_SALT_040 <- myres
+inc_COPR_040 <- myres
 
 # populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,2] <- nrow(tmp)
 
 
 
-# SALT in 80 -------------------------------------------------------------------
+# COPR in 80 -------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
 
 # model & diagnostic plots ---------------------------------
 mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
 # hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
 # model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_080.html") # table does not have corrected p-values. 
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_080.html") # table does not have corrected p-values. 
 
 # create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
@@ -630,29 +658,29 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-inc_SALT_080 <- myres
+inc_COPR_080 <- myres
 
 # populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,3] <- nrow(tmp)
 
 
 
-# SALT in 120 ------------------------------------------------------------------
+# COPR in 120 ------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
 
 # model & diagnostic plots ---------------------------------
 mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
 # hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
 # model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_120.html") # table does not have corrected p-values. 
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_120.html") # table does not have corrected p-values. 
 
 # create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
@@ -665,99 +693,86 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-inc_SALT_120 <- myres
+inc_COPR_120 <- myres
 
 # populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,4] <- nrow(tmp)
 
 
 # ----------------------------
-mySALTnleft <- mySALTno  # give a clearer name. 
-rm(my, mymod, myres, tmp, i, mysig, mySALTno)
+myCOPRnleft <- myCOPRno  # give a clearer name. 
+rm(my, mymod, myres, tmp, i, mysig, myCOPRno)
 ```
+<br/><br/>
 
 
 
-
-
-
-
-Plot evolved fitness in CM
+6 panel figure: row 1:salt, row2: copr, col1: fit0, col2: fit500 col3: dw
 ```{r}
 my <- myd
-# Visualize -------------------------------------------------------------------
 
+# set universal vars -----------------------------------------------------------
 mybinwidth <- 0.01
-
-mytitle <- NULL
 myylab <- "Count"
 myxlab <- "fitness"
-
 myhighlight <- "black"
 myfillapha <- 0.85
-myptalpha <- 0.35
-mylinealpha <- 0
-mypalette <- setpalette
-
+myrugalpha <- 0.2
+mypalette_r1 <- ramppalette[c(1,5,6,7)]
+mypalette_r2 <- ramppalette[c(1,2,3,4)]
 mytextsize <- 8
 myheight <- 8
 mywidth <- 8.5
+myxlim1 <- c(.6, 1.6); myymax1 <- 800
+myxlim2 <- myxlim1; myymax2 <- 300
+myxlim3 <- c(-.5, .5); myymax3 <- myymax2
+myxlim4 <- c(.6, 1.8); myymax4 <- 1250
+myxlim5 <- myxlim4; myymax5 <- 400
+myxlim6 <- c(-.3, .9); myymax6 <- myymax5
 
-# summary(my$fit500[my$epo %in% c("SALT_A", "SALT_B")]) # 0.7258 -- 1.4820
-# summary(my$dw[my$epo %in% c("SALT_A", "SALT_B")]) # -0.27508 -- 0.45753
-# summary(my$fit500[my$epo %in% c("COPR_A", "COPR_B")]) # 0.7893 -- 1.7746
-# summary(my$dw[my$epo %in% c("COPR_A", "COPR_B")]) # -0.2620 -- 0.8507
 
 
+# Row 1: SALT lines ------------------------------------------------------------
+# fit0 -----------------------------------------------------
 p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = paste0(mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(.6, 1.6)) +
-  ylim(c(NA,800)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim1) +
+  ylim(c(NA,myymax1)) +
+  scale_color_manual(values =mypalette_r1, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
   theme(legend.position= c(0.8,0.8)) +
   labs(fill = "Assay Environment") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-
-
-library(gridExtra)
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
 legend <- get_legend(p)
 p <- p + theme(legend.position="none")
 psanc <- p
 
+# fit500 ---------------------------------------------------
 p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(.6, 1.6)) +
-  ylim(c(NA,300)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim2) +
+  ylim(c(NA,myymax2)) +
+  scale_color_manual(values =mypalette_r1, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -766,19 +781,18 @@ p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0
   theme(legend.text = element_text(size = mytextsize))
 psevo <- p
 
-
+# dw -------------------------------------------------------
 p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-.5, .5)) +
-  ylim(c(NA,300)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim3) +
+  ylim(c(NA,myymax3)) +
+  scale_color_manual(values =mypalette_r1, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -789,22 +803,19 @@ psdel <- p
 
 
 
-
-
-
-
+# Row 2: COPR lines ------------------------------------------------------------
+# fit0 -----------------------------------------------------
 p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(.6, 1.8)) +
-  ylim(c(NA,1250)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim4) +
+  ylim(c(NA,myymax4)) +
+  scale_color_manual(values =mypalette_r2, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -813,19 +824,18 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(m
   theme(legend.text = element_text(size = mytextsize))
 pcanc <- p
 
-
+# fit500 ---------------------------------------------------
 p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0(mpamt, mpasp),fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(.6, 1.8)) +
-  ylim(c(NA,400)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim5) +
+  ylim(c(NA,myymax5)) +
+  scale_color_manual(values =mypalette_r2, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -834,19 +844,18 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0
   theme(legend.text = element_text(size = mytextsize))
 pcevo <- p
 
-
+# dw -------------------------------------------------------
 p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-.3, .9)) +
-  ylim(c(NA,400)) +
-  scale_color_manual(values =mypalette, guide = FALSE) +
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim6) +
+  ylim(c(NA,myymax6)) +
+  scale_color_manual(values =mypalette_r2, guide = FALSE) +
+  scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  # geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -857,7 +866,7 @@ pcdel <- p
 
 
 
-# plot it together -------------------------------------------------------------
+# Plot using grid and output ---------------------------------------------------
 pdf(file = "000_fit_cbyenv_full.pdf", width = mywidth, height = myheight)
 grid.arrange( grid::textGrob("SALT", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
               grid::textGrob("COPR", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
@@ -877,64 +886,59 @@ grid.arrange( grid::textGrob("SALT", gp =grid::gpar(fontsize = 8, fontface = "bo
 dev.off() # one column wide, equal height
 
 # -----------------------------------------------------------------------------
-rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mylinealpha, mypalette, myptalpha, myr, mytextsize,
-   mytitle, mywidth, myx, myxlab, myylab)
+rm(my, p, mybinwidth, myfillapha, myheight, myhighlight, mytextsize, mywidth, myxlab, myylab,
+   legend, pcanc, pcdel, pcevo, psanc, psdel, psevo, mypalette_r1, mypalette_r2, myrugalpha,
+   myxlim1, myxlim2, myxlim3, myxlim4, myxlim5, myxlim6, myymax1, myymax2, myymax3, myymax4,
+   myymax5, myymax6)
 ```
 
 
 # Plot: SALTA SALTB ancestral and evolved fitness in CM,salt40, salt80, salt120
 ```{R}
 my <- myd
-# Visualize -------------------------------------------------------------------
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
 
+# set universal vars -----------------------------------------------------------
 mybinwidth <- 0.01
-
-mytitle <- NULL
 myylab <- "Count"
 myxlab <- "fitness"
-
 myhighlight <- "black"
-myfillapha <- 0.85
-myptalpha <- 0.35
-mylinealpha <- 0
-mypalette <- setpalette
-
+myfillapha <- 0.95
+myrugalpha <- 0.2
+mypalette <- incpalette_br_cy
 mytextsize <- 8
 myheight <- 11
 mywidth <- 8.5
-
-# summary(my$fit500[my$epo %in% c("SALT_A", "SALT_B")]) # 0.7258 -- 1.4820
-# summary(my$dw[my$epo %in% c("SALT_A", "SALT_B")]) # -0.27508 -- 0.45753
+myxlim_c1_c2 <- c(0.6, 1.6)
+myxlim_c3 <- c(-0.5, 0.5)
+myymax11 <- 400
+myymax12_13 <- 100
+myymax21 <- 350
+myymax22_23 <- 80
+myymax31 <- 250
+myymax32_33 <- 40
+myymax41 <- 250
+myymax42_43 <- 50
 
 # salt anc -----------------------------
 # salt anc in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,400)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax11)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= c(0.7,0.7), legend.key.size = unit(.20, "cm")) +
   labs(fill = "Treatment") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-
-
-library(gridExtra)
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
 legend <- get_legend(p)
 p <- p + theme(legend.position="none")
 p_salt_anc_0 <- p
@@ -942,248 +946,225 @@ p_salt_anc_0 <- p
 # salt anc in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,350)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax21)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_anc_40 <- p
 
 # salt anc in 80
 p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,250)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax31)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_anc_80 <- p
 
 # salt anc in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,250)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax41)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_anc_120 <- p
 
 # salt evo -----------------------------
 # salt evo in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,100)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax12_13)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_evo_0 <- p
 
 # salt evo in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,80)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax22_23)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_evo_40 <- p
 
 # salt evo in 80
 p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,40)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax32_33)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_evo_80 <- p
 
 # salt evo in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.6)) +
-  ylim(c(NA,50)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax42_43)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab(myxlab)+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_evo_120 <- p
 
 # salt delta -----------------------------
 # salt delta in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.5)) +
-  ylim(c(NA,100)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax12_13)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_del_0 <- p
 
 # salt evo in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.5)) +
-  ylim(c(NA,80)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax22_23)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_del_40 <- p
 
 # salt evo in 80
 p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.5)) +
-  ylim(c(NA,40)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax32_33)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_del_80 <- p
 
 # salt evo in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.5)) +
-  ylim(c(NA,50)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax42_43)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab(myxlab)+
-  #geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_salt_del_120 <- p
 
-# plot it together -------------------------------------------------------------
+# Plot using grid and output ---------------------------------------------------
 pdf(file = "000_SALT_fit_byenv_cbytreat_full.pdf", width = mywidth, height = myheight)
 grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
               grid::textGrob("CM + Salt 40", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
@@ -1208,6 +1189,14 @@ grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontf
                         c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18)),
   top = grid::textGrob("\n Yeast Fitness (SALT) in Complete Media and Salt Stress Environments", gp =grid::gpar(fontsize = 14, fontface = "bold")))
 dev.off() # one column wide, equal height
+
+# ----------------------------
+rm(legend, my, p, p_salt_anc_0,  p_salt_anc_40,  p_salt_anc_80,  p_salt_anc_120,
+    p_salt_evo_0,  p_salt_evo_40,  p_salt_evo_80,  p_salt_evo_120,
+    p_salt_del_0,  p_salt_del_40,  p_salt_del_80,  p_salt_del_120, mybinwidth,
+   myfillapha, myheight, myhighlight, mypalette, myrugalpha, mytextsize, mywidth,
+   myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
+   myymax31, myymax32_33, myymax41, myymax42_43)
 ```
 
 
@@ -1215,305 +1204,275 @@ dev.off() # one column wide, equal height
 # Plot: COPRA COPRB ancestral and evolved fitness in CM,copr40, copr80, copr120
 ```{R}
 my <- myd
-# Visualize -------------------------------------------------------------------
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
 
+# set universal vars -----------------------------------------------------------
 mybinwidth <- 0.01
-
-mytitle <- NULL
 myylab <- "Count"
 myxlab <- "fitness"
-
 myhighlight <- "black"
-myfillapha <- 0.85
-myptalpha <- 0.35
-mylinealpha <- 0
-mypalette <- setpalette
-
+myfillapha <- 0.95
+myrugalpha <- 0.2
+mypalette <- incpalette_br_cy
 mytextsize <- 8
 myheight <- 11
 mywidth <- 8.5
-
-# summary(my$fit500[my$epo %in% c("COPR_A", "COPR_B")]) # 0.7893 -- 1.7746
-# summary(my$dw[my$epo %in% c("COPR_A", "COPR_B")]) # -0.2620 -- 0.8507
+myxlim_c1_c2 <- c(0.6, 1.8)
+myxlim_c3 <- c(-0.5, 0.9)
+myymax11 <- 400
+myymax12_13 <- 60
+myymax21 <- 400
+myymax22_23 <- 60
+myymax31 <- 400
+myymax32_33 <- 20
+myymax41 <- 120
+myymax42_43 <- 15
 
 # copr anc -----------------------------
 # copr anc in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth,  lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,400)) +
+  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax11)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= c(0.7,0.7), legend.key.size = unit(.20, "cm")) +
   labs(fill = "Treatment") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-
-
-library(gridExtra)
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
 legend <- get_legend(p)
 p <- p + theme(legend.position="none")
 p_copr_anc_0 <- p
 
 # copr anc in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth,  lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,400)) +
+  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax21)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_anc_40 <- p
 
 # copr anc in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) + 
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth,  lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,400)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax31)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_anc_80 <- p
 
 # copr anc in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth,  lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,120)) +
+  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax41)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_anc_120 <- p
 
 # copr evo -----------------------------
 # copr evo in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth,  lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,60)) +
+  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax12_13)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_evo_0 <- p
 
 # copr evo in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,60)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax22_23)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_evo_40 <- p
 
 # copr evo in 80
 p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,20)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax32_33)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_evo_80 <- p
 
 # copr evo in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(0.6, 1.8)) +
-  ylim(c(NA,15)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c1_c2) +
+  ylim(c(NA,myymax42_43)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab(myxlab)+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_evo_120 <- p
 
 # copr delta -----------------------------
 # copr delta in 0
 p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.9)) +
-  ylim(c(NA,60)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax12_13)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_del_0 <- p
 
 # copr evo in 40
 p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.9)) +
-  ylim(c(NA,60)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax22_23)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_del_40 <- p
 
 # copr evo in 80
 p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.9)) +
-  ylim(c(NA,20)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax32_33)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab("")+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_del_80 <- p
 
 # copr evo in 120
 p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  xlim(c(-0.5, 0.9)) +
-  ylim(c(NA,15)) +
+  geom_rug(alpha = myrugalpha)+
+  xlim(myxlim_c3) +
+  ylim(c(NA,myymax42_43)) +
   scale_color_manual(values =mypalette, guide = FALSE) + 
   scale_fill_manual(values =mypalette) +
   theme_classic() +
   theme(legend.position= "none") +
   labs(fill = "Significance") +
-  ggtitle(mytitle)+ ylab("")+ xlab(myxlab)+
-  geom_hline(yintercept=-0.01, colour="white", size=1.01)+
+  ylab("")+ xlab("")+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
-#p
 p_copr_del_120 <- p
 
-# plot it together -------------------------------------------------------------
+# Plot using grid and output ---------------------------------------------------
 pdf(file = "000_COPR_fit_byenv_cbytreat_full.pdf", width = mywidth, height = myheight)
 grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
               grid::textGrob("CM + Copr 40", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
@@ -1536,8 +1495,16 @@ grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontf
                         c(3,  7,7,7,7,     11,11,11,11,  15,15,15,15,  18, 18),
                         c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18),
                         c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18)),
-  top = grid::textGrob("\n Yeast Fitness (COPR) in Complete Media and Copper Stress Environments", gp =grid::gpar(fontsize = 14, fontface = "bold")))
+  top = grid::textGrob("\n Yeast Fitness (COPR) in Complete Media and Copr Stress Environments", gp =grid::gpar(fontsize = 14, fontface = "bold")))
 dev.off() # one column wide, equal height
+
+# ----------------------------
+rm(legend, my, p, p_copr_anc_0,  p_copr_anc_40,  p_copr_anc_80,  p_copr_anc_120,
+    p_copr_evo_0,  p_copr_evo_40,  p_copr_evo_80,  p_copr_evo_120,
+    p_copr_del_0,  p_copr_del_40,  p_copr_del_80,  p_copr_del_120, mybinwidth,
+   myfillapha, myheight, myhighlight, mypalette, myrugalpha, mytextsize, mywidth,
+   myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
+   myymax31, myymax32_33, myymax41, myymax42_43)
 ```
 
 
