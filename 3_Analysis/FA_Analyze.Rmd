@@ -24,1141 +24,53 @@ require(plyr); # used for dataframe manipulation
 require(gridExtra) # used for multipanel plotting
 require(barnard)
 require(GGally)
-
+require(plotly)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
+
 
 Explore extinction and extirpation.
 ```{r, warning = FALSE, message=FALSE}
 load(file = "myd.Rdata")
 myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")]), 
                                                   as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")])))
-my <- myd
-# first need to collapse replicates such that there is only a single entry per bc per assay env. 
-my1 <- my[my$mpar == 1,]
-my2 <- my[my$mpar == 2,]; colnames(my2)[c(11, 110)] <- paste0(colnames(my2)[c(11, 110)], "_2")
-my3 <- my[my$mpar == 3,]; colnames(my3)[c(11, 110)] <- paste0(colnames(my3)[c(11, 110)], "_3")
-my4 <- my[my$mpar == 4,]; colnames(my4)[c(11, 110)] <- paste0(colnames(my4)[c(11, 110)], "_4")
-# 
-# myee <- cbind(my1, my2$bc1cts_f_e_2, my2$re_f_e_2, my3$bc1cts_f_e_3, my3$re_f_e_3, my4$bc1cts_f_e_4, my4$re_f_e_4)
-# bc1cts_f_e <- apply(myee, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_e", "bc1cts_f_e_2", "bc1cts_f_e_3", "bc1cts_f_e_4")]),
-#                                                   as.numeric(x[c( "re_f_e","re_f_e_2","re_f_e_3","re_f_e_4")])))
-# my <- cbind(my1, bc1cts_f_e)
-my <- cbind(my1, my2$bc1cts_f_e_2,  my3$bc1cts_f_e_3,  my4$bc1cts_f_e_4)
-colnames(my)[126:128] <- c("bc1cts_f_e_2", "bc1cts_f_e_3", "bc1cts_f_e_4")
 
-mythresh <- 15
-
-# SALT -----------------------------------------------------
-mymat <- matrix(nrow = 7, ncol = 16)
-mymatsum <- matrix(nrow = 7, ncol = 4)
-# - EH0 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[1,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[1,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[1,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[1,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-
-# - EH40 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[2,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[2,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[2,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[2,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-
-
-# - EH80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[3,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[3,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[3,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[3,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-
-
-
-# - EH0_40 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[4,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[4,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[4,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[4,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-
-
-# - EH20_60 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[5,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[5,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[5,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[5,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-
-
-
-# - EH0_80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[6,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[6,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[6,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[6,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-
-
-
-# - EH40_80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mymat[7,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in salt 0.4 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4,]
-mymat[7,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in salt 0.8 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8,]
-mymat[7,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in salt 1.2 ------------------
-myy <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2,]
-mymat[7,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-mySALTee <- mymat
-mySALTmatsum <- mymatsum
-rownames(mySALTee) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-colnames(mySALTee) <- c("0.0_xtinc_a", "0.0_xtirp_a", "0.0_xtinc_e", "0.0_xtirp_e", 
-                        "0.4_xtinc_a", "0.4_xtirp_a", "0.4_xtinc_e", "0.4_xtirp_e", 
-                        "0.8_xtinc_a", "0.8_xtirp_a", "0.8_xtinc_e", "0.8_xtirp_e", 
-                        "1.2_xtinc_a", "1.2_xtirp_a", "1.2_xtinc_e", "1.2_xtirp_e")
-
-# mye <- mySALTee# now want to make a matrix for the denominator of our proportion calculation...taking into account barcodes lost at previous stages.
-# mye["EH0",] <- length(unique(myy$bcpID[myy$treat == "EH0"])) 
-# mye["EH40",] <- length(unique(myy$bcpID[myy$treat == "EH40"])) 
-# mye["EH80",] <- length(unique(myy$bcpID[myy$treat == "EH80"])) 
-# mye["EH0_40",] <- length(unique(myy$bcpID[myy$treat == "EH0_40"])) 
-# mye["EH20_60",] <- length(unique(myy$bcpID[myy$treat == "EH20_60"])) 
-# mye["EH0_80",] <- length(unique(myy$bcpID[myy$treat == "EH0_80"])) 
-# mye["EH40_80",] <- length(unique(myy$bcpID[myy$treat == "EH40_80"])) 
-# 
-# 
-# mye[,2] <- mye[,2] - (mySALTee[,1]) # in CM
-# mye[,3] <- mye[,3] - ((mySALTee[,2]) + (mySALTee[,1]))
-# mye[,4] <- mye[,4] - ((mySALTee[,3]) + (mySALTee[,2]) + mySALTee[,1]) 
-# 
-# mye[,6] <- mye[,6] - (mySALTee[,5]) # in SALT 40
-# mye[,7] <- mye[,7] - ((mySALTee[,6]) + (mySALTee[,5]))
-# mye[,8] <- mye[,8] - ((mySALTee[,7]) + (mySALTee[,6]) + mySALTee[,5]) 
-# 
-# mye[,10] <- mye[,10] - (mySALTee[,9]) # in SALT 80
-# mye[,11] <- mye[,11] - ((mySALTee[,10]) + (mySALTee[,9]))
-# mye[,12] <- mye[,12] - ((mySALTee[,11]) + (mySALTee[,10]) + mySALTee[,9]) 
-# 
-# mye[,14] <- mye[,14] - (mySALTee[,13]) # in SALT 120
-# mye[,15] <- mye[,15] - ((mySALTee[,14]) + (mySALTee[,13]))
-# mye[,16] <- mye[,16] - ((mySALTee[,15]) + (mySALTee[,14]) + mySALTee[,13]) 
-# 
-# mySALTee_denom <- mye; rm(mye)
-# mySALTee_p <- mySALTee / mySALTee_denom
-
-
-
-
-
-
-# COPR -----------------------------------------------------
-mymat <- matrix(nrow = 7, ncol = 16)
-mymatsum <- matrix(nrow = 7, ncol = 4)
-# - EH0 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[1,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[1,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[1,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[1,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh) #  were extinct at the start
-mymat[1,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[1,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh) #  extinct at start of fit500
-mymat[1,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh)#  extirpated during the fit500 
-mymatsum[1,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0"] <= mythresh))
-
-
-# - EH40 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[2,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[2,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[2,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[2,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh) #  were extinct at the start
-mymat[2,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[2,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh) #  extinct at start of fit500
-mymat[2,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[2,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40"] <= mythresh))
-
-
-
-# - EH80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[3,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[3,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[3,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[3,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh) #  were extinct at the start
-mymat[3,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[3,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh) #  extinct at start of fit500
-mymat[3,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[3,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH80"] <= mythresh))
-
-
-
-# - EH0_40 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[4,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[4,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[4,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[4,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh) #  were extinct at the start
-mymat[4,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[4,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh) #  extinct at start of fit500
-mymat[4,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh)#  extirpated during the fit500 
-mymatsum[4,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_40"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_40"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_40"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_40"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_40"] <= mythresh))
-
-
-
-# - EH20_60 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[5,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[5,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[5,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[5,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh) #  were extinct at the start
-mymat[5,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[5,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh) #  extinct at start of fit500
-mymat[5,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh)#  extirpated during the fit500 
-mymatsum[5,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH20_60"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH20_60"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH20_60"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH20_60"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH20_60"] <= mythresh))
-
-
-
-
-# - EH0_80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[6,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[6,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[6,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[6,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh) #  were extinct at the start
-mymat[6,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[6,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh) #  extinct at start of fit500
-mymat[6,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[6,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH0_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH0_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH0_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH0_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH0_80"] <= mythresh))
-
-
-
-
-# - EH40_80 ------------------------------------------
-# --- in CM ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-mymat[7,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,2] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,3] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,4] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,1] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in copr 0.4 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4,]
-mymat[7,5] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,6] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,7] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,8] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,2] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in copr 0.8 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8,]
-mymat[7,9] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,10] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,11] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,12] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,3] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-# --- in copr 1.2 ------------------
-myy <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2,]
-mymat[7,13] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh) #  were extinct at the start
-mymat[7,14] <- sum(myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh) #  were extirpated in the fit0 assays
-mymat[7,15] <- sum(myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh) #  extinct at start of fit500
-mymat[7,16] <- sum(myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                    myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                    myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh)#  extirpated during the fit500 
-mymatsum[7,4] <- sum(myy$bc1cts_i_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_f_a[myy$treat == "EH40_80"] <= mythresh |
-                       myy$bc1cts_i_e[myy$treat == "EH40_80"] <= mythresh |
-                       (myy$bc1cts_f_e[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_2[myy$treat == "EH40_80"] <= mythresh & 
-                          myy$bc1cts_f_e_3[myy$treat == "EH40_80"] <= mythresh  & 
-                          myy$bc1cts_f_e_4[myy$treat == "EH40_80"] <= mythresh))
-
-
-myCOPRee <- mymat
-myCOPRmatsum <- mymatsum
-rownames(myCOPRee) <- rownames(mySALTee); colnames(myCOPRee) <- colnames(mySALTee)
-
-# mye <- myCOPRee # now want to make a matrix for the denominator of our proportion calculation...taking into account barcodes lost at previous stages.
-# mye["EH0",] <- length(unique(myy$bcpID[myy$treat == "EH0"])) 
-# mye["EH40",] <- length(unique(myy$bcpID[myy$treat == "EH40"])) 
-# mye["EH80",] <- length(unique(myy$bcpID[myy$treat == "EH80"])) 
-# mye["EH0_40",] <- length(unique(myy$bcpID[myy$treat == "EH0_40"])) 
-# mye["EH20_60",] <- length(unique(myy$bcpID[myy$treat == "EH20_60"])) 
-# mye["EH0_80",] <- length(unique(myy$bcpID[myy$treat == "EH0_80"])) 
-# mye["EH40_80",] <- length(unique(myy$bcpID[myy$treat == "EH40_80"])) 
-# 
-# 
-# mye[,2] <- mye[,2] - (myCOPRee[,1]) # in CM
-# mye[,3] <- mye[,3] - ((myCOPRee[,2]) + (myCOPRee[,1]))
-# mye[,4] <- mye[,4] - ((myCOPRee[,3]) + (myCOPRee[,2]) + myCOPRee[,1]) 
-# 
-# mye[,6] <- mye[,6] - (myCOPRee[,5]) # in COPR 40
-# mye[,7] <- mye[,7] - ((myCOPRee[,6]) + (myCOPRee[,5]))
-# mye[,8] <- mye[,8] - ((myCOPRee[,7]) + (myCOPRee[,6]) + myCOPRee[,5]) 
-# 
-# mye[,10] <- mye[,10] - (myCOPRee[,9]) # in COPR 80
-# mye[,11] <- mye[,11] - ((myCOPRee[,10]) + (myCOPRee[,9]))
-# mye[,12] <- mye[,12] - ((myCOPRee[,11]) + (myCOPRee[,10]) + myCOPRee[,9]) 
-# 
-# mye[,14] <- mye[,14] - (myCOPRee[,13]) # in COPR 120
-# mye[,15] <- mye[,15] - ((myCOPRee[,14]) + (myCOPRee[,13]))
-# mye[,16] <- mye[,16] - ((myCOPRee[,15]) + (myCOPRee[,14]) + myCOPRee[,13]) 
-# 
-# myCOPRee_denom <- mye; rm(mye)
-# myCOPRee_p <- myCOPRee / myCOPRee_denom
-
-
-mycollapsed <- my
-rm(my, my1, my2, my3, my4, myee, mymat, myy, bc1cts_f_e)
 ```
+<br/><br/>
 
 
 Load datasets
 ```{r, warning = FALSE, message=FALSE}
 my <- myd
 # view the most sensitive measure -- those barcodes that are actually omit at generation 500 (not present at start of the fit  assay)
-hist((my$bc1cts_i_e[my$bc1cts_i_e <= 1000000]), breaks = 100)
-hist((my$bc1cts_i_e[my$bc1cts_i_e <= 1000]), breaks = 100)
-hist((my$bc1cts_i_e[my$bc1cts_i_e <= 200]), breaks = 100)
-hist((my$bc1cts_i_e[my$bc1cts_i_e <= 100]), breaks = 100)
-hist((my$bc1cts_i_e[my$bc1cts_i_e <= 50]), breaks = 100) # lets omit below 15, this look like a natural break -- we will apply this value at 4 timepoints...
+# hist((my$bc1cts_i_e[my$bc1cts_i_e <= 1000000]), breaks = 100)
+# hist((my$bc1cts_i_e[my$bc1cts_i_e <= 1000]), breaks = 100)
+# hist((my$bc1cts_i_e[my$bc1cts_i_e <= 100]), breaks = 100)
+# hist((my$bc1cts_i_e[my$bc1cts_i_e <= 50]), breaks = 100) # lets omit below 15, this look like a natural break -- we will apply this value at 4 timepoints...
 
 # first take a look at how many entries fall w/in each category
-sum(my$bc1cts_i_e <= 15) # entries with generation 500 fitness assay initial counts <= 15
-sum(my$bc1cts_f_e <= 15) # "" generation 500 fitness assay final counts ""
-sum(my$bc1cts_i_a <= 15) # "" generation 0 fitness assay initial counts ""
-sum(my$bc1cts_f_a <= 15) # "" generation 0 fitness assay final counts ""
+# sum(my$bc1cts_i_e <= 15) # entries with generation 500 fitness assay initial counts <= 15 [ANS: 1792 / 7104 (0.2522523)]
+# sum(my$bc1cts_f_e <= 15) # "" generation 500 fitness assay final counts "" [ANS: 2605 / 7104 (0.3666948)]
+# sum(my$bc1cts_i_a <= 15) # "" generation 0 fitness assay initial counts "" [ANS: 0 / 7104 (0.00)]
+# sum(my$bc1cts_f_a <= 15) # "" generation 0 fitness assay final counts "" [ANS: 8 / 7104 (0.001126126)]
 
 my$omit <- FALSE # initially set to false (was T for all < 2 counts originally)
-my$omit[my$bc1cts_i_e <= 15] <- T # see prev block comments, just assignment here. 
-my$omit[my$bc1cts_f_e <= 15] <- T
-my$omit[my$bc1cts_i_a <= 15] <- T
-my$omit[my$bc1cts_f_a <= 15] <- T
+my$omit[my$bc1cts_i_e <= 15 | my$bc1cts_f_e <= 15 | my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- T # see prev block comments, just assignment here. 
 
-my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA the data fields to ensure the ommision of these entires. 
-my$fit500[my$omit == T] <- NA
-my$dw[my$omit == T] <- NA
-
+my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
+my$fit500[my$omit == T] <- NA # na fit500 data for omits
+my$dw[my$omit == T] <- NA # na dw data for omits
 
 myd <- my
 ```
 <br/><br/>
 
 
-
-
-
-Create helper functions for linear model residual plotting and data transformation.
+Create helper functions for plotting and data transformation.
 ```{r, warning = FALSE, message=FALSE}
-# expand_residuals creates a modified histogram of residuals. Each entry in the model output is plotted a number of times equal to its reads.
+# expand_residuals creates a modified histogram of residuals. ------------------
+# Each entry in the model output is plotted a number of times equal to its reads.
 expand_residuals <- function(model, reads){
   myfr <- NA
   for(i in 1:length(residuals(model))){
@@ -1168,13 +80,17 @@ expand_residuals <- function(model, reads){
   return(myfr)
 }
 
-# log transformation for modeling. 
+
+
+# log transformation for modeling. ---------------------------------------------
 log_transform <- function(myvar){
   myvar <- log(((myvar - min(myvar))/(max(myvar) - min(myvar))) + 1) 
   return(myvar)
 }
 
-# no accepted way to do se on the weighted mean, suggest bootstrapping. There are 3 methods for empirical estimation, the one that performs closes to the bootstrap method is presented here. 
+
+
+# weighted.var.se --------------------------------------------------------------
 # https://stats.stackexchange.com/questions/25895/computing-standard-error-in-weighted-mean-estimation
 weighted.var.se <- function(x, w, na.rm=FALSE)
 #  Computes the variance of a weighted mean following Cochran 1977 definition
@@ -1186,12 +102,6 @@ weighted.var.se <- function(x, w, na.rm=FALSE)
   out = n/((n-1)*sum(w)^2)*(sum((w*x-wbar*xWbar)^2)-2*xWbar*sum((w-wbar)*(w*x-wbar*xWbar))+xWbar^2*sum((w-wbar)^2))
   return(out)
 }
-
-
-my_dens <- function(data, mapping, ...) {
-  ggplot(data = data, mapping=mapping) +
-    geom_density(..., alpha = 0.7) 
-}
 ```
 <br/><br/>
 
@@ -1201,36 +111,40 @@ Set color palette options for all plots
 setpalette <- RColorBrewer::brewer.pal(7, "Dark2") # current preferred palette
 #setpalette <- c("#993404","#d95f0e","#fe9929","#41b6c4","#2c7fb8","#253494") # option 2
 #setpalette <- c("#8c510a","#d8b365","#f6e8c3", "#c7eae5","#5ab4ac","#01665e") # option 3
+ramppalette <- c("#006600", "#9999ff", "#6666ff", "#000066","#ff9999", "#ff6666", "#990000")
 ```
 <br/><br/>
 
 
 Plot initial fitness
 ```{r}
+# BLOCK NOTES ------------------------------------------------------------------
+# - initial fitness distribution looks hump-shaped 
+# - initial fitness distribution shows positive shift in general -- indicates that the chosen ref happened to be lower in fit than most other bcs in our pop, this is no problem. 
+# - Initial fitness distribution shifted as salt stress increases -- indicates increasing discrepency between pop and ref with higher salt concentration (good thing we use delta fitness).
+# - Initial fitness distribution shows no shift in COPR (Need to plot salt then copr; uncomment myc line; to see this).
+# - Initial fitness hump-shape falls apart in copr 120 which may be too stressfull to accurately assess fitness in. (we will see down the line). 
+# 
+# - PROBLEMS:
+#   - The plot shows very different patterns when you plot salt first and when you plot copr first. may be worth looking at both (I describe above though). 
+# ------------------------------------------------------------------------------
+
 my <- myd
 # Visualize -------------------------------------------------------------------
-# myx <- my$fit0 - weighted.mean(my$fit0, my$re_fit_a) # non-mean-corrected are more interpretable. 
 myx <- my$fit0
 myr <- my$re_fit_a / mean(my$re_fit_a)
-myc <- paste0(my$mpamt, my$mpasp)
+myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2", "SALT0.4", "SALT0.8", "SALT1.2"))
+#myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2","COPR0.4", "COPR0.8", "COPR1.2" ))
 mybinwidth <- 0.0025
-
 mytitle <- NULL
 myylab <- "Count"
 myxlab <- "Ancestral Fitness (in Seven Environments)"
-
 myhighlight <- "black"
 myfillapha <- 0.8
-myptalpha <- 0.35
-mylinealpha <- 0.35
-mypalette <- setpalette
-
+mypalette <- ramppalette
 mytextsize <- 8
 myheight <- 7 
 mywidth <- 7
-
-
-
 
 p <- ggplot(my, aes(x=myx,color = myc, fill = myc, weight = myr)) + 
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
@@ -1254,12 +168,13 @@ p <- ggplot(my, aes(x=myx,color = myc, fill = myc, weight = myr)) +
                      limits = c(.75, 1.25))+
   scale_y_continuous(breaks = seq(0, 1000, by = 100), limits = c(0, 700))
 p
-# -----------------------------------------------------------------------------
 
 # figure output ---------------------------------------------------------------
 pdf(file = "000_ancfit_cbyenv.pdf", width = mywidth, height = myheight); p; dev.off() # one column wide, equal height
+
+
 # -----------------------------------------------------------------------------
-rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mylinealpha, mypalette, myptalpha, myr, mytextsize,
+rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mypalette, myr, mytextsize,
    mytitle, mywidth, myx, myxlab, myylab)
 ```
 <br/><br/>
@@ -1267,102 +182,62 @@ rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mylinealpha, mypal
 
 fit0 ~ treatment 
 ```{r}
-# in CM ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "CM" & myd$mpasp == 0.0 & myd$epo == "SALT_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
+# BLOCK NOTES ------------------------------------------------------------------
+# - all treatment differences within models are nonsignifiant; else COPR120 which has significant differnces among treatments
+# - treatment nonsignificant in all models
+# 
+# - PROBLEMS:
+#   - Large eigenvalue warning in all models -- ask CB
+# ------------------------------------------------------------------------------
 
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
+# prep an appropriate dataframe for these tests --------------------------------
+#     - The appropriate data frame contains one entry (row) for each fit0 replicate in each environment 
+my <- myd[myd$epo %in% c("COPR_A", "SALT_A") & myd$mpar == 1,]
+myt1 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
+myt2 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
+myt3 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
+myt4 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
+myt <- rbind(myt1, myt2, myt3, myt4)
+myt$treat <- factor(myt$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # Relevel the treatments appropriately. 
+
+
+# in CM ------------------------------------------------------------------------
+my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.0,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in SALT40 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "SALT" & myd$mpasp == 0.4 & myd$epo == "SALT_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
+my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.4,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in SALT80 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "SALT" & myd$mpasp == 0.8 & myd$epo == "SALT_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
+my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.8,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in SALT120 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "SALT" & myd$mpasp == 1.2 & myd$epo == "SALT_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
+my <- myt[myt$epo == "SALT_A" & myt$mpasp == 1.2,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in COPR40 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "COPR" & myd$mpasp == 0.4 & myd$epo == "COPR_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-
-anova(mymod)
+my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.4,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in COPR80 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "COPR" & myd$mpasp == 0.8 & myd$epo == "COPR_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
+my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.8,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
 # in COPR120 ------------------------------------------------------------------------
-my <- myd[myd$mpamt == "COPR" & myd$mpasp == 1.2 & myd$epo == "COPR_A" & myd$mpar == 1,]
-myt1 <- my[,c("bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
+my <- myt[myt$epo == "COPR_A" & myt$mpasp == 1.2,]
+mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
+summary(mymod);anova(mymod)
 
-myt$treat <- relevel(myt$treat, ref = "EH0")
-mymod <- lmer(myt$fit0 ~ myt$treat + (1|myt$bc1), weights = myt$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-anova(mymod)
-
-
-# create temporary plotting dataframe -----------------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F) # create a myres dataframe to aid in plotting. 
-myres$p.adjust <- p.adjust(myres$`Pr(>|t|)`, method = "fdr")
+# ----------------------------
+rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
 ```
 <br/><br/>
 
