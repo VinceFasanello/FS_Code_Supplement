@@ -4385,33 +4385,86 @@ pdf(file = "EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myh
 
 ```
 
-Now for some pairs plots
+
+3d plots
 ```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-ggpairs(my,aes(color = treat, alpha = 0.7))
+library(plotly)
 
-my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-ggpairs(my,aes(color = treat, alpha = 0.7))
 
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-ggpairs(my,aes(color = treat, alpha = 0.7))
+Sys.setenv("plotly_username"="vincefasanello")
+Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
 
-my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-ggpairs(my,aes(color = treat, alpha = 0.7))
+# all treats -----------------------------------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="All Treatments"); p
+chart_link = api_create(p, filename="FS_scatter3d_AllTreats_000_040_080");chart_link
 
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-ggpairs(my,aes(color = treat, alpha = 0.7))
+# specialists vs. generalists ------------------------------
+# eh0, eh0_40, eh40 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: low stress end"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-40_EH40_in_000_040_080");chart_link
+
+# eh40, eh40_80, eh80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: high stress end"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH40_EH40-80_EH80_in_000_040_080");chart_link
+
+# eh0, eh0_80, eh80 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: full spectrum"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-80_EH80_in_000_040_080");chart_link
+
+
+# Shared mean, variable flux -------------------------------
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared mean with variable degree of flux around mean"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
+
+# Shared min, variable flux -------------------------------
+# eh0, eh0_40, eh0_80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared minimum with variable degree of flux up"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
+
+# # Shared max, variable flux -------------------------------
+# eh80, e40_80, eh0_80 -----------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared maximum with variable degree of flux down"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
+
+# variable mean (min, max), shared flux --------------------
+# eh0, eh40, eh80 ----------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialists with different means compared"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH0_EH40_EH80_in_000_040_080");chart_link
+
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
+my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="generalists with same flux degree, different means compared"); p
+chart_link = api_create(p, filename="FS_scatter3d_EH0_EH40_EH80_in_000_040_080");chart_link
+
+
+
 ```
-
-
-
-
-
 
 
 
@@ -4424,7 +4477,7 @@ ggpairs(my,aes(color = treat, alpha = 0.7))
 # explore the new analysis framework. 
 
 # 0, 0_40, 40 (in .00, .40, .80. 1.20)
-``` {r}
+```{r}
 # TREAT EFFECTS ------------------------------------------------------------------------------------
 # IN 0.00 ----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),]
