@@ -362,45 +362,42 @@ Test for fitness increase SALT
 ```{r}
 mysig <- 0.05
 
-# SALT RESULTS OUTPUT TABLES --------------------
-mySALTin <- matrix(nrow = 7, ncol = 4)
-mySALTdec <- matrix(nrow = 7, ncol = 4)
+# SALT RESULTS OUTPUT TABLES ---------------------------------------------------
+mySALTin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
+mySALTdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
 rownames(mySALTin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
 rownames(mySALTdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
 colnames(mySALTin) <- c(0.0, 0.4, 0.8, 1.2)
 colnames(mySALTdec) <- c(0.0, 0.4, 0.8, 1.2)
-mySALTno <- matrix(nrow = 7, ncol = 4)
+mySALTno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
 
-my <- myd[order(myd$bcpID),] # SALT in CM --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[my$mpasp == 0.0 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt00.html") # table does not have corrected p-values. 
+# SALT in CM -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0 & !is.na(my$dw),]
 
-# create results dataframe ----------------------------------------------------
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_000.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
 myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
 myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
 myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$m_dw <- ddply(my, ~bcpID, function(my) weighted.mean(my$dw, my$re_dw))[,2]
-myres$m_re_dw <- ddply(my, ~bcpID, function(my) mean(my$re_dw))[,2]
-myres$mcm_dw <- myres$m_dw - weighted.mean(myres$m_dw, myres$m_re_dw)
-myres$in_color <- "fdr > 0.01"; myres$in_color[myres$p1s_h.adj <= mysig] <- "fdr <= mysig"
-myres$in_color <- as.factor(myres$in_color); myres$in_color <- relevel(myres$in_color, "fdr > 0.01")
-myres$dec_color <- "fdr > 0.01"; myres$dec_color[myres$p1s_l.adj <= mysig] <- "fdr <= mysig"
-myres$dec_color <- as.factor(myres$dec_color); myres$dec_color <- relevel(myres$dec_color, "fdr > 0.01")
 myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
+inc_SALT_000 <- myres
+
+# populate mats --------------------------------------------
 tmp <- myres[myres$treat == "EH0",];mySALTdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,1] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH40",];mySALTdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,1] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH80",];mySALTdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,1] <- nrow(tmp)
@@ -410,18 +407,19 @@ tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,1] <- sum(tmp$p1s_l.adj <= my
 tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,1] <- nrow(tmp)
 
 
-my <- myd[order(myd$bcpID),] # SALT in 40 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$mpasp == 0.4 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+ # SALT in 40 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt40.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_040.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -432,7 +430,9 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
+inc_SALT_040 <- myres
+
+# populate mats --------------------------------------------
 tmp <- myres[myres$treat == "EH0",];mySALTdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,2] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH40",];mySALTdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,2] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH80",];mySALTdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,2] <- nrow(tmp)
@@ -442,18 +442,19 @@ tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,2] <- sum(tmp$p1s_l.adj <= my
 tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,2] <- nrow(tmp)
 
 
-my <- myd[order(myd$bcpID),] # SALT in 80 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$mpasp == 0.8 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+# SALT in 80 -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt80.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_080.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -464,7 +465,9 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
+inc_SALT_080 <- myres
+
+# populate mats --------------------------------------------
 tmp <- myres[myres$treat == "EH0",];mySALTdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,3] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH40",];mySALTdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,3] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH80",];mySALTdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,3] <- nrow(tmp)
@@ -474,18 +477,19 @@ tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,3] <- sum(tmp$p1s_l.adj <= my
 tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,3] <- nrow(tmp)
 
 
-my <- myd[order(myd$bcpID),] # SALT in 120 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$mpasp == 1.2 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+# SALT in 120 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt120.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_120.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -496,7 +500,9 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
+inc_SALT_120 <- myres
+
+# populate mats --------------------------------------------
 tmp <- myres[myres$treat == "EH0",];mySALTdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,4] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH40",];mySALTdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,4] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH80",];mySALTdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,4] <- nrow(tmp)
@@ -505,8 +511,10 @@ tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,4] <- sum(tmp$p1s_l.adj <= m
 tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,4] <- nrow(tmp)
 tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,4] <- nrow(tmp)
 
-mySALTin_p <- mySALTin / mySALTno
-mySALTdec_p <- mySALTdec / mySALTno
+
+# ----------------------------
+mySALTnleft <- mySALTno  # give a clearer name. 
+rm(my, mymod, myres, tmp, i, mysig, mySALTno)
 ```
 
 
@@ -519,66 +527,29 @@ Test for fitness increase COPR
 ```{r}
 mysig <- 0.05
 
-# COPR RESULTS OUTPUT TABLES --------------------
-myCOPRin <- matrix(nrow = 7, ncol = 4)
-myCOPRdec <- matrix(nrow = 7, ncol = 4)
-rownames(myCOPRin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-rownames(myCOPRdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-colnames(myCOPRin) <- c(0.0, 0.4, 0.8, 1.2)
-colnames(myCOPRdec) <- c(0.0, 0.4, 0.8, 1.2)
-myCOPRno <- matrix(nrow = 7, ncol = 4)
-
-my <- myd[order(myd$bcpID),] # COPR in CM --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[my$mpasp == 0.0 & !is.na(my$dw),]
-
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr00.html") # table does not have corrected p-values. 
-
-# create results dataframe ----------------------------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$m_dw <- ddply(my, ~bcpID, function(my) weighted.mean(my$dw, my$re_dw))[,2]
-myres$m_re_dw <- ddply(my, ~bcpID, function(my) mean(my$re_dw))[,2]
-myres$mcm_dw <- myres$m_dw - weighted.mean(myres$m_dw, myres$m_re_dw)
-myres$in_color <- "fdr > 0.01"; myres$in_color[myres$p1s_h.adj <= mysig] <- "fdr <= mysig"
-myres$in_color <- as.factor(myres$in_color); myres$in_color <- relevel(myres$in_color, "fdr > 0.01")
-myres$dec_color <- "fdr > 0.01"; myres$dec_color[myres$p1s_l.adj <= mysig] <- "fdr <= mysig"
-myres$dec_color <- as.factor(myres$dec_color); myres$dec_color <- relevel(myres$dec_color, "fdr > 0.01")
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-# -----------------------------------------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,1] <- nrow(tmp)
+# SALT RESULTS OUTPUT TABLES ---------------------------------------------------
+mySALTin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
+mySALTdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
+rownames(mySALTin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mySALTdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+colnames(mySALTin) <- c(0.0, 0.4, 0.8, 1.2)
+colnames(mySALTdec) <- c(0.0, 0.4, 0.8, 1.2)
+mySALTno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
 
 
-my <- myd[order(myd$bcpID),] # COPR in 40 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$mpasp == 0.4 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+# SALT in CM -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0 & !is.na(my$dw),]
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr40.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_000.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -589,28 +560,31 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,2] <- nrow(tmp)
+inc_SALT_000 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,1] <- nrow(tmp)
 
 
-my <- myd[order(myd$bcpID),] # COPR in 80 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$mpasp == 0.8 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+ # SALT in 40 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr80.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_040.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -621,28 +595,31 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,3] <- nrow(tmp)
+inc_SALT_040 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,2] <- nrow(tmp)
 
 
-my <- myd[order(myd$bcpID),] # COPR in 120 --------------------------------------------------------------------------------------------------
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$mpasp == 1.2 & !is.na(my$dw),]
 
-# model & diagnostic plots ----------------------------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); summary(mymod)
-hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+# SALT in 80 -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
 
-# model output -----------------------------------------------------------------
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr120.html") # table does not have corrected p-values. 
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# create results dataframe ----------------------------------------------------
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_080.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
 myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
 myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
 myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
@@ -653,17 +630,56 @@ myres$treat <- NA
 for (i in 1:length(myres$treat)) {
   myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
 }
-# -----------------------------------------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,4] <- nrow(tmp)
+inc_SALT_080 <- myres
 
-myCOPRin_p <- myCOPRin / myCOPRno
-myCOPRdec_p <- myCOPRdec / myCOPRno
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,3] <- nrow(tmp)
+
+
+
+# SALT in 120 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
+
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_120.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_SALT_120 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,4] <- nrow(tmp)
+
+
+# ----------------------------
+mySALTnleft <- mySALTno  # give a clearer name. 
+rm(my, mymod, myres, tmp, i, mysig, mySALTno)
 ```
 
 
