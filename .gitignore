@@ -1,6 +1,6 @@
 .Rproj.user
 .Rhistory
-.RData
+
 .Ruserdata
 .fastq
 .fastq.gz
@@ -9,7 +9,7 @@
 .zip
 *.Rproj.user
 *.Rhistory
-*.RData
+
 *.Ruserdata
 *.fastq
 *.fastq.gz
