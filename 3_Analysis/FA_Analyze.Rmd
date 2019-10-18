@@ -243,48 +243,39 @@ rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
 
 dw associated with weight?
 ```{r}
+# BLOCK NOTES ------------------------------------------------------------------
+#  - data distribution is approximately hump shaped with mean near 0 (no change in fitness). Higher weights are likely to have fitness values closer to hump mean. This makes sense -- higher weight means more counts recovered at all timepoints means more confidence in fitness calculation, means less likely to pick up spurious increases / decreases in fitness caused by stocahsticity in sampling.
+#  - COPR 1.2 and, to a lesser extent, COPR 0.8 have differnent releationships than the other variables. SALT does not share the trend
+#  - for self use only, not for inclusion in any publication. will be hard to explain fully and needlessly confusing to the reader.  
+# ------------------------------------------------------------------------------
+
 my <- myd[myd$omit == F,]
-# untransformed -- looks like there is some kind of pattern
-hist(my$dw)
-hist(my$re_dw)
-plot(my$dw ~ my$re_dw) # linear model wouldnt be appropriate here. 
-plot(my$re_dw ~ my$dw) # OBSERVATION: data distribution is approximately hump shaped with mean near 0 (no change in fitness). Higher weights are likely to have fitness values closer to hump mean. This makes sense -- higher weight means more counts recovered at all timepoints means more confidence in fitness calculation, means less likely to pick up spurious increases / decreases in fitness caused by stocahsticity in sampling
 
 # look at everything together --------------------------------------------------
 myx <- my$dw
 myy <- my$re_dw
-# myx <- scale(my$dw)
-# myy <- scale(my$re_dw)
-myc <- paste0(my$mpamt, my$mpasp)
+myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2", "SALT0.4", "SALT0.8", "SALT1.2"))
 mys <- my$treat
-
-mytitle <- NULL
 myylab <- "Weight (reads)"
 myxlab <- "dw"
-
 myhighlight <- "black"
-myfillapha <- 0.35
 myptalpha <- 0.35
-mylinealpha <- 0.35
-mypalette <- setpalette
-
+mypalette <- ramppalette
 mytextsize <- 8
 myheight <- 7
 mywidth <- 7
-myptsize <- 0.75
 mystroke <- 1.5
 
-mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
+#mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
 p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
   geom_point(aes(color=myc, pch = mys), alpha = myptalpha, stroke = mystroke)+
-  geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
-  # geom_abline(intercept = 0, slope = 1)+
+  # geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
   scale_shape_manual(values=1:nlevels(mys))+
   geom_rug(alpha = myptalpha)+
-  scale_color_manual(values = setpalette)+
+  scale_color_manual(values = mypalette)+
   theme_classic() +
   labs(color = "Treatment") +
-  ggtitle(mytitle) + ylab(myylab)+ xlab(myxlab) +
+  ylab(myylab)+ xlab(myxlab) +
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -294,29 +285,27 @@ p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
 p
 # figure output ----
 pdf(file = "000_FitAndWeight_All.pdf", width = mywidth, height = myheight); p; dev.off() # one column wide, equal height
-# ------------------------------------------------------------------------------
 
 
-
-
-# look at SALT  --------------------------------------------------
+# look at SALT  ----------------------------------------------------------------
 my <- myd[myd$epo %in% c("SALT_A", "SALT_B") & myd$omit == F,]
 myx <- my$dw
 myy <- my$re_dw
-myc <- paste0(my$mpamt, my$mpasp)
+myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2"))
 mys <- my$treat
+mypalette <- ramppalette[c(1,5,6,7)]
+myptalpha <- 0.7
 
-
-mymod <- lmer(myy ~ myx + (myx||paste0(my$mpasp))); summary(mymod)
+#mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
 p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
   geom_point(aes(color=myc, pch = mys), alpha = myptalpha, stroke = mystroke)+
-  geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
+  # geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
   scale_shape_manual(values=1:nlevels(mys))+
   geom_rug(alpha = myptalpha)+
-  scale_color_manual(values = setpalette)+
+  scale_color_manual(values = mypalette)+
   theme_classic() +
   labs(color = "Treatment") +
-  ggtitle(mytitle) + ylab(myylab)+ xlab(myxlab) +
+  ylab(myylab)+ xlab(myxlab) +
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -326,29 +315,28 @@ p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
 p
 # figure output ----
 pdf(file = "000_FitAndWeight_SALT.pdf", width = mywidth, height = myheight); p; dev.off() # one column wide, equal height
-# ------------------------------------------------------------------------------
 
 
 
-
-
-# look at COPR  --------------------------------------------------
+# look at COPR  ----------------------------------------------------------------
 my <- myd[myd$epo %in% c("COPR_A", "COPR_B") & myd$omit == F,]
 myx <- my$dw
 myy <- my$re_dw
-myc <- paste0(my$mpamt, my$mpasp)
+myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2"))
 mys <- my$treat
+mypalette <- ramppalette[c(1,2,3,4)]
+myptalpha <- 0.7
 
-mymod <- lmer(myy ~ myx + (myx||paste0(my$mpasp))); summary(mymod)
+#mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
 p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
   geom_point(aes(color=myc, pch = mys), alpha = myptalpha, stroke = mystroke)+
-  geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
+  # geom_line(aes(y=predict(mymod), group = myc, color = myc), size = 1, alpha = myptalpha)+
   scale_shape_manual(values=1:nlevels(mys))+
   geom_rug(alpha = myptalpha)+
-  scale_color_manual(values = setpalette)+
+  scale_color_manual(values = mypalette)+
   theme_classic() +
   labs(color = "Treatment") +
-  ggtitle(mytitle) + ylab(myylab)+ xlab(myxlab) +
+  ylab(myylab)+ xlab(myxlab) +
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
@@ -358,9 +346,11 @@ p <- ggplot(my, aes(x=myx, y=myy, color = myc))+
 p
 # figure output ----
 pdf(file = "000_FitAndWeight_COPR.pdf", width = mywidth, height = myheight); p; dev.off() # one column wide, equal height
+
+
 # ------------------------------------------------------------------------------
-
-
+rm(my, p, myc, myheight, myhighlight, mypalette, myptalpha, mys, mystroke,
+   mytextsize, mywidth, myx, myxlab, myy, myylab)
 ```
 <br/><br/>
 
