@@ -2,3 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+.fastq
+.fastq.gz
+.DS_Store
+.fastq.Rdata
+.zip
+*.Rdata
+*.fastq
+*.gz
