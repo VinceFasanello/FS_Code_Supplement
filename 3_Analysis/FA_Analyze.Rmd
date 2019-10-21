@@ -117,6 +117,16 @@ get_legend<-function(myggplot){
   legend <- tmp$grobs[[leg]]
   return(legend)
 }
+
+
+get_se <- function(x){
+  tmp <- sd(x, na.rm=TRUE) /  sqrt(length(x[!is.na(x)]))
+  return(tmp)
+}
+
+
+
+
 ```
 <br/><br/>
 
@@ -1517,977 +1527,810 @@ rm(legend, my, p, p_copr_anc_0,  p_copr_anc_40,  p_copr_anc_80,  p_copr_anc_120,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION
-
 First, need to create an appropriate data frame with 1 entry per bcpID (rather than 4 reps)
 ```{r}
+# create the frame, omitting most cols not necessary for these upcoming plots and tests.
 my <- myd
-my <- my[,c(1:7, 83:88, 112, 123, 126)]
-my1 <- my[my$mpar == 1,]
-my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2")
-my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3")
-my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4")
-my <- cbind(my1, my2$re_dw_2, my2$dw_2, my3$re_dw_3, my3$dw_3, my4$re_dw_4, my4$dw_4)
-colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_dw_2", "dw_2", "re_dw_3", "dw_3", "re_dw_4", "dw_4")
+my <- my[,c(1:7, 83:88, 112, 123, 126)] # reatain only interst columns
+my1 <- my[my$mpar == 1,] # r1
+my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2") # r2
+my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3") # r3
+my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4") # r4
+my <- cbind(my1, my2$re_dw_2, my2$dw_2, my3$re_dw_3, my3$dw_3, my4$re_dw_4, my4$dw_4) # zip
+colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_dw_2", "dw_2", "re_dw_3", "dw_3", "re_dw_4", "dw_4") # name fix
 mn_dw <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), 
-                                                  as.numeric(x[c( "re_dw","re_dw_2","re_dw_3","re_dw_4")]), na.rm = T))
-my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA
-my$omit <- F; my$omit[is.na(my$mn_dw)] <- T
-mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), na.rm =T))
-my$mn_re_dw <- mn_re_dw
+                                                  as.numeric(x[c( "re_dw","re_dw_2","re_dw_3","re_dw_4")]), na.rm = T)) # calculate wtd.mean dw across reps
+my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA # fix nans
+my$omit <- F; my$omit[is.na(my$mn_dw)] <- T # update omit field
+mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "re_dw", "re_dw_2", "re_dw_3", "re_dw_4")]), na.rm =T)) # calculate reads for mn_dw
+my$mn_re_dw <- mn_re_dw # assign
+mydwc <- my # name frame
 
-mydwc <- my 
-
-
+# ------------------
+rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw)
 ```
 
 
-
-SALTA, SALTB in CM
+# SALT first....
+# lets set some universal guides for SALT plotting
 ```{r}
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
-summary(my$dw)
+my <- mydwc[!is.na(mydwc$dw),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
 
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
-myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
-myc <- my$treat
-
+mylowlim <- round(min(my$dw, na.rm = T)*1.10, 2)
+myhighlim <- round(max(my$dw, na.rm = T)*1.10, 2)
 mytitle <- NULL
 myylab <- "Fitness change"
 myxlab <- "Treatment"
-
 myoutline <-  "grey20"
 myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
+myptalpha <- 0.5
+myrugalpha <- 0.7
 mypalette <- setpalette
 mytextsize <- 8
 myheight <- 3.5
 mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+mywtmeanptcol <- "black"
+
+# ------------------
+rm(my)
+```
+
+# SALT evolved in CM
+# visualize
+```{r}
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
+my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
+
+# Visualize -------------------------------------------------------------------
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$mn_dw
+myr <- my$mn_re_dw
+myc <- my$treat
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.5,by=.05),
-                     limits = c(-.3, .5),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
 
 
-SALTA, SALTB in SALT 0.4
+# SALT evolved in SALT 0.4
+# visualize
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
-summary(my$dw)
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
 
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.5,by=.05),
-                     limits = c(-.3, .5),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
-
-
-
-# MODELS -----------------------------------------------------------------------
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-# Model is nearly unidentifiable: very large eigenvalue - Rescale variables?
-# Try scaling---------
-# mymod <- lmer(scale(my$dw, center = T, scale = T) ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# # no effect.
-
-# check for singularity ---
-# tt <- getME(mymod,"theta")
-# ll <- getME(mymod,"lower")
-# min(tt[ll==0]) 
-# # not singular fit. 
-
-# look at an lm just to see what we would get here ---
-# mymod <- lm(my$dw ~ my$treat, weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level ---
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
-# ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
 ```
 
-SALTA, SALTB in SALT 0.8
+# models
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
+
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+# model eval ---------------------------
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
+# --------------------------------------
+
+# run same model with ea of the 7 treats as base level -------------------------
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+# ------------------------------------------------------------------------------
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+```
+
+
+
+
+
+# SALT evolved in SALT 0.8
+# visualize
+```{r}
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
-summary(my$dw)
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
 
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.5,by=.05),
-                     limits = c(-.3, .5),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
 
 
 
-
-
-
-
-
-
-SALTA, SALTB in SALT 1.2
+# SALT evolved in SALT 1.2
+# visualize
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
-summary(my$dw)
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-
 
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.5,by=.05),
-                     limits = c(-.3, .5),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
-COPRA, COPRB in CM
+
+
+# COPR next....
+# lets set some universal guides for COPR plotting
 ```{r}
-my <- myd[!is.na(myd$dw),]
+my <- mydwc[!is.na(mydwc$dw),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+
+mylowlim <- round(min(my$dw, na.rm = T)*1.10, 2)
+myhighlim <- round(max(my$dw, na.rm = T)*1.10, 2)
+mytitle <- NULL
+myylab <- "Fitness change"
+myxlab <- "Treatment"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 0.5
+myrugalpha <- 0.7
+mypalette <- setpalette
+mytextsize <- 8
+myheight <- 3.5
+mywidth <- 7
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+mywtmeanptcol <- "black"
+
+# ------------------
+rm(my)
+```
+
+# COPR evolved in CM
+# visualize
+```{r}
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
 
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.9,by=.05),
-                     limits = c(-.3, .9),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
-COPRA, COPRB in COPR 0.4
+
+
+# COPR evolved in COPR 0.4
+# visualize
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
 
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.9,by=.05),
-                     limits = c(-.3, .9),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
-COPRA, COPRB in COPR 0.8
+
+
+
+# COPR evolved in COPR 0.8
+# visualize
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
 
-
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.9,by=.05),
-                     limits = c(-.3, .9),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 
 
 
-COPRA, COPRB in COPR 1.2
+
+
+# COPR evolved in COPR 1.2
+# visualize
 ```{r}
-my <- myd[!is.na(myd$dw),]
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
 my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
 
-# check weighted mean and se for all treatments in this env. [SE IS TOO SMALL TO PLOT HERE!]
-my0 <- my[my$treat == "EH0",]; print("EH0"); weighted.mean(my0$dw, my0$re_dw); weighted.var.se(x = my0$dw, w = my0$re_dw, na.rm = T)
-my40 <- my[my$treat == "EH40",]; print("EH40"); weighted.mean(my40$dw, my40$re_dw); weighted.var.se(x = my40$dw, w = my40$re_dw, na.rm = T)
-my80 <- my[my$treat == "EH80",]; print("EH80"); weighted.mean(my80$dw, my80$re_dw); weighted.var.se(x = my80$dw, w = my80$re_dw, na.rm = T)
-my040 <- my[my$treat == "EH0_40",]; print("EH0_40"); weighted.mean(my040$dw, my040$re_dw); weighted.var.se(x = my040$dw, w = my040$re_dw, na.rm = T)
-my2060 <- my[my$treat == "EH20_60",]; print("EH20_60"); weighted.mean(my2060$dw, my2060$re_dw); weighted.var.se(x = my2060$dw, w = my2060$re_dw, na.rm = T)
-my4080 <- my[my$treat == "EH40_80",]; print("EH40_80"); weighted.mean(my4080$dw, my4080$re_dw); weighted.var.se(x = my4080$dw, w = my4080$re_dw, na.rm = T)
-my080 <- my[my$treat == "EH0_80",]; print("EH0_80"); weighted.mean(my080$dw, my080$re_dw); weighted.var.se(x = my080$dw, w = my080$re_dw, na.rm = T)
-
-
-
-
 # Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 myx <- my$treat
-myy <- my$dw
-myr <- my$re_dw
+myy <- my$mn_dw
+myr <- my$mn_re_dw
 myc <- my$treat
-
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myfillapha <- 0.35
-myptalpha <- 0.35
-mylinealpha <- 0.35
-
-mypalette <- setpalette
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(7^2))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(7^2))))+0.01
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
 p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_segment(x=6.90, xend=7.10, y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=5.90, xend=6.10, y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = myoutline) +
-  geom_segment(x=4.90, xend=5.10, y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), yend = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = myoutline) +
-  geom_segment(x=3.90, xend=4.10, y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), yend = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = myoutline) +
-  geom_segment(x=2.90, xend=3.10, y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), yend = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = myoutline) +
-  geom_segment(x=1.90, xend=2.10, y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), yend = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = myoutline) +
-  geom_segment(x=0.90, xend=1.10, y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), yend = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = myoutline) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myptalpha)+
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
   scale_color_manual(values =mypalette) + 
   geom_hline(yintercept = 0, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
   ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")) +
-  scale_y_continuous(breaks = seq(-.3,.9,by=.05),
-                     limits = c(-.3, .9),
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
                      labels = scales::number_format(accuracy = 0.01))+
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-  # annotate("text", x=c(2,3,5,6), y=c(.14,.55,.15,.46), label = c("**", "***", "***", "*"), size = 8, fontface = "bold")
 p 
-# -----------------------------------------------------------------------------
-
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
-# -----------------------------------------------------------------------------
+```
 
-
-
+# models
+```{r}
 # MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
+
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
 # model eval ---------------------------
-hist(residuals(mymod), breaks = 100)
-hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-anova(mymod) # test term significance
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
 # --------------------------------------
 
-# run same model with ea of the 7 treats as base level ---
+# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-x <- summary(mymod);x#x$coefficients[,"Pr(>|t|)"]<- p.adjust(x$coefficients[,"Pr(>|t|)"], method = "fdr");x
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 # ------------------------------------------------------------------------------
-rm(my, mymod, p, myc, myfill, myfillapha, myheight, mylinealpha, myoutline, mypalette, myptalpha, myptsize, myr, 
-   mytextsize, mytitle, mywidth, myx, myxlab, myy, myylab)
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
