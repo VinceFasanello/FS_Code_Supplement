@@ -35,7 +35,7 @@ Explore extinction and extirpation.
 ```{r, warning = FALSE, message=FALSE}
 load(file = "myd.Rdata")
 myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")]), 
-                                                  as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")])))
+                                                  as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
 
 ```
 <br/><br/>
@@ -60,9 +60,12 @@ my <- myd
 my$omit <- FALSE # initially set to false (was T for all < 2 counts originally)
 my$omit[my$bc1cts_i_e <= 15 | my$bc1cts_f_e <= 15 | my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- T # see prev block comments, just assignment here. 
 
-my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
+#my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
+my$re_fit_a[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA
 my$fit500[my$omit == T] <- NA # na fit500 data for omits
 my$dw[my$omit == T] <- NA # na dw data for omits
+my$re_dw[my$omit == T] <- NA
+my$re_fit_e[my$omit == T] <- NA
 
 myd <- my
 ```
@@ -149,7 +152,7 @@ Plot initial fitness
 my <- myd
 # Visualize -------------------------------------------------------------------
 myx <- my$fit0
-myr <- my$re_fit_a / mean(my$re_fit_a)
+myr <- my$re_fit_a / mean(my$re_fit_a, na.rm = T)
 myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2", "SALT0.4", "SALT0.8", "SALT1.2"))
 #myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2","COPR0.4", "COPR0.8", "COPR1.2" ))
 mybinwidth <- 0.0025
@@ -740,7 +743,7 @@ myxlim6 <- c(-.3, .9); myymax6 <- myymax5
 
 # Row 1: SALT lines ------------------------------------------------------------
 # fit0 -----------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = paste0(mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a))) +
+p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = paste0(mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim1) +
@@ -762,7 +765,7 @@ p <- p + theme(legend.position="none")
 psanc <- p
 
 # fit500 ---------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e))) +
+p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim2) +
@@ -782,7 +785,7 @@ p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0
 psevo <- p
 
 # dw -------------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw))) +
+p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim3) +
@@ -805,7 +808,7 @@ psdel <- p
 
 # Row 2: COPR lines ------------------------------------------------------------
 # fit0 -----------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a))) +
+p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim4) +
@@ -825,7 +828,7 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(m
 pcanc <- p
 
 # fit500 ---------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0(mpamt, mpasp),fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e))) +
+p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0(mpamt, mpasp),fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim5) +
@@ -845,7 +848,7 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0
 pcevo <- p
 
 # dw -------------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw))) +
+p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw, na.rm = T))) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim6) +
@@ -922,7 +925,7 @@ myymax42_43 <- 50
 
 # salt anc -----------------------------
 # salt anc in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -944,7 +947,7 @@ p <- p + theme(legend.position="none")
 p_salt_anc_0 <- p
 
 # salt anc in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -964,7 +967,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0
 p_salt_anc_40 <- p
 
 # salt anc in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -984,7 +987,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0
 p_salt_anc_80 <- p
 
 # salt anc in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1005,7 +1008,7 @@ p_salt_anc_120 <- p
 
 # salt evo -----------------------------
 # salt evo in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1025,7 +1028,7 @@ p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit5
 p_salt_evo_0 <- p
 
 # salt evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1045,7 +1048,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit5
 p_salt_evo_40 <- p
 
 # salt evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1065,7 +1068,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit5
 p_salt_evo_80 <- p
 
 # salt evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1086,7 +1089,7 @@ p_salt_evo_120 <- p
 
 # salt delta -----------------------------
 # salt delta in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1106,7 +1109,7 @@ p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, 
 p_salt_del_0 <- p
 
 # salt evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1126,7 +1129,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, 
 p_salt_del_40 <- p
 
 # salt evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1145,7 +1148,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, 
 p_salt_del_80 <- p
 
 # salt evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1230,7 +1233,7 @@ myymax42_43 <- 15
 
 # copr anc -----------------------------
 # copr anc in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1252,7 +1255,7 @@ p <- p + theme(legend.position="none")
 p_copr_anc_0 <- p
 
 # copr anc in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1272,7 +1275,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0
 p_copr_anc_40 <- p
 
 # copr anc in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1292,7 +1295,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0
 p_copr_anc_80 <- p
 
 # copr anc in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1313,7 +1316,7 @@ p_copr_anc_120 <- p
 
 # copr evo -----------------------------
 # copr evo in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1333,7 +1336,7 @@ p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit5
 p_copr_evo_0 <- p
 
 # copr evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1353,7 +1356,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit5
 p_copr_evo_40 <- p
 
 # copr evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1373,7 +1376,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit5
 p_copr_evo_80 <- p
 
 # copr evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c1_c2) +
@@ -1394,7 +1397,7 @@ p_copr_evo_120 <- p
 
 # copr delta -----------------------------
 # copr delta in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1414,7 +1417,7 @@ p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, 
 p_copr_del_0 <- p
 
 # copr evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1434,7 +1437,7 @@ p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, 
 p_copr_del_40 <- p
 
 # copr evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1453,7 +1456,7 @@ p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, 
 p_copr_del_80 <- p
 
 # copr evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw)) +
+p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
   geom_rug(alpha = myrugalpha)+
   xlim(myxlim_c3) +
@@ -1551,6 +1554,31 @@ rm(legend, my, p, p_copr_anc_0,  p_copr_anc_40,  p_copr_anc_80,  p_copr_anc_120,
 
 
 ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION
+
+First, need to create an appropriate data frame with 1 entry per bcpID (rather than 4 reps)
+```{r}
+my <- myd
+my <- my[,c(1:7, 83:88, 112, 123, 126)]
+my1 <- my[my$mpar == 1,]
+my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2")
+my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3")
+my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4")
+my <- cbind(my1, my2$re_dw_2, my2$dw_2, my3$re_dw_3, my3$dw_3, my4$re_dw_4, my4$dw_4)
+colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_dw_2", "dw_2", "re_dw_3", "dw_3", "re_dw_4", "dw_4")
+mn_dw <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), 
+                                                  as.numeric(x[c( "re_dw","re_dw_2","re_dw_3","re_dw_4")]), na.rm = T))
+my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA
+my$omit <- F; my$omit[is.na(my$mn_dw)] <- T
+mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), na.rm =T))
+my$mn_re_dw <- mn_re_dw
+
+mydwc <- my 
+
+
+```
+
+
+
 SALTA, SALTB in CM
 ```{r}
 my <- myd[!is.na(myd$dw),]
@@ -3153,7 +3181,7 @@ colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_dw_2", "dw_2", "re_dw_3", "dw_3"
 mn_dw <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), 
                                                   as.numeric(x[c( "re_dw","re_dw_2","re_dw_3","re_dw_4")]), na.rm = T))
 my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA
-mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")])))
+mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")])), na.rm = T)
 my$mn_re_dw <- mn_re_dw
 
 mydwc <- my 
