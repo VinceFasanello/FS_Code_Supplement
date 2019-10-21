@@ -2282,8 +2282,93 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 
 
 
+take a look at the rankings of the barcodes in all envs. 
+Salt
+```{r}
+mywidth <- 7
+myheight <- 7
+
+my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
 
 
+my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_SALTinSALT040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_SALTinSALT080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
+```
+
+
+Copr
+```{r}
+mywidth <- 7
+myheight <- 7
+
+my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off()
+
+
+my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_COPRinCOPR040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_COPRinCOPR080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my <- my[!is.na(my$mn_dw),]
+my <- my[order(my$mn_dw),]
+p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+  geom_bar (stat="identity")
+p
+pdf(file = "000_rank_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
+```
 
 
 
