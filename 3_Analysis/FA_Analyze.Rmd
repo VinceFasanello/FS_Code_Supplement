@@ -2215,158 +2215,158 @@ rm(myheight, mywidth, my, p)
 3d plots
 SALT first
 ```{R}
-library(plotly)
-Sys.setenv("plotly_username"="vincefasanello")
-Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
-
-# all treats -----------------------------------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="All Treatments"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_AllTreats_000_040_080");chart_link
-
-# specialists vs. generalists ------------------------------
-# eh0, eh0_40, eh40 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: low stress end"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH40_in_000_040_080");chart_link
-
-# eh40, eh40_80, eh80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: high stress end"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH40-80_EH80_in_000_040_080");chart_link
-
-# eh0, eh0_80, eh80 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),]  
-my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: full spectrum"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-80_EH80_in_000_040_080");chart_link
-
-
-# Shared mean, variable flux -------------------------------
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared mean with variable degree of flux around mean"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
-
-# Shared min, variable flux -------------------------------
-# eh0, eh0_40, eh0_80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared minimum with variable degree of flux up"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
-
-# # Shared max, variable flux -------------------------------
-# eh80, e40_80, eh0_80 -----------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared maximum with variable degree of flux down"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
-
-# variable mean (min, max), shared flux --------------------
-# eh0, eh40, eh80 ----------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialists with different means compared"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH40_EH80_in_000_040_080");chart_link
-
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="generalists with same flux degree, different means compared"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
-
-# ----------------------------
-rm(my, p)
+# library(plotly)
+# Sys.setenv("plotly_username"="vincefasanello")
+# Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
+# 
+# # all treats -----------------------------------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="All Treatments"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_AllTreats_000_040_080");chart_link
+# 
+# # specialists vs. generalists ------------------------------
+# # eh0, eh0_40, eh40 --------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: low stress end"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH40_in_000_040_080");chart_link
+# 
+# # eh40, eh40_80, eh80 ------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: high stress end"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH40-80_EH80_in_000_040_080");chart_link
+# 
+# # eh0, eh0_80, eh80 --------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),]  
+# my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: full spectrum"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-80_EH80_in_000_040_080");chart_link
+# 
+# 
+# # Shared mean, variable flux -------------------------------
+# # eh0_40, eh20_60, eh40_80 -------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared mean with variable degree of flux around mean"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
+# 
+# # Shared min, variable flux -------------------------------
+# # eh0, eh0_40, eh0_80 ------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared minimum with variable degree of flux up"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
+# 
+# # # Shared max, variable flux -------------------------------
+# # eh80, e40_80, eh0_80 -----------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared maximum with variable degree of flux down"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
+# 
+# # variable mean (min, max), shared flux --------------------
+# # eh0, eh40, eh80 ----------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialists with different means compared"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH40_EH80_in_000_040_080");chart_link
+# 
+# # eh0_40, eh20_60, eh40_80 -------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+# my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="generalists with same flux degree, different means compared"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
+# 
+# # ----------------------------
+# rm(my, p)
 ```
 
 COPR next
 ```{R}
-library(plotly)
-Sys.setenv("plotly_username"="vincefasanello")
-Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
-
-# all treats -----------------------------------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="All Treatments"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_AllTreats_000_040_080");chart_link
-
-# specialists vs. generalists ------------------------------
-# eh0, eh0_40, eh40 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: low stress end"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH40_in_000_040_080");chart_link
-
-# eh40, eh40_80, eh80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: high stress end"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH40-80_EH80_in_000_040_080");chart_link
-
-# eh0, eh0_80, eh80 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),]  
-my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: full spectrum"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-80_EH80_in_000_040_080");chart_link
-
-
-# Shared mean, variable flux -------------------------------
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared mean with variable degree of flux around mean"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
-
-# Shared min, variable flux -------------------------------
-# eh0, eh0_40, eh0_80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared minimum with variable degree of flux up"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
-
-# # Shared max, variable flux -------------------------------
-# eh80, e40_80, eh0_80 -----------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared maximum with variable degree of flux down"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
-
-# variable mean (min, max), shared flux --------------------
-# eh0, eh40, eh80 ----------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialists with different means compared"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH40_EH80_in_000_040_080");chart_link
-
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="generalists with same flux degree, different means compared"); p
-chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
-
-# ----------------------------
-rm(my, p)
+# library(plotly)
+# Sys.setenv("plotly_username"="vincefasanello")
+# Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
+# 
+# # all treats -----------------------------------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="All Treatments"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_AllTreats_000_040_080");chart_link
+# 
+# # specialists vs. generalists ------------------------------
+# # eh0, eh0_40, eh40 --------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: low stress end"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH40_in_000_040_080");chart_link
+# 
+# # eh40, eh40_80, eh80 ------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: high stress end"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH40-80_EH80_in_000_040_080");chart_link
+# 
+# # eh0, eh0_80, eh80 --------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),]  
+# my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialist vs. generalists: full spectrum"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-80_EH80_in_000_040_080");chart_link
+# 
+# 
+# # Shared mean, variable flux -------------------------------
+# # eh0_40, eh20_60, eh40_80 -------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared mean with variable degree of flux around mean"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
+# 
+# # Shared min, variable flux -------------------------------
+# # eh0, eh0_40, eh0_80 ------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared minimum with variable degree of flux up"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
+# 
+# # # Shared max, variable flux -------------------------------
+# # eh80, e40_80, eh0_80 -----------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="shared maximum with variable degree of flux down"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
+# 
+# # variable mean (min, max), shared flux --------------------
+# # eh0, eh40, eh80 ----------------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="specialists with different means compared"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH40_EH80_in_000_040_080");chart_link
+# 
+# # eh0_40, eh20_60, eh40_80 -------------
+# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+# my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+#   layout(title ="generalists with same flux degree, different means compared"); p
+# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
+# 
+# # ----------------------------
+# rm(my, p)
 ```
 
 
@@ -3652,5 +3652,896 @@ p_SALT_dec_000[is.nan(p_SALT_dec_000)] <- 1
 p_SALT_dec_040[is.nan(p_SALT_dec_040)] <- 1
 p_SALT_dec_080[is.nan(p_SALT_dec_080)] <- 1
 p_SALT_dec_120[is.nan(p_SALT_dec_120)] <- 1
+rm(my, myres, mytdata)
+```
+
+
+
+
+
+
+
+
+
+# COPR -------------------------------------------------------------------------
+# INCREASE -------------------------------------------------
+```{r}
+mytdata <- myCOPRin
+my <- matrix(nrow =2, ncol=2)
+myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(myCOPRin); rownames(myres) <- colnames(myres)
+
+# 0.0 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0"]
+my[1,2] <- myCOPRtot["EH0","0"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0"]
+my[2,2] <- myCOPRtot["EH40","0"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0"]
+my[1,2] <- myCOPRtot["EH40","0"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0"]
+my[1,2] <- myCOPRtot["EH80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0"]
+my[1,2] <- myCOPRtot["EH0_40","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0"]
+my[1,2] <- myCOPRtot["EH20_60","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0"]
+my[1,2] <- myCOPRtot["EH0_80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_inc_000 <- myres
+
+
+
+
+
+
+
+# 0.4 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.4"]
+my[1,2] <- myCOPRtot["EH0","0.4"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.4"]
+my[2,2] <- myCOPRtot["EH40","0.4"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.4"]
+my[1,2] <- myCOPRtot["EH40","0.4"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.4"]
+my[1,2] <- myCOPRtot["EH80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.4"]
+my[1,2] <- myCOPRtot["EH0_40","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.4"]
+my[1,2] <- myCOPRtot["EH20_60","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.4"]
+my[1,2] <- myCOPRtot["EH0_80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_inc_040 <- myres
+
+
+
+
+
+
+
+
+
+# 0.8 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.8"]
+my[1,2] <- myCOPRtot["EH0","0.8"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.8"]
+my[2,2] <- myCOPRtot["EH40","0.8"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.8"]
+my[1,2] <- myCOPRtot["EH40","0.8"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.8"]
+my[1,2] <- myCOPRtot["EH80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.8"]
+my[1,2] <- myCOPRtot["EH0_40","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.8"]
+my[1,2] <- myCOPRtot["EH20_60","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.8"]
+my[1,2] <- myCOPRtot["EH0_80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_inc_080 <- myres
+
+
+
+
+
+
+
+
+
+# 1.2 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "1.2"]
+my[1,2] <- myCOPRtot["EH0","1.2"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","1.2"]
+my[2,2] <- myCOPRtot["EH40","1.2"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "1.2"]
+my[1,2] <- myCOPRtot["EH40","1.2"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "1.2"]
+my[1,2] <- myCOPRtot["EH80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "1.2"]
+my[1,2] <- myCOPRtot["EH0_40","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "1.2"]
+my[1,2] <- myCOPRtot["EH20_60","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "1.2"]
+my[1,2] <- myCOPRtot["EH0_80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_inc_120 <- myres
+
+# ----------
+p_COPR_inc_000[is.nan(p_COPR_inc_000)] <- 1
+p_COPR_inc_040[is.nan(p_COPR_inc_040)] <- 1
+p_COPR_inc_080[is.nan(p_COPR_inc_080)] <- 1
+p_COPR_inc_120[is.nan(p_COPR_inc_120)] <- 1
+rm(my, myres, mytdata)
+```
+
+
+
+# DECREASE -------------------------------------------------
+```{r}
+mytdata <- myCOPRdec
+my <- matrix(nrow =2, ncol=2)
+myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(myCOPRin); rownames(myres) <- colnames(myres)
+
+# 0.0 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0"]
+my[1,2] <- myCOPRtot["EH0","0"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0"]
+my[2,2] <- myCOPRtot["EH40","0"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0"]
+my[1,2] <- myCOPRtot["EH40","0"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0"]
+my[1,2] <- myCOPRtot["EH80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0"]
+my[1,2] <- myCOPRtot["EH0_40","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0"]
+my[1,2] <- myCOPRtot["EH20_60","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0"]
+my[1,2] <- myCOPRtot["EH0_80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_dec_000 <- myres
+
+
+
+
+
+
+
+# 0.4 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.4"]
+my[1,2] <- myCOPRtot["EH0","0.4"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.4"]
+my[2,2] <- myCOPRtot["EH40","0.4"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.4"]
+my[1,2] <- myCOPRtot["EH40","0.4"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.4"]
+my[1,2] <- myCOPRtot["EH80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.4"]
+my[1,2] <- myCOPRtot["EH0_40","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.4"]
+my[1,2] <- myCOPRtot["EH20_60","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.4"]
+my[1,2] <- myCOPRtot["EH0_80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_dec_040 <- myres
+
+
+
+
+
+
+
+
+
+# 0.8 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.8"]
+my[1,2] <- myCOPRtot["EH0","0.8"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.8"]
+my[2,2] <- myCOPRtot["EH40","0.8"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.8"]
+my[1,2] <- myCOPRtot["EH40","0.8"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.8"]
+my[1,2] <- myCOPRtot["EH80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.8"]
+my[1,2] <- myCOPRtot["EH0_40","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.8"]
+my[1,2] <- myCOPRtot["EH20_60","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.8"]
+my[1,2] <- myCOPRtot["EH0_80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_dec_080 <- myres
+
+
+
+
+
+
+
+
+
+# 1.2 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "1.2"]
+my[1,2] <- myCOPRtot["EH0","1.2"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","1.2"]
+my[2,2] <- myCOPRtot["EH40","1.2"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "1.2"]
+my[1,2] <- myCOPRtot["EH40","1.2"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "1.2"]
+my[1,2] <- myCOPRtot["EH80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "1.2"]
+my[1,2] <- myCOPRtot["EH0_40","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "1.2"]
+my[1,2] <- myCOPRtot["EH20_60","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "1.2"]
+my[1,2] <- myCOPRtot["EH0_80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_COPR_dec_120 <- myres
+
+# ----------
+p_COPR_dec_000[is.nan(p_COPR_dec_000)] <- 1
+p_COPR_dec_040[is.nan(p_COPR_dec_040)] <- 1
+p_COPR_dec_080[is.nan(p_COPR_dec_080)] <- 1
+p_COPR_dec_120[is.nan(p_COPR_dec_120)] <- 1
 rm(my, myres, mytdata)
 ```
