@@ -388,341 +388,7 @@ rm(my, p, myc, myheight, myhighlight, mypalette, myptalpha, mys, mystroke,
 
 
 
-Test for fitness increase SALT
-```{r}
-# BLOCK NOTES ------------------------------------------------------------------
-#  - Fitness increase data: analyze by groups externally & use in later blocks
-#  - Fitness decrease data: analyze by groups externally & use in later blocks
-#  - nleft data: use in later blocks
-#  - env specific data frames: use in later blocks
-# ------------------------------------------------------------------------------
 
-mysig <- 0.05
-
-# SALT RESULTS OUTPUT TABLES ---------------------------------------------------
-mySALTin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
-mySALTdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
-rownames(mySALTin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-rownames(mySALTdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-colnames(mySALTin) <- c(0.0, 0.4, 0.8, 1.2)
-colnames(mySALTdec) <- c(0.0, 0.4, 0.8, 1.2)
-mySALTno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
-
-
-
-# SALT in CM -------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0 & !is.na(my$dw),]
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_000.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_SALT_000 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,1] <- nrow(tmp)
-
-
-
- # SALT in 40 ------------------------------------------------------------------
-my <- myd[order(myd$bcpID),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_040.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_SALT_040 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,2] <- nrow(tmp)
-
-
-
-# SALT in 80 -------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_080.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_SALT_080 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,3] <- nrow(tmp)
-
-
-
-# SALT in 120 ------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_120.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_SALT_120 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];mySALTdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];mySALTdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];mySALTdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,4] <- nrow(tmp)
-
-
-# ----------------------------
-mySALTnleft <- mySALTno  # give a clearer name. 
-rm(my, mymod, myres, tmp, i, mysig, mySALTno)
-```
-<br/><br/>
-
-
-
-Test for fitness increase COPR
-```{r}
-# BLOCK NOTES ------------------------------------------------------------------
-#  - Fitness increase data: analyze by groups externally & use in later blocks
-#  - Fitness decrease data: analyze by groups externally & use in later blocks
-#  - nleft data: use in later blocks
-#  - env specific data frames: use in later blocks
-# ------------------------------------------------------------------------------
-
-mysig <- 0.05
-
-# COPR RESULTS OUTPUT TABLES ---------------------------------------------------
-myCOPRin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
-myCOPRdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
-rownames(myCOPRin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-rownames(myCOPRdec) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-colnames(myCOPRin) <- c(0.0, 0.4, 0.8, 1.2)
-colnames(myCOPRdec) <- c(0.0, 0.4, 0.8, 1.2)
-myCOPRno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
-
-
-
-# COPR in CM -------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0 & !is.na(my$dw),]
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_000.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_COPR_000 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,1] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,1] <- nrow(tmp)
-
-
-
- # COPR in 40 ------------------------------------------------------------------
-my <- myd[order(myd$bcpID),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_040.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_COPR_040 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,2] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,2] <- nrow(tmp)
-
-
-
-# COPR in 80 -------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_080.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_COPR_080 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,3] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,3] <- nrow(tmp)
-
-
-
-# COPR in 120 ------------------------------------------------------------------
-my <- myd[order(myd$bcpID),] 
-my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
-
-# model & diagnostic plots ---------------------------------
-mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
-# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
-
-# model output ---------------------------------------------
-# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_120.html") # table does not have corrected p-values. 
-
-# create results dataframe ---------------------------------
-myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
-myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
-myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
-myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
-myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
-myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
-myres$treat <- NA
-for (i in 1:length(myres$treat)) {
-  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
-}
-inc_COPR_120 <- myres
-
-# populate mats --------------------------------------------
-tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,4] <- nrow(tmp)
-tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,4] <- nrow(tmp)
-
-
-# ----------------------------
-myCOPRnleft <- myCOPRno  # give a clearer name. 
-rm(my, mymod, myres, tmp, i, mysig, myCOPRno)
-```
-<br/><br/>
 
 
 
@@ -1547,8 +1213,19 @@ mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "re_dw", "re_dw_2", "r
 my$mn_re_dw <- mn_re_dw # assign
 mydwc <- my # name frame
 
+# While we are at it lets make a wide version as well, this will be needed later.
+my <- mydwc
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]
+my80 <- my[my$mpasp == 0.8,]
+my120 <- my[my$mpasp == 1.2,]
+sum(my0$bcpID != my40$bcpID)
+my <- cbind(my0, my40$mn_dw, my40$mn_re_dw, my80$mn_dw, my80$mn_re_dw, my120$mn_dw, my120$mn_re_dw)
+colnames(my)[c(23:30)] <- c("mn_dw_0", "mn_re_dw_0","mn_dw_40", "mn_re_dw_40", "mn_dw_80", "mn_re_dw_80", "mn_dw_120", "mn_re_dw_120")
+mydwcw <- my
+
 # ------------------
-rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw)
+rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120)
 ```
 
 
@@ -2276,7 +1953,8 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------------------------------------------------------------------
 
 # ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+rm(my, myx, myy, myr, myc, myptsize, p, mymod, myfill, myheight, myhighlim, mylowlim, mymeanptsize, myoutline, mypalette, myptalpha, myrugalpha,
+   mytextsize, mytitle, mywidth, mywtmeanptcol, mywtmeanpttype, myxlab, myylab)
 ```
 
 
@@ -2285,19 +1963,23 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 take a look at the rankings of the barcodes in all envs. 
 Salt
 ```{r}
+# Set controls for all plots ---------------------------------------------------
 mywidth <- 7
 myheight <- 7
 
-my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
+# SALT in CM -------------------------------------------------------------------
+my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
+my <- my[!is.na(my$mn_dw),] # rm NAs
+my <- my[order(my$mn_dw),] # sort so the plot looks good
 p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
+  geom_bar (stat="identity") # plot
+p # view plot
+pdf(file = "000_rank_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
 
 
+
+# SALT in SALT 040 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2307,6 +1989,9 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
 p
 pdf(file = "000_rank_SALTinSALT040.pdf", width = mywidth, height = myheight); p; dev.off()
 
+
+
+# SALT in SALT 080 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2316,6 +2001,9 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
 p
 pdf(file = "000_rank_SALTinSALT080.pdf", width = mywidth, height = myheight); p; dev.off()
 
+
+
+# SALT in SALT 120 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2329,19 +2017,23 @@ pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p;
 
 Copr
 ```{r}
+# Set controls for all plots ---------------------------------------------------
 mywidth <- 7
 myheight <- 7
 
-my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
+# COPR in CM -------------------------------------------------------------------
+my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
+my <- my[!is.na(my$mn_dw),] # rm NAs
+my <- my[order(my$mn_dw),] # sort so the plot looks good
 p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off()
+  geom_bar (stat="identity") # plot
+p # view plot
+pdf(file = "000_rank_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
 
 
+
+# COPR in COPR 040 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2351,6 +2043,9 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
 p
 pdf(file = "000_rank_COPRinCOPR040.pdf", width = mywidth, height = myheight); p; dev.off()
 
+
+
+# COPR in COPR 080 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2360,6 +2055,9 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
 p
 pdf(file = "000_rank_COPRinCOPR080.pdf", width = mywidth, height = myheight); p; dev.off()
 
+
+
+# COPR in COPR 120 -------------------------------------------------------------
 my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my <- my[!is.na(my$mn_dw),]
@@ -2368,719 +2066,725 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
   geom_bar (stat="identity")
 p
 pdf(file = "000_rank_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# ----------------------------
+rm(myheight, mywidth, my, p)
+```
+
+
+
+Now for some pairs plots
+SALT first. 
+```{R}
+# Set controls for all plots ---------------------------------------------------
+mywidth <- 8
+myheight <- mywidth
+
+# ALL ------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
+pdf(file = "000_pairs_SALT_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# specialist vs. generalists: low stress end ---------------
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
+pdf(file = "000_pairs_SALT_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# specialist vs. generalists: full spectrum ----------------
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
+pdf(file = "000_pairs_SALT_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
+pdf(file = "000_pairs_SALT_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
+pdf(file = "000_pairs_SALT_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
+pdf(file = "000_pairs_SALT_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
+pdf(file = "000_pairs_SALT_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
+pdf(file = "000_pairs_SALT_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
+pdf(file = "000_pairs_SALT_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# rm -------------------------
+rm(myheight, mywidth, my, p)
+```
+
+
+COPR first. 
+```{R}
+# Set controls for all plots ---------------------------------------------------
+mywidth <- 8
+myheight <- mywidth
+
+# ALL ------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
+pdf(file = "000_pairs_COPR_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# specialist vs. generalists: low stress end ---------------
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
+pdf(file = "000_pairs_COPR_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# specialist vs. generalists: full spectrum ----------------
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
+pdf(file = "000_pairs_COPR_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
+pdf(file = "000_pairs_COPR_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
+pdf(file = "000_pairs_COPR_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
+pdf(file = "000_pairs_COPR_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
+pdf(file = "000_pairs_COPR_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
+pdf(file = "000_pairs_COPR_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
+pdf(file = "000_pairs_COPR_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+
+# rm -------------------------
+rm(myheight, mywidth, my, p)
 ```
 
 
 
 
+3d plots
+SALT first
+```{R}
+library(plotly)
+Sys.setenv("plotly_username"="vincefasanello")
+Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
+
+# all treats -----------------------------------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="All Treatments"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_AllTreats_000_040_080");chart_link
+
+# specialists vs. generalists ------------------------------
+# eh0, eh0_40, eh40 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: low stress end"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH40_in_000_040_080");chart_link
+
+# eh40, eh40_80, eh80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: high stress end"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH40-80_EH80_in_000_040_080");chart_link
+
+# eh0, eh0_80, eh80 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),]  
+my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: full spectrum"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-80_EH80_in_000_040_080");chart_link
+
+
+# Shared mean, variable flux -------------------------------
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared mean with variable degree of flux around mean"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
+
+# Shared min, variable flux -------------------------------
+# eh0, eh0_40, eh0_80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared minimum with variable degree of flux up"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
+
+# # Shared max, variable flux -------------------------------
+# eh80, e40_80, eh0_80 -----------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared maximum with variable degree of flux down"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
+
+# variable mean (min, max), shared flux --------------------
+# eh0, eh40, eh80 ----------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialists with different means compared"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH40_EH80_in_000_040_080");chart_link
+
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
+my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="generalists with same flux degree, different means compared"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
+
+# ----------------------------
+rm(my, p)
+```
+
+COPR next
+```{R}
+library(plotly)
+Sys.setenv("plotly_username"="vincefasanello")
+Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
+
+# all treats -----------------------------------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="All Treatments"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_AllTreats_000_040_080");chart_link
+
+# specialists vs. generalists ------------------------------
+# eh0, eh0_40, eh40 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: low stress end"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH40_in_000_040_080");chart_link
+
+# eh40, eh40_80, eh80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: high stress end"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH40-80_EH80_in_000_040_080");chart_link
+
+# eh0, eh0_80, eh80 --------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),]  
+my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialist vs. generalists: full spectrum"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-80_EH80_in_000_040_080");chart_link
+
+
+# Shared mean, variable flux -------------------------------
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared mean with variable degree of flux around mean"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
+
+# Shared min, variable flux -------------------------------
+# eh0, eh0_40, eh0_80 ------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared minimum with variable degree of flux up"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
+
+# # Shared max, variable flux -------------------------------
+# eh80, e40_80, eh0_80 -----------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="shared maximum with variable degree of flux down"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
+
+# variable mean (min, max), shared flux --------------------
+# eh0, eh40, eh80 ----------------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="specialists with different means compared"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH40_EH80_in_000_040_080");chart_link
+
+# eh0_40, eh20_60, eh40_80 -------------
+my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
+my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+  layout(title ="generalists with same flux degree, different means compared"); p
+chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
+
+# ----------------------------
+rm(my, p)
+```
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Test for fitness increase SALT
 ```{r}
-mydata <- mycollapsed[mycollapsed$epo %in% c("SALT_A", "SALT_B"),]
-myspread <- matrix(nrow = 7, ncol = 36)
-colnames(myspread) <- c("tot_0.0", "ext_0.0",  "ext_p_0.0","inc_0.0", "inc_p_0.0", "dec_0.0", "dec_p_0.0", "unc_0.0", "unc_p_0.0",
-                        "tot_0.4", "ext_0.4",  "ext_p_0.4","inc_0.4", "inc_p_0.4", "dec_0.4", "dec_p_0.4", "unc_0.4", "unc_p_0.4",
-                        "tot_0.8", "ext_0.8",  "ext_p_0.8","inc_0.8", "inc_p_0.8", "dec_0.8", "dec_p_0.8", "unc_0.8", "unc_p_0.8",
-                        "tot_1.2", "ext_1.2",  "ext_p_1.2","inc_1.2", "inc_p_1.2", "dec_1.2", "dec_p_1.2", "unc_1.2", "unc_p_1.2")
-rownames(myspread) <- rownames(mySALTin)
+# BLOCK NOTES ------------------------------------------------------------------
+#  - Fitness increase data: analyze by groups externally & use in later blocks
+#  - Fitness decrease data: analyze by groups externally & use in later blocks
+#  - nleft data: use in later blocks
+#  - env specific data frames: use in later blocks
+# ------------------------------------------------------------------------------
 
-# EH0 --------------------------------------------------------------------------
-mytreat <- "EH0"
-mywritereadrow <- 1
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+mysig <- 0.05
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# SALT RESULTS OUTPUT TABLES ---------------------------------------------------
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+mySALTin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
+mySALTdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
+mySALTno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
+mySALTtot <- matrix(nrow = 7, ncol = 4) # number of barcodes included in the treatment
+rownames(mySALTin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mySALTdec) <- rownames(mySALTin)
+rownames(mySALTno) <- rownames(mySALTin)
+rownames(mySALTtot) <- rownames(mySALTin)
+colnames(mySALTin) <- c(0.0, 0.4, 0.8, 1.2)
+colnames(mySALTdec) <- colnames(mySALTin)
+colnames(mySALTno) <- colnames(mySALTin)
+colnames(mySALTtot) <- colnames(mySALTin)
 
 
 
+# SALT in CM -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
+mySALTtot[,c(1:4)] <- table(my$treat)/4
+my <- my[!is.na(my$dw),]
+
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_000.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_SALT_000 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,1] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,1] <- nrow(tmp)
 
 
 
-# EH40 --------------------------------------------------------------------------
-mytreat <- "EH40"
-mywritereadrow <- 2
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH40, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+ # SALT in 40 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_040.html") # table does not have corrected p-values. 
 
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_SALT_040 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,2] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,2] <- nrow(tmp)
 
 
 
+# SALT in 80 -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
+
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_080.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_SALT_080 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,3] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,3] <- nrow(tmp)
 
 
 
-# EH80 --------------------------------------------------------------------------
-mytreat <- "EH80"
-mywritereadrow <- 3
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+# SALT in 120 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "salt_inc_120.html") # table does not have corrected p-values. 
 
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_SALT_120 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];mySALTdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[1,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[1,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];mySALTdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[2,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[2,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];mySALTdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[3,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[3,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];mySALTdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[4,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[4,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];mySALTdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[5,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[5,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];mySALTdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[6,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[6,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];mySALTdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); mySALTin[7,4] <- sum(tmp$p1s_h.adj <= mysig); mySALTno[7,4] <- nrow(tmp)
 
 
+# ----------------------------
+mySALTnleft <- mySALTno; rm(mySALTno)  # give a clearer name. 
+mySALText <- mySALTtot - mySALTnleft; rm(mySALTnleft) # now subtract from tot to get n extinct in each treat
+mySALTunc <- mySALTtot - (mySALTdec + mySALTin + mySALText)
 
-
-
-
-# EH0_40 --------------------------------------------------------------------------
-mytreat <- "EH0_40"
-mywritereadrow <- 4
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0_40, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH20_60 --------------------------------------------------------------------------
-mytreat <- "EH20_60"
-mywritereadrow <- 5
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH20_60, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH0_80 --------------------------------------------------------------------------
-mytreat <- "EH0_80"
-mywritereadrow <- 6
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0_80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH40_80 --------------------------------------------------------------------------
-mytreat <- "EH40_80"
-mywritereadrow <- 7
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,1] # number that increase
-z <- mySALTdec[mywritereadrow,1] # number that decrease
-a <- mySALTmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH40_80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,2] # number that increase
-z <- mySALTdec[mywritereadrow,2] # number that decrease
-a <- mySALTmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,3] # number that increase
-z <- mySALTdec[mywritereadrow,3] # number that decrease
-a <- mySALTmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- mySALTin[mywritereadrow,4] # number that increase
-z <- mySALTdec[mywritereadrow,4] # number that decrease
-a <- mySALTmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-mySALTspread <- myspread
+# ----------------------------
+rm(inc_SALT_000, inc_SALT_040, inc_SALT_080, inc_SALT_120) # uncomment if you want to retain these results. 
+rm(my, mymod, myres, tmp, i, mysig)
 ```
+<br/><br/>
 
 
+
+Test for fitness increase COPR
 ```{r}
-mydata <- mycollapsed[mycollapsed$epo %in% c("COPR_A", "COPR_B"),]
-myspread <- matrix(nrow = 7, ncol = 36)
-colnames(myspread) <- c("tot_0.0", "ext_0.0",  "ext_p_0.0","inc_0.0", "inc_p_0.0", "dec_0.0", "dec_p_0.0", "unc_0.0", "unc_p_0.0",
-                        "tot_0.4", "ext_0.4",  "ext_p_0.4","inc_0.4", "inc_p_0.4", "dec_0.4", "dec_p_0.4", "unc_0.4", "unc_p_0.4",
-                        "tot_0.8", "ext_0.8",  "ext_p_0.8","inc_0.8", "inc_p_0.8", "dec_0.8", "dec_p_0.8", "unc_0.8", "unc_p_0.8",
-                        "tot_1.2", "ext_1.2",  "ext_p_1.2","inc_1.2", "inc_p_1.2", "dec_1.2", "dec_p_1.2", "unc_1.2", "unc_p_1.2")
-rownames(myspread) <- rownames(myCOPRin)
+# BLOCK NOTES ------------------------------------------------------------------
+#  - Fitness increase data: analyze by groups externally & use in later blocks
+#  - Fitness decrease data: analyze by groups externally & use in later blocks
+#  - nleft data: use in later blocks
+#  - env specific data frames: use in later blocks
+# ------------------------------------------------------------------------------
 
-# EH0 --------------------------------------------------------------------------
-mytreat <- "EH0"
-mywritereadrow <- 1
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+mysig <- 0.05
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# COPR RESULTS OUTPUT TABLES ---------------------------------------------------
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+myCOPRin <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant increase
+myCOPRdec <- matrix(nrow = 7, ncol = 4) # number of barcodes with significant decrease
+myCOPRno <- matrix(nrow = 7, ncol = 4) # number of barcodes non-extinct
+myCOPRtot <- matrix(nrow = 7, ncol = 4) # number of barcodes included in the treatment
+rownames(myCOPRin) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(myCOPRdec) <- rownames(myCOPRin)
+rownames(myCOPRno) <- rownames(myCOPRin)
+rownames(myCOPRtot) <- rownames(myCOPRin)
+colnames(myCOPRin) <- c(0.0, 0.4, 0.8, 1.2)
+colnames(myCOPRdec) <- colnames(myCOPRin)
+colnames(myCOPRno) <- colnames(myCOPRin)
+colnames(myCOPRtot) <- colnames(myCOPRin)
 
 
 
+# COPR in CM -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
+myCOPRtot[,c(1:4)] <- table(my$treat)/4
+my <- my[!is.na(my$dw),]
+
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_000.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_COPR_000 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,1] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,1] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,1] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,1] <- nrow(tmp)
 
 
 
-# EH40 --------------------------------------------------------------------------
-mytreat <- "EH40"
-mywritereadrow <- 2
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH40, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+ # COPR in 40 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.4 & !is.na(my$dw),] 
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_040.html") # table does not have corrected p-values. 
 
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_COPR_040 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,2] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,2] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,2] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,2] <- nrow(tmp)
 
 
 
+# COPR in 80 -------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.8 & !is.na(my$dw),] 
+
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
+
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_080.html") # table does not have corrected p-values. 
+
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_COPR_080 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,3] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,3] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,3] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,3] <- nrow(tmp)
 
 
 
-# EH80 --------------------------------------------------------------------------
-mytreat <- "EH80"
-mywritereadrow <- 3
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
+# COPR in 120 ------------------------------------------------------------------
+my <- myd[order(myd$bcpID),] 
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 1.2 & !is.na(my$dw),] 
 
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model & diagnostic plots ---------------------------------
+mymod <- lm(my$dw ~ my$bcpID + 0, weights = my$re_dw); # summary(mymod)
+# hist(residuals(mymod), breaks = 100); hist(expand_residuals(mymod, my$re_dw), breaks = 100); plot(mymod)
 
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# model output ---------------------------------------------
+# tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = "copr_inc_120.html") # table does not have corrected p-values. 
 
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
+# create results dataframe ---------------------------------
+myres <- as.data.frame(coef(summary(mymod)), stringsAsFactors = F)
+myres$p1s_l <- pt(coef(summary(mymod))[, 3], mymod$df, lower = T) # one-sided test p-values for lower
+myres$p1s_h <- pt(coef(summary(mymod))[, 3], mymod$df, lower = F) # one-sided test p-values for higher
+myres$p1s_l.adj <- p.adjust(myres$p1s_l, method = "fdr") # fdr adjusted p value (for 1-sided lower)
+myres$p1s_h.adj <- p.adjust(myres$p1s_h, method = "fdr") # fdr adjusted p value (for 1-sided higher)
+myres$bcid <-  gsub("^.*?D","",rownames(myres)) # fix barcode id names
+myres$treat <- NA
+for (i in 1:length(myres$treat)) {
+  myres$treat[i] <- as.character(my$treat)[my$bcpID == myres$bcid[i]][1]
+}
+inc_COPR_120 <- myres
+
+# populate mats --------------------------------------------
+tmp <- myres[myres$treat == "EH0",];myCOPRdec[1,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[1,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[1,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40",];myCOPRdec[2,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[2,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[2,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH80",];myCOPRdec[3,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[3,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[3,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_40",];myCOPRdec[4,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[4,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[4,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH20_60",];myCOPRdec[5,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[5,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[5,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH0_80",];myCOPRdec[6,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[6,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[6,4] <- nrow(tmp)
+tmp <- myres[myres$treat == "EH40_80",];myCOPRdec[7,4] <- sum(tmp$p1s_l.adj <= mysig); myCOPRin[7,4] <- sum(tmp$p1s_h.adj <= mysig); myCOPRno[7,4] <- nrow(tmp)
 
 
+# ----------------------------
+myCOPRnleft <- myCOPRno; rm(myCOPRno)  # give a clearer name. 
+myCOPRext <- myCOPRtot - myCOPRnleft; rm(myCOPRnleft) # now subtract from tot to get n extinct in each treat
+myCOPRunc <- myCOPRtot - (myCOPRdec + myCOPRin + myCOPRext)
 
-
-
-
-# EH0_40 --------------------------------------------------------------------------
-mytreat <- "EH0_40"
-mywritereadrow <- 4
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0_40, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH20_60 --------------------------------------------------------------------------
-mytreat <- "EH20_60"
-mywritereadrow <- 5
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH20_60, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH0_80 --------------------------------------------------------------------------
-mytreat <- "EH0_80"
-mywritereadrow <- 6
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH0_80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-
-
-
-
-
-# EH40_80 --------------------------------------------------------------------------
-mytreat <- "EH40_80"
-mywritereadrow <- 7
-# 0.0----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.0 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,1] # number that increase
-z <- myCOPRdec[mywritereadrow,1] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,1]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 1:9] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-paste0("EH40_80, 0.0")
-paste0("total n = ", x)
-paste0("n extinct = ", a, ", ", "(", a/x, ")")
-paste0("n increase = ", y, ", ", "(", y/x, ")")
-paste0("n decrease = ", z, ", ", "(", z/x, ")")
-paste0("n unchnaged = ", b, ", ", "(", b/x, ")")
-
-# 0.4----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.4 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,2] # number that increase
-z <- myCOPRdec[mywritereadrow,2] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,2]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 10:18] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 0.8----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 0.8 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,3] # number that increase
-z <- myCOPRdec[mywritereadrow,3] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,3]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 19:27] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-# 1.2----------------------------------------------------------
-x <- nrow(mydata[mydata$mpasp == 1.2 & mydata$treat == mytreat,]) # total number of barcodes
-y <- myCOPRin[mywritereadrow,4] # number that increase
-z <- myCOPRdec[mywritereadrow,4] # number that decrease
-a <- myCOPRmatsum[mywritereadrow,4]# number that become extinct by the end of the generation 500 fit assay
-b <- x - (y + z + a)# number unchanged in fitness
-myspread[mywritereadrow, 28:36] <- c(x, a, a/x, y, y/x, z, z/x, b, b/x)
-
-myCOPRspread <- myspread
+# ----------------------------
+rm(inc_COPR_000, inc_COPR_040, inc_COPR_080, inc_COPR_120) # uncomment if you want to retain these results. 
+rm(my, mymod, myres, tmp, i, mysig)
 ```
+<br/><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # lets take a look at extinction in salt...
 ```{R}
@@ -3096,179 +2800,7 @@ myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
 
 
 
-Need to collapse replicates for the pairs plots...
-```{R}
-my <- myd
-my <- my[,c(1:7, 83:88, 112, 123, 126)]
-my1 <- my[my$mpar == 1,]
-my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2")
-my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3")
-my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4")
-my <- cbind(my1, my2$re_dw_2, my2$dw_2, my3$re_dw_3, my3$dw_3, my4$re_dw_4, my4$dw_4)
-colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_dw_2", "dw_2", "re_dw_3", "dw_3", "re_dw_4", "dw_4")
-mn_dw <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")]), 
-                                                  as.numeric(x[c( "re_dw","re_dw_2","re_dw_3","re_dw_4")]), na.rm = T))
-my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA
-mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "dw", "dw_2", "dw_3", "dw_4")])), na.rm = T)
-my$mn_re_dw <- mn_re_dw
 
-mydwc <- my 
-
-# now lets make a wide version as well.
-my <- mydwc
-my0 <- my[my$mpasp == 0.0,]
-my40 <- my[my$mpasp == 0.4,]
-my80 <- my[my$mpasp == 0.8,]
-my120 <- my[my$mpasp == 1.2,]
-sum(my0$bcpID != my40$bcpID)
-my <- cbind(my0, my40$mn_dw, my40$mn_re_dw, my80$mn_dw, my80$mn_re_dw, my120$mn_dw, my120$mn_re_dw)
-colnames(my)[c(23:30)] <- c("mn_dw_0", "mn_re_dw_0","mn_dw_40", "mn_re_dw_40", "mn_dw_80", "mn_re_dw_80", "mn_dw_120", "mn_re_dw_120")
-
-mydwcw <- my
-```
-
-
-Now for some pairs plots
-```{R}
-mywidth <- 8
-myheight <- mywidth
-
-my <- mydwcw
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-levels(my$treat) <- relevel
-ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
-
-my <- mydwcw
-my <- my[,c("treat", "mn_dw_0", "mn_dw_120")]
-levels(my$treat) <- relevel
-ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
-
-
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
-pdf(file = "EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
-pdf(file = "EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
-my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
-pdf(file = "EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
-pdf(file = "EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
-pdf(file = "EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
-pdf(file = "EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
-pdf(file = "EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
-pdf(file = "EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-
-
-```
-
-
-3d plots
-```{R}
-library(plotly)
-
-
-Sys.setenv("plotly_username"="vincefasanello")
-Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
-
-# all treats -----------------------------------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="All Treatments"); p
-chart_link = api_create(p, filename="FS_scatter3d_AllTreats_000_040_080");chart_link
-
-# specialists vs. generalists ------------------------------
-# eh0, eh0_40, eh40 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: low stress end"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-40_EH40_in_000_040_080");chart_link
-
-# eh40, eh40_80, eh80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: high stress end"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH40_EH40-80_EH80_in_000_040_080");chart_link
-
-# eh0, eh0_80, eh80 --------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialist vs. generalists: full spectrum"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-80_EH80_in_000_040_080");chart_link
-
-
-# Shared mean, variable flux -------------------------------
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared mean with variable degree of flux around mean"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
-
-# Shared min, variable flux -------------------------------
-# eh0, eh0_40, eh0_80 ------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared minimum with variable degree of flux up"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
-
-# # Shared max, variable flux -------------------------------
-# eh80, e40_80, eh0_80 -----------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="shared maximum with variable degree of flux down"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
-
-# variable mean (min, max), shared flux --------------------
-# eh0, eh40, eh80 ----------------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="specialists with different means compared"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH0_EH40_EH80_in_000_040_080");chart_link
-
-# eh0_40, eh20_60, eh40_80 -------------
-my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80),] 
-my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
-  layout(title ="generalists with same flux degree, different means compared"); p
-chart_link = api_create(p, filename="FS_scatter3d_EH0_EH40_EH80_in_000_040_080");chart_link
-
-
-
-```
 
 
 
@@ -3282,57 +2814,6 @@ chart_link = api_create(p, filename="FS_scatter3d_EH0_EH40_EH80_in_000_040_080")
 
 # 0, 0_40, 40 (in .00, .40, .80. 1.20)
 ```{r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH40"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH40"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH40"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH40"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -3453,57 +2934,6 @@ fisher.test(x = my[c(3,1),], alternative = "g") # 40 > 0
 
 # 0, 0_80, 80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -3619,57 +3049,6 @@ fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_80
 
 # 40, 40_80, 80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH40_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH40_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH40_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH40_80", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -3784,57 +3163,6 @@ fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80?
 
 # 40, 20_60, 40_80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -3931,57 +3259,6 @@ fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
 
 # 0, 0_40, 0_80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -4079,57 +3356,6 @@ fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
 
 # 80, 40_80, 0_80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -4226,57 +3452,6 @@ fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
 
 # 0, 40, 80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH40", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH40", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH40", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0", "EH40", "EH80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -4373,57 +3548,6 @@ fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 80
 
 # 0_40, 20_60, 40_80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
@@ -4522,57 +3646,6 @@ fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
 
 # 0_40, 20_60, 40_80
 ``` {r}
-# TREAT EFFECTS ------------------------------------------------------------------------------------
-# IN 0.00 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH40", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.40 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH40", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 0.80 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH40", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# IN 1.20 ----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),]
-my <- my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B") & my$treat %in% c("EH0_40", "EH40", "EH40_80"),]
-my$treat <- drop.levels(my$treat);my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# --------------------------------------------------------------------------------------------------
-
-
 # Fishers exact tests ------------------------------------------------------------------------------
 # 0.00 -------------------------------------------------------------------------
 # 0.00 -- EXTINCT
