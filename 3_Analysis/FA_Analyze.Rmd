@@ -2737,14 +2737,25 @@ rm(my, mymod, myres, tmp, i, mysig)
 
 # lets take a look at extinction in salt...without any stats tests. We will look at this in more depth in the longitudinal data (either as extinciton or fixation)
 ```{R}
-my <- mySALTspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
-my <- mySALTspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
-myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
-colnames(myres) <- c("ext_n", "ext_se", "ext_p")
-myres[,1] <- apply(my, 1, mean)
-myres[,2] <- apply(my, 1, sjstats::se)
-myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
+# need to rewrite this SECTION!
 
+
+# my <- mySALTspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
+# my <- mySALTspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
+# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
+# colnames(myres) <- c("ext_n", "ext_se", "ext_p")
+# myres[,1] <- apply(my, 1, mean)
+# myres[,2] <- apply(my, 1, sjstats::se)
+# myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
+# 
+# 
+# my <- myCOPRspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
+# my <- myCOPRspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
+# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
+# colnames(myres) <- c("ext_n", "ext_se", "ext_p")
+# myres[,1] <- apply(my, 1, mean)
+# myres[,2] <- apply(my, 1, sjstats::se)
+# myres[,3] <- myres[,1] / myCOPRspread[,"tot_0.0"]
 ```
 
 
@@ -2760,33 +2771,34 @@ myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
 Now there are many many tedious comparisons that must be drawn between the treatments in different environments....
 this will be 17 tests X 4 environments X 2 variables X 2 chemicals = 272 tests....
 I will write these tests here...but I am hesitant to copy the results down by hand again...Lets just get the code down in case we need it later.
-```{r}
+
 # SALT -------------------------------------------------------------------------
 # INCREASE -------------------------------------------------
+```{r}
 mytdata <- mySALTin
 my <- matrix(nrow =2, ncol=2)
+myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(mySALTin); rownames(myres) <- colnames(myres)
 
 # 0.0 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0"]
 my[1,2] <- mySALTtot["EH0","0"] - my[1,1]
-
 # 40 ---------------
 my[2,1] <- mytdata["EH40","0"]
 my[2,2] <- mySALTtot["EH40","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 80 ---------------
 my[2,1] <- mytdata["EH80","0"]
 my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_40 -------------
 my[2,1] <- mytdata["EH0_40","0"]
 my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_80 -------------
 my[2,1] <- mytdata["EH0_80","0"]
 my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 
 # 40 vs ---------------------------------
@@ -2795,23 +2807,23 @@ my[1,2] <- mySALTtot["EH40","0"] - my[1,1]
 # 80 ---------------
 my[2,1] <- mytdata["EH80","0"]
 my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_40 -------------
 my[2,1] <- mytdata["EH0_40","0"]
 my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 20_60 -------------
 my[2,1] <- mytdata["EH20_60","0"]
 my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_80 -------------
 my[2,1] <- mytdata["EH0_80","0"]
 my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 40_80 -------------
 my[2,1] <- mytdata["EH40_80","0"]
 my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 
 # 80 vs ---------------------------------
@@ -2820,11 +2832,11 @@ my[1,2] <- mySALTtot["EH80","0"] - my[1,1]
 # 40_80 -------------
 my[2,1] <- mytdata["EH40_80","0"]
 my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_80 -------------
 my[2,1] <- mytdata["EH0_80","0"]
 my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 
 # 0_40 vs ---------------------------------
@@ -2833,15 +2845,15 @@ my[1,2] <- mySALTtot["EH0_40","0"] - my[1,1]
 # 40_80 -------------
 my[2,1] <- mytdata["EH40_80","0"]
 my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_80 -------------
 my[2,1] <- mytdata["EH0_80","0"]
 my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 20_60 -------------
 my[2,1] <- mytdata["EH20_60","0"]
 my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 
 # 20_60 vs ---------------------------------
@@ -2850,11 +2862,11 @@ my[1,2] <- mySALTtot["EH20_60","0"] - my[1,1]
 # 40_80 -------------
 my[2,1] <- mytdata["EH40_80","0"]
 my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 # 0_80 -------------
 my[2,1] <- mytdata["EH0_80","0"]
 my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 
 # 0_80 vs ---------------------------------
@@ -2863,992 +2875,782 @@ my[1,2] <- mySALTtot["EH0_80","0"] - my[1,1]
 # 40_80 -------------
 my[2,1] <- mytdata["EH40_80","0"]
 my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-chisq.test(x = my, simulate.p.value = T)
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_inc_000 <- myres
+
+
+
+
+
+
+
+# 0.4 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.4"]
+my[1,2] <- mySALTtot["EH0","0.4"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.4"]
+my[2,2] <- mySALTtot["EH40","0.4"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.4"]
+my[1,2] <- mySALTtot["EH40","0.4"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.4"]
+my[1,2] <- mySALTtot["EH80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.4"]
+my[1,2] <- mySALTtot["EH0_40","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.4"]
+my[1,2] <- mySALTtot["EH20_60","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.4"]
+my[1,2] <- mySALTtot["EH0_80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_inc_040 <- myres
+
+
+
+
+
+
+
+
+
+# 0.8 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.8"]
+my[1,2] <- mySALTtot["EH0","0.8"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.8"]
+my[2,2] <- mySALTtot["EH40","0.8"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.8"]
+my[1,2] <- mySALTtot["EH40","0.8"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.8"]
+my[1,2] <- mySALTtot["EH80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.8"]
+my[1,2] <- mySALTtot["EH0_40","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.8"]
+my[1,2] <- mySALTtot["EH20_60","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.8"]
+my[1,2] <- mySALTtot["EH0_80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_inc_080 <- myres
+
+
+
+
+
+
+
+
+
+# 1.2 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "1.2"]
+my[1,2] <- mySALTtot["EH0","1.2"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","1.2"]
+my[2,2] <- mySALTtot["EH40","1.2"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "1.2"]
+my[1,2] <- mySALTtot["EH40","1.2"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "1.2"]
+my[1,2] <- mySALTtot["EH80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "1.2"]
+my[1,2] <- mySALTtot["EH0_40","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "1.2"]
+my[1,2] <- mySALTtot["EH20_60","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "1.2"]
+my[1,2] <- mySALTtot["EH0_80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_inc_120 <- myres
+
+# ----------
+p_SALT_inc_000[is.nan(p_SALT_inc_000)] <- 1
+p_SALT_inc_040[is.nan(p_SALT_inc_040)] <- 1
+p_SALT_inc_080[is.nan(p_SALT_inc_080)] <- 1
+p_SALT_inc_120[is.nan(p_SALT_inc_120)] <- 1
+rm(my, myres, mytdata)
 ```
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# explore the new analysis framework. 
-
-# 0, 0_40, 40 (in .00, .40, .80. 1.20)
+# DECREASE -------------------------------------------------
 ```{r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-Barnard::barnard.test(n1 = my[1,1], my[2,1], my[1,2], my[2,2])
-Barnard::barnard.test(n1 = my[1,2], my[2,2], my[1,1], my[2,1])
-
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES! 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40?  NO! -- fail to reject equality
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40? YES! 
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES!
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40? YES!
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40? NO! -- fail to reject equality
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40 > 0_40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 0_40 > 0
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES! 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40?  NO! -- fail to reject equality
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40? YES! 
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH40 > #EH0?  NO! -- fail to reject equality
-fisher.test(x = my[c(3,2),], alternative = "g") #EH40 > #EH0_40? YES!
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40? NO! -- fail to reject equality
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 40
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES! 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40?  NO! -- fail to reject equality
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40?  NO! -- fail to reject equality
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH40 > #EH0? YES!
-fisher.test(x = my[c(3,2),], alternative = "g") #EH40 > #EH0_40? YES!
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_40 > #EH0? NO! -- fail to reject equality
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES!
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40? NO! -- fail to reject equality
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH0_40? YES!
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES! 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40?  NO! -- fail to reject equality
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40?  YES!
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH40 > #EH0? YES!
-fisher.test(x = my[c(3,2),], alternative = "g") #EH40 > #EH0_40? YES!
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_40 > #EH0? NO! -- fail to reject equality
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH40? YES!
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_40 > #EH40? NO! -- fail to reject equality
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_40? NO! -- fail to reject equality
-
-
-# 0.0 + 0.4 --------------------------------------------------------------------
-# inc
-my1 <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40 > 0_40
-
-# dec
-my1 <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH0", "EH0_40", "EH40"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 40
-fisher.test(x = my[c(2,1),], alternative = "g") # 0_40 > 0
-fisher.test(x = my[c(3,1),], alternative = "g") # 40 > 0
-
-
-```
-
-
-
-# 0, 0_80, 80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH0? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80?
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80? 
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80?
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80?
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH0?
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_80 > #EH0
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80? 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80?  
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80? 
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH0?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_80 > #EH0? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80? 
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80? 
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80? 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80?  
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80? 
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH0?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_80 > #EH0? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80? 
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80? 
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80? 
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80?  
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80? 
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH0?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH0_80 > #EH0? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH0_80? 
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH0 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH0 > #EH0_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH0_80 > #EH80? 
-
-
-# 0.0 + 0.8 --------------------------------------------------------------------
-# inc
-my1 <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(3,1),], alternative = "g") # 0 > 0_80
-
-# dec
-my1 <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH0", "EH0_80", "EH80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_80
-```
-
-
-# 40, 40_80, 80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH40_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH40? 
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") #EH40 > #EH40_80?
-fisher.test(x = my[c(1,3),], alternative = "g") #EH40 > #EH80?
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40?
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > #EH40_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH40
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > 40_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH80? 
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH40? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #80 > 40
-fisher.test(x = my[c(2,1),], alternative = "g") #40_80 > #40? 
-fisher.test(x = my[c(2,3),], alternative = "g") #40_80 > #80? 
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > 40_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH80? 
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH40? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH40 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH40 > #EH40_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40? 
-fisher.test(x = my[c(3,2),], alternative = "g") #EH80 > 40_80?
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH80? 
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") #EH80 > #EH40?  
-fisher.test(x = my[c(2,1),], alternative = "g") #EH40_80 > #EH40? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH40 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH40 > #EH40_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-
-
-# 0.4 + 0.8 --------------------------------------------------------------------
-# inc
-my1 <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 80
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 40
-
-# dec
-my1 <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my2 <- mySALTspread[c("EH40", "EH40_80", "EH80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my <- my1 + my2
-my
-fisher.test(x = my[c(1,3),], alternative = "g") #EH40 > #EH80?  
-fisher.test(x = my[c(1,2),], alternative = "g") #EH40 > #EH40_80? 
-fisher.test(x = my[c(2,3),], alternative = "g") #EH40_80 > #EH80? 
-```
-
-# 40, 20_60, 40_80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 40 > 20_60
-fisher.test(x = my[c(1,3),], alternative = "g") # 40 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 0_80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 0_80
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 0_80
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH40", "EH20_60", "EH0_80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 20_60 
-```
-
-
-
-# 0, 0_40, 0_80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 0_40 > 0
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 0_40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0.40
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 0_40
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 0_40 > 0
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 0_40 > 0
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0", "EH0_40", "EH0_80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 0_40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 0_40 > 0_80
-```
-
-
-
-
-# 80, 40_80, 0_80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 80
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 40_80
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 80
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 40_80
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 80
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 0_80 > 40_80
-fisher.test(x = my[c(3,1),], alternative = "g") # 0_80 > 80
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,1),], alternative = "g") # 40_80 > 80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH80", "EH40_80", "EH0_80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 80 > 40_80
-fisher.test(x = my[c(1,3),], alternative = "g") # 80 > 0_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40_80 > 0_80
-```
-
-
-# 0, 40, 80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 80
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0", "EH40", "EH80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0 > 80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 80
-```
-
-
-# 0_40, 20_60, 40_80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 80 > 0
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 0_40
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 0_40
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 0_40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 20_60
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 20_60 > 0_40
-
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0_40", "EH20_60", "EH40_80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 20_60
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 20_60 > 40_80
-
-```
-
-
-# 0_40, 20_60, 40_80
-``` {r}
-# Fishers exact tests ------------------------------------------------------------------------------
-# 0.00 -------------------------------------------------------------------------
-# 0.00 -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(2,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-
-# 0.00  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(4,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 0_40
-
-# 0.00 -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(6,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0_40
-
-
-# 0.40 -------------------------------------------------------------------------
-# 0.40  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(11,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-
-
-# 0.40  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(13,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40-80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0_40
-
-# 0.40  -- DECREASE -- NO DIFFERENCES IN DECREASE DATA.
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(15,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 40_80
-
-# 0.80 -------------------------------------------------------------------------
-# 0.80  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(20,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-
-# 0.80  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(22,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40-80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0_40
-
-
-# 0.80  -- DECREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(24,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 40_80
-
-
-# 1.2 -------------------------------------------------------------------------
-# 1.20  -- EXTINCT
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(29,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(3,2),], alternative = "g") # 40_80 > 40
-fisher.test(x = my[c(1,2),], alternative = "g") # 0_40 > 40
-
-
-# 1.20  -- INCREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(31,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(3,2),], alternative = "g") # 40-80 > 40
-fisher.test(x = my[c(3,1),], alternative = "g") # 40_80 > 0_40
-fisher.test(x = my[c(2,1),], alternative = "g") # 40 > 0_40
-
-
-# 1.20  -- DECREASE
-my <- mySALTspread[c("EH0_40", "EH40", "EH40_80"), c(33,1)]; my[,2] <- my[,2] - my[,1]
-my
-fisher.test(x = my[c(1,2),], alternative = "g", simulate.p.value = T) # 0_40 > 40
-x <- chisq.test(x = my[c(1,2),], simulate.p.value = T)
-x$expected
-fisher.test(x = my[c(1,3),], alternative = "g") # 0_40 > 40_80
-fisher.test(x = my[c(2,3),], alternative = "g") # 40 > 40_80
-
-
+mytdata <- mySALTdec
+my <- matrix(nrow =2, ncol=2)
+myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(mySALTin); rownames(myres) <- colnames(myres)
+
+# 0.0 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0"]
+my[1,2] <- mySALTtot["EH0","0"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0"]
+my[2,2] <- mySALTtot["EH40","0"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0"]
+my[1,2] <- mySALTtot["EH40","0"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0"]
+my[1,2] <- mySALTtot["EH80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0"]
+my[1,2] <- mySALTtot["EH0_40","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0"]
+my[1,2] <- mySALTtot["EH20_60","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0"]
+my[1,2] <- mySALTtot["EH0_80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_dec_000 <- myres
+
+
+
+
+
+
+
+# 0.4 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.4"]
+my[1,2] <- mySALTtot["EH0","0.4"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.4"]
+my[2,2] <- mySALTtot["EH40","0.4"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.4"]
+my[1,2] <- mySALTtot["EH40","0.4"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.4"]
+my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.4"]
+my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.4"]
+my[1,2] <- mySALTtot["EH80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.4"]
+my[1,2] <- mySALTtot["EH0_40","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.4"]
+my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.4"]
+my[1,2] <- mySALTtot["EH20_60","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.4"]
+my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.4"]
+my[1,2] <- mySALTtot["EH0_80","0.4"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.4"]
+my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_dec_040 <- myres
+
+
+
+
+
+
+
+
+
+# 0.8 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0.8"]
+my[1,2] <- mySALTtot["EH0","0.8"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0.8"]
+my[2,2] <- mySALTtot["EH40","0.8"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0.8"]
+my[1,2] <- mySALTtot["EH40","0.8"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0.8"]
+my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0.8"]
+my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0.8"]
+my[1,2] <- mySALTtot["EH80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0.8"]
+my[1,2] <- mySALTtot["EH0_40","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0.8"]
+my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0.8"]
+my[1,2] <- mySALTtot["EH20_60","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0.8"]
+my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0.8"]
+my[1,2] <- mySALTtot["EH0_80","0.8"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0.8"]
+my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_dec_080 <- myres
+
+
+
+
+
+
+
+
+
+# 1.2 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "1.2"]
+my[1,2] <- mySALTtot["EH0","1.2"] - my[1,1]
+# 40 ---------------
+my[2,1] <- mytdata["EH40","1.2"]
+my[2,2] <- mySALTtot["EH40","1.2"] - my[2,1]; # my
+myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
+myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "1.2"]
+my[1,2] <- mySALTtot["EH40","1.2"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","1.2"]
+my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
+myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","1.2"]
+my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "1.2"]
+my[1,2] <- mySALTtot["EH80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "1.2"]
+my[1,2] <- mySALTtot["EH0_40","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","1.2"]
+my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
+myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "1.2"]
+my[1,2] <- mySALTtot["EH20_60","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","1.2"]
+my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
+myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "1.2"]
+my[1,2] <- mySALTtot["EH0_80","1.2"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","1.2"]
+my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
+myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
+
+# save results -----
+p_SALT_dec_120 <- myres
+
+# ----------
+p_SALT_dec_000[is.nan(p_SALT_dec_000)] <- 1
+p_SALT_dec_040[is.nan(p_SALT_dec_040)] <- 1
+p_SALT_dec_080[is.nan(p_SALT_dec_080)] <- 1
+p_SALT_dec_120[is.nan(p_SALT_dec_120)] <- 1
+rm(my, myres, mytdata)
 ```
