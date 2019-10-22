@@ -2735,58 +2735,7 @@ rm(my, mymod, myres, tmp, i, mysig)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# lets take a look at extinction in salt...
+# lets take a look at extinction in salt...without any stats tests. We will look at this in more depth in the longitudinal data (either as extinciton or fixation)
 ```{R}
 my <- mySALTspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
 my <- mySALTspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
@@ -2797,6 +2746,164 @@ myres[,2] <- apply(my, 1, sjstats::se)
 myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+Now there are many many tedious comparisons that must be drawn between the treatments in different environments....
+this will be 17 tests X 4 environments X 2 variables X 2 chemicals = 272 tests....
+I will write these tests here...but I am hesitant to copy the results down by hand again...Lets just get the code down in case we need it later.
+```{r}
+# SALT -------------------------------------------------------------------------
+# INCREASE -------------------------------------------------
+mytdata <- mySALTin
+my <- matrix(nrow =2, ncol=2)
+
+# 0.0 --------------------------------------------
+# 0 vs ---------------------------------
+my[1,1] <- mytdata["EH0", "0"]
+my[1,2] <- mySALTtot["EH0","0"] - my[1,1]
+
+# 40 ---------------
+my[2,1] <- mytdata["EH40","0"]
+my[2,2] <- mySALTtot["EH40","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+
+
+# 40 vs ---------------------------------
+my[1,1] <- mytdata["EH40", "0"]
+my[1,2] <- mySALTtot["EH40","0"] - my[1,1]
+# 80 ---------------
+my[2,1] <- mytdata["EH80","0"]
+my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_40 -------------
+my[2,1] <- mytdata["EH0_40","0"]
+my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+
+
+# 80 vs ---------------------------------
+my[1,1] <- mytdata["EH80", "0"]
+my[1,2] <- mySALTtot["EH80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+
+
+# 0_40 vs ---------------------------------
+my[1,1] <- mytdata["EH0_40", "0"]
+my[1,2] <- mySALTtot["EH0_40","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 20_60 -------------
+my[2,1] <- mytdata["EH20_60","0"]
+my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+
+
+# 20_60 vs ---------------------------------
+my[1,1] <- mytdata["EH20_60", "0"]
+my[1,2] <- mySALTtot["EH20_60","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+# 0_80 -------------
+my[2,1] <- mytdata["EH0_80","0"]
+my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+
+
+# 0_80 vs ---------------------------------
+my[1,1] <- mytdata["EH0_80", "0"]
+my[1,2] <- mySALTtot["EH0_80","0"] - my[1,1]
+# 40_80 -------------
+my[2,1] <- mytdata["EH40_80","0"]
+my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
+chisq.test(x = my, simulate.p.value = T)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
