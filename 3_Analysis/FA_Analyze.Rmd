@@ -31,7 +31,8 @@ options(scipen = 999) # turn off scientific notation
 
 
 
-Explore extinction and extirpation.
+Add a field summarizing barcode 1 counts at time final in the ancestral fitness assay*
+      *move this block to prev script when time permits.
 ```{r, warning = FALSE, message=FALSE}
 load(file = "myd.Rdata")
 myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")]), 
@@ -42,7 +43,7 @@ myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1ct
 
 
 
-Load datasets
+Determine data ommission criteria and implement.
 ```{r, warning = FALSE, message=FALSE}
 my <- myd
 # view the most sensitive measure -- those barcodes that are actually omit at generation 500 (not present at start of the fit  assay)
@@ -73,7 +74,7 @@ myd <- my
 
 
 
-Create helper functions for plotting and data transformation.
+Initialize helper functions (see links for those found online)
 ```{r, warning = FALSE, message=FALSE}
 # expand_residuals creates a modified histogram of residuals. ------------------
 # Each entry in the model output is plotted a number of times equal to its reads.
@@ -109,7 +110,9 @@ weighted.var.se <- function(x, w, na.rm=FALSE)
   return(out)
 }
 
-# get legend function found on stack exchange ----------------------------------
+
+
+# get legend function found on stack exchange ----------------------------------[FIND LINK]
 #   scrapes figure legend for later plotting in multipannel plot
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -119,34 +122,37 @@ get_legend<-function(myggplot){
 }
 
 
+
+# get_se calculates standard error of the mean ---------------------------------
 get_se <- function(x){
   tmp <- sd(x, na.rm=TRUE) /  sqrt(length(x[!is.na(x)]))
   return(tmp)
 }
-
-
-
-
 ```
 <br/><br/>
 
 
 
-Set color palette options for all plots
+Set color palette options to be used throughout
 ```{r}
-setpalette <- RColorBrewer::brewer.pal(7, "Dark2") # current preferred palette
-#setpalette <- c("#993404","#d95f0e","#fe9929","#41b6c4","#2c7fb8","#253494") # option 2
-#setpalette <- c("#8c510a","#d8b365","#f6e8c3", "#c7eae5","#5ab4ac","#01665e") # option 3
-ramppalette <- c("#006600", "#9999ff", "#6666ff", "#000066","#ff9999", "#ff6666", "#990000")
-incpalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
-incpalette_re_bl <- RColorBrewer::brewer.pal(n = 11, name = "RdYlBu")[c(11,10,8,6,4,3,2)]
-ramppalette_YlOrRd <-  RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")[c(3:9)]
+# Color palettes with implementation information beneath:-----------------------
+trichromramp_g_bl_rd <- c("#006600", "#9999ff", "#6666ff", "#000066","#ff9999", "#ff6666", "#990000")
+# used in:
+#     1. all plots that compare by env in a single panel
+
+dichrompalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
+# used in:
+#     1. All plots that compare by treat.
+
+dark2 <- RColorBrewer::brewer.pal(7, "Dark2") # not used currently. good swap for dichrompalette_br_cy and dichrompalette_re_bl when not trying to show ranks
+dichrompalette_re_bl <- RColorBrewer::brewer.pal(n = 11, name = "RdYlBu")[c(11,10,8,6,4,3,2)] # not used currently. good swap for dichrompalette_br_cy, dark2
+heat_YlOrRd <-  RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")[c(3:9)] # not currently used
 ```
 <br/><br/>
 
 
 
-Plot initial fitness
+Visualize Initial (ancestral) fitness in seven environments
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
 # - initial fitness distribution looks hump-shaped 
@@ -171,7 +177,7 @@ myylab <- "Count"
 myxlab <- "Ancestral Fitness (in Seven Environments)"
 myhighlight <- "black"
 myfillapha <- 0.8
-mypalette <- ramppalette
+mypalette <- trichromramp_g_bl_rd
 mytextsize <- 8
 myheight <- 7 
 mywidth <- 7
@@ -211,7 +217,7 @@ rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mypalette, myr, my
 
 
 
-fit0 ~ treatment 
+Test for an effect of treatment on initial fitness (shouldnt be one, treatments have not yet been applied!)
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
 # - all treatment differences within models are nonsignifiant; else COPR120 which has significant differnces among treatments
@@ -273,7 +279,8 @@ rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
 <br/><br/>
 
 
-dw associated with weight?
+
+As an additional check, assess the relationship between change in fitness,dw, and weight (reads)
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
 #  - data distribution is approximately hump shaped with mean near 0 (no change in fitness). Higher weights are likely to have fitness values closer to hump mean. This makes sense -- higher weight means more counts recovered at all timepoints means more confidence in fitness calculation, means less likely to pick up spurious increases / decreases in fitness caused by stocahsticity in sampling.
@@ -292,7 +299,7 @@ myylab <- "Weight (reads)"
 myxlab <- "dw"
 myhighlight <- "black"
 myptalpha <- 0.35
-mypalette <- ramppalette
+mypalette <- trichromramp_g_bl_rd
 mytextsize <- 8
 myheight <- 7
 mywidth <- 7
@@ -325,7 +332,7 @@ myx <- my$dw
 myy <- my$re_dw
 myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2"))
 mys <- my$treat
-mypalette <- ramppalette[c(1,5,6,7)]
+mypalette <- trichromramp_g_bl_rd[c(1,5,6,7)]
 myptalpha <- 0.7
 
 #mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
@@ -356,7 +363,7 @@ myx <- my$dw
 myy <- my$re_dw
 myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2"))
 mys <- my$treat
-mypalette <- ramppalette[c(1,2,3,4)]
+mypalette <- trichromramp_g_bl_rd[c(1,2,3,4)]
 myptalpha <- 0.7
 
 #mymod <- lmer(myy ~ myx + (myx||paste0(my$mpamt, my$mpasp))); summary(mymod)
@@ -388,11 +395,7 @@ rm(my, p, myc, myheight, myhighlight, mypalette, myptalpha, mys, mystroke,
 
 
 
-
-
-
-
-6 panel figure: row 1:salt, row2: copr, col1: fit0, col2: fit500 col3: dw
+Plot: SALT (row 1), COPR (row 2), ancestral, evolved, and change in fitness; color by environment
 ```{r}
 my <- myd
 
@@ -403,8 +406,8 @@ myxlab <- "fitness"
 myhighlight <- "black"
 myfillapha <- 0.85
 myrugalpha <- 0.2
-mypalette_r1 <- ramppalette[c(1,5,6,7)]
-mypalette_r2 <- ramppalette[c(1,2,3,4)]
+mypalette_r1 <- trichromramp_g_bl_rd[c(1,5,6,7)]
+mypalette_r2 <- trichromramp_g_bl_rd[c(1,2,3,4)]
 mytextsize <- 8
 myheight <- 8
 mywidth <- 8.5
@@ -427,7 +430,7 @@ p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = paste0(m
   scale_color_manual(values =mypalette_r1, guide = FALSE) +
   scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
-  theme(legend.position= c(0.8,0.8)) +
+  theme(legend.position= c(0.8,0.5)) +
   labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -450,7 +453,7 @@ p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0
   scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
   theme(legend.position= "none") +
-  labs(fill = "Significance") +
+  labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -470,7 +473,7 @@ p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = paste0(mpa
   scale_fill_manual(values =mypalette_r1) +
   theme_classic() +
   theme(legend.position= "none") +
-  labs(fill = "Significance") +
+  labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -492,8 +495,8 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(m
   scale_color_manual(values =mypalette_r2, guide = FALSE) +
   scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
+  theme(legend.position= c(0.8,0.5)) +
+  labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -501,6 +504,8 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(m
   theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
   theme(legend.title = element_text(size = mytextsize, face = "bold"))+
   theme(legend.text = element_text(size = mytextsize))
+legend2 <- get_legend(p)
+p <- p + theme(legend.position="none")
 pcanc <- p
 
 # fit500 ---------------------------------------------------
@@ -513,7 +518,7 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0
   scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
   theme(legend.position= "none") +
-  labs(fill = "Significance") +
+  labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -533,7 +538,7 @@ p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = paste0(mpa
   scale_fill_manual(values =mypalette_r2) +
   theme_classic() +
   theme(legend.position= "none") +
-  labs(fill = "Significance") +
+  labs(fill = "Assay Environment") +
   ylab(myylab)+ xlab(myxlab)+
   theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
@@ -556,10 +561,11 @@ grid.arrange( grid::textGrob("SALT", gp =grid::gpar(fontsize = 8, fontface = "bo
               grid::textGrob("Generation-0", gp =grid::gpar(fontsize = 12, fontface = "bold")),
               grid::textGrob("Generation-500", gp =grid::gpar(fontsize = 12, fontface = "bold")),
               grid::textGrob("Delta", gp =grid::gpar(fontsize = 12, fontface = "bold")),
+              legend2,
   layout_matrix = rbind(c(10, 10,11,11,10, 10,12,12,10,  10,13,13,10,  10, 10),
                         c(1,  3,3,3,3,     4,4,4,4,      5,5,5,5,      9, 10),
                         c(1,  3,3,3,3,     4,4,4,4,      5,5,5,5,      10, 10),
-                        c(2,  6,6,6,6,     7,7,7,7,      8,8,8,8,      10, 10),
+                        c(2,  6,6,6,6,     7,7,7,7,      8,8,8,8,      14, 10),
                         c(2,  6,6,6,6,     7,7,7,7,      8,8,8,8,      10, 10)),
   top = grid::textGrob("\n Yeast Fitness in SALT and COPR", gp =grid::gpar(fontsize = 14, fontface = "bold")))
 dev.off() # one column wide, equal height
@@ -570,9 +576,11 @@ rm(my, p, mybinwidth, myfillapha, myheight, myhighlight, mytextsize, mywidth, my
    myxlim1, myxlim2, myxlim3, myxlim4, myxlim5, myxlim6, myymax1, myymax2, myymax3, myymax4,
    myymax5, myymax6)
 ```
+<br/><br/>
 
 
-# Plot: SALTA SALTB ancestral and evolved fitness in CM,salt40, salt80, salt120
+
+Plot: SALT ancestral, evolved, and change in fitness in CM,salt40, salt80, salt120; color by treatment
 ```{R}
 my <- myd
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
@@ -584,7 +592,7 @@ myxlab <- "fitness"
 myhighlight <- "black"
 myfillapha <- 0.95
 myrugalpha <- 0.2
-mypalette <- incpalette_br_cy
+mypalette <- dichrompalette_br_cy
 mytextsize <- 8
 myheight <- 11
 mywidth <- 8.5
@@ -877,10 +885,11 @@ rm(legend, my, p, p_salt_anc_0,  p_salt_anc_40,  p_salt_anc_80,  p_salt_anc_120,
    myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
    myymax31, myymax32_33, myymax41, myymax42_43)
 ```
+<br/><br/>
 
 
 
-# Plot: COPRA COPRB ancestral and evolved fitness in CM,copr40, copr80, copr120
+Plot: COPR ancestral, evolved, and change in fitness in CM, copr40, copr80, copr120; color by treatment
 ```{R}
 my <- myd
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
@@ -892,7 +901,7 @@ myxlab <- "fitness"
 myhighlight <- "black"
 myfillapha <- 0.95
 myrugalpha <- 0.2
-mypalette <- incpalette_br_cy
+mypalette <- dichrompalette_br_cy
 mytextsize <- 8
 myheight <- 11
 mywidth <- 8.5
@@ -1185,16 +1194,12 @@ rm(legend, my, p, p_copr_anc_0,  p_copr_anc_40,  p_copr_anc_80,  p_copr_anc_120,
    myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
    myymax31, myymax32_33, myymax41, myymax42_43)
 ```
+<br/><br/>
 
 
 
-
-
-
-
-
-ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION
-First, need to create an appropriate data frame with 1 entry per bcpID (rather than 4 reps)
+ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION ACROSS 7 TREATMENTS IN 4 ENVIRONMENTS AND 2 CHEMICAL STRESSORS 
+Create an appropriate data frame with 1 entry per bcpID (rather than 1 entry per rep*bcpID)
 ```{r}
 # create the frame, omitting most cols not necessary for these upcoming plots and tests.
 my <- myd
@@ -1227,10 +1232,12 @@ mydwcw <- my
 # ------------------
 rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120)
 ```
+<br/><br/>
 
 
-# SALT first....
-# lets set some universal guides for SALT plotting
+
+# SALT data...
+# Set universal guides for SALT plotting
 ```{r}
 my <- mydwc[!is.na(mydwc$dw),]
 my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
@@ -1244,7 +1251,7 @@ myoutline <-  "grey20"
 myfill <-  "grey90"
 myptalpha <- 0.5
 myrugalpha <- 0.7
-mypalette <- setpalette
+mypalette <- dichrompalette_br_cy
 mytextsize <- 8
 myheight <- 3.5
 mywidth <- 7
@@ -1255,9 +1262,12 @@ mywtmeanptcol <- "black"
 # ------------------
 rm(my)
 ```
+<br/><br/>
+
+
 
 # SALT evolved in CM
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1302,8 +1312,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1336,12 +1347,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
+<br/><br/>
 
 
 
 # SALT evolved in SALT 0.4
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1386,8 +1397,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1420,13 +1432,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
-
+<br/><br/>
 
 
 
 # SALT evolved in SALT 0.8
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1471,8 +1482,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1505,13 +1517,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
-
+<br/><br/>
 
 
 
 # SALT evolved in SALT 1.2
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1556,8 +1567,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1590,7 +1602,7 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
+<br/><br/>
 
 
 
@@ -1609,7 +1621,7 @@ myoutline <-  "grey20"
 myfill <-  "grey90"
 myptalpha <- 0.5
 myrugalpha <- 0.7
-mypalette <- setpalette
+mypalette <- dichrompalette_br_cy
 mytextsize <- 8
 myheight <- 3.5
 mywidth <- 7
@@ -1620,9 +1632,12 @@ mywtmeanptcol <- "black"
 # ------------------
 rm(my)
 ```
+<br/><br/>
+
+
 
 # COPR evolved in CM
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1667,8 +1682,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1701,12 +1717,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
+<br/><br/>
 
 
 
 # COPR evolved in COPR 0.4
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1751,8 +1767,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1785,13 +1802,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
-
+<br/><br/>
 
 
 
 # COPR evolved in COPR 0.8
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1836,8 +1852,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1870,13 +1887,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # ------------------
 rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
-
-
+<br/><br/>
 
 
 
 # COPR evolved in COPR 1.2
-# visualize
+# Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -1921,8 +1937,9 @@ p
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
-# models
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
@@ -1956,12 +1973,12 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 rm(my, myx, myy, myr, myc, myptsize, p, mymod, myfill, myheight, myhighlim, mylowlim, mymeanptsize, myoutline, mypalette, myptalpha, myrugalpha,
    mytextsize, mytitle, mywidth, mywtmeanptcol, mywtmeanpttype, myxlab, myylab)
 ```
+<br/><br/>
 
 
 
-
-take a look at the rankings of the barcodes in all envs. 
-Salt
+It is important to look at these data a few different ways, lets zoom in on the rug plot from the treatment effect violin plots above...
+PLOT(S): SALT dw rank by barcode in 0.0, 0.4, 0.8, 1.2
 ```{r}
 # Set controls for all plots ---------------------------------------------------
 mywidth <- 7
@@ -2013,9 +2030,11 @@ p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
 p
 pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
+<br/><br/>
 
 
-Copr
+
+PLOT(S): COPR dw rank by barcode in 0.0, 0.4, 0.8, 1.2
 ```{r}
 # Set controls for all plots ---------------------------------------------------
 mywidth <- 7
@@ -2070,11 +2089,13 @@ pdf(file = "000_rank_COPRinCOPR120.pdf", width = mywidth, height = myheight); p;
 # ----------------------------
 rm(myheight, mywidth, my, p)
 ```
+<br/><br/>
 
 
 
-Now for some pairs plots
-SALT first. 
+This is still a lot to take in at one time, maybe looking at some targeted sets will help with interpretation....
+SALT data first...
+PLOT(S): pairs plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
 # Set controls for all plots ---------------------------------------------------
 mywidth <- 8
@@ -2140,9 +2161,12 @@ pdf(file = "000_pairs_SALT_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidt
 # rm -------------------------
 rm(myheight, mywidth, my, p)
 ```
+<br/><br/>
 
 
-COPR first. 
+
+COPR data next...
+PLOT(S): pairs plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
 # Set controls for all plots ---------------------------------------------------
 mywidth <- 8
@@ -2208,12 +2232,14 @@ pdf(file = "000_pairs_COPR_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidt
 # rm -------------------------
 rm(myheight, mywidth, my, p)
 ```
+<br/><br/>
 
 
 
-
-3d plots
-SALT first
+It is possible that a 3-dimensional plot (0.0 vs. 0.4 vs. 0.8 env) will reveal even more interpretable structure...*
+      * these blocks are commented because the plots have already been generated, but also because they are not very helpful and will not be used moving forward.
+SALT first...
+PLOT(S): 3d plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
 # library(plotly)
 # Sys.setenv("plotly_username"="vincefasanello")
@@ -2221,7 +2247,7 @@ SALT first
 # 
 # # all treats -----------------------------------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="All Treatments"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_AllTreats_000_040_080");chart_link
 # 
@@ -2229,21 +2255,21 @@ SALT first
 # # eh0, eh0_40, eh40 --------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: low stress end"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH40_in_000_040_080");chart_link
 # 
 # # eh40, eh40_80, eh80 ------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: high stress end"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH40-80_EH80_in_000_040_080");chart_link
 # 
 # # eh0, eh0_80, eh80 --------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),]  
 # my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: full spectrum"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-80_EH80_in_000_040_080");chart_link
 # 
@@ -2252,7 +2278,7 @@ SALT first
 # # eh0_40, eh20_60, eh40_80 -------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared mean with variable degree of flux around mean"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
 # 
@@ -2260,7 +2286,7 @@ SALT first
 # # eh0, eh0_40, eh0_80 ------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared minimum with variable degree of flux up"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
 # 
@@ -2268,7 +2294,7 @@ SALT first
 # # eh80, e40_80, eh0_80 -----------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared maximum with variable degree of flux down"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
 # 
@@ -2276,22 +2302,26 @@ SALT first
 # # eh0, eh40, eh80 ----------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialists with different means compared"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH40_EH80_in_000_040_080");chart_link
 # 
 # # eh0_40, eh20_60, eh40_80 -------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
 # my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="generalists with same flux degree, different means compared"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
 # 
 # # ----------------------------
 # rm(my, p)
 ```
+<br/><br/>
 
-COPR next
+
+
+COPR next...
+PLOT(S): 3d plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
 # library(plotly)
 # Sys.setenv("plotly_username"="vincefasanello")
@@ -2299,7 +2329,7 @@ COPR next
 # 
 # # all treats -----------------------------------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="All Treatments"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_AllTreats_000_040_080");chart_link
 # 
@@ -2307,21 +2337,21 @@ COPR next
 # # eh0, eh0_40, eh40 --------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: low stress end"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH40_in_000_040_080");chart_link
 # 
 # # eh40, eh40_80, eh80 ------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: high stress end"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH40-80_EH80_in_000_040_080");chart_link
 # 
 # # eh0, eh0_80, eh80 --------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),]  
 # my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialist vs. generalists: full spectrum"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-80_EH80_in_000_040_080");chart_link
 # 
@@ -2330,7 +2360,7 @@ COPR next
 # # eh0_40, eh20_60, eh40_80 -------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared mean with variable degree of flux around mean"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
 # 
@@ -2338,7 +2368,7 @@ COPR next
 # # eh0, eh0_40, eh0_80 ------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared minimum with variable degree of flux up"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
 # 
@@ -2346,7 +2376,7 @@ COPR next
 # # eh80, e40_80, eh0_80 -----------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="shared maximum with variable degree of flux down"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
 # 
@@ -2354,24 +2384,26 @@ COPR next
 # # eh0, eh40, eh80 ----------------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="specialists with different means compared"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH40_EH80_in_000_040_080");chart_link
 # 
 # # eh0_40, eh20_60, eh40_80 -------------
 # my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
 # my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = setpalette, type = "scatter3d", mode = "markers") %>%
+# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
 #   layout(title ="generalists with same flux degree, different means compared"); p
 # chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
 # 
 # # ----------------------------
 # rm(my, p)
 ```
+<br/><br/>
 
 
 
-Test for fitness increase SALT
+ASSESS: FITNESS INCREASE & DECREASE IN 500 GENERATIONS OF EVOLUTION ACROSS 7 TREATMENTS IN 4 ENVIRONMENTS AND 2 CHEMICAL STRESSORS 
+Test for fitness increase/decrease for SALT evolved lines in 0.0, 0.4, 0.8, and 1.2 SALT envs. - generate results frames
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
 #  - Fitness increase data: analyze by groups externally & use in later blocks
@@ -2553,7 +2585,7 @@ rm(my, mymod, myres, tmp, i, mysig)
 
 
 
-Test for fitness increase COPR
+Test for fitness increase/decrease for COPR evolved lines in 0.0, 0.4, 0.8, and 1.2 COPR envs. - generate results frames
 ```{r}
 # BLOCK NOTES ------------------------------------------------------------------
 #  - Fitness increase data: analyze by groups externally & use in later blocks
@@ -2735,43 +2767,37 @@ rm(my, mymod, myres, tmp, i, mysig)
 
 
 
-# lets take a look at extinction in salt...without any stats tests. We will look at this in more depth in the longitudinal data (either as extinciton or fixation)
+# Take a look at extinction in without any stats tests.*, **
+      * We will look at this in more depth in the longitudinal data (either as extinciton or fixation)
+      ** slight variation in n bcs extinct in the different environments comes from the fact that some bcs (that already have v.low counts) are extirpated during the fit assay in some environments but not in others. 
 ```{R}
-# need to rewrite this SECTION!
+# SALT first -------------------------------------------------------------------
+my <- mySALText
+myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my) # create res dataframe 
+colnames(myres) <- c("mean", "se", "mean.prop")
+myres[,1] <- apply(my, 1, mean) # calculate treat means
+myres[,2] <- apply(my, 1, sjstats::se) # calculate treatment ses
+myres[,3] <- myres[,1] / mySALTtot[,1] # report treatment means as proportions as well
+SALT_ext_res_summary <- myres # store in informative frame.
 
+# COPR -------------------------------------------------------------------------
+my <- mySALText
+myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
+colnames(myres) <- c("mean", "se", "mean.prop")
+myres[,1] <- apply(my, 1, mean)
+myres[,2] <- apply(my, 1, sjstats::se)
+myres[,3] <- myres[,1] / mySALTtot[,1]
+SALT_ext_res_summary <- myres
 
-# my <- mySALTspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
-# my <- mySALTspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
-# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
-# colnames(myres) <- c("ext_n", "ext_se", "ext_p")
-# myres[,1] <- apply(my, 1, mean)
-# myres[,2] <- apply(my, 1, sjstats::se)
-# myres[,3] <- myres[,1] / mySALTspread[,"tot_0.0"]
-# 
-# 
-# my <- myCOPRspread[,c("ext_0.0", "ext_p_0.0", "ext_0.4", "ext_p_0.4", "ext_0.8", "ext_p_0.8", "ext_1.2", "ext_p_1.2")]
-# my <- myCOPRspread[,c("ext_0.0", "ext_0.4", "ext_0.8", "ext_1.2")]
-# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
-# colnames(myres) <- c("ext_n", "ext_se", "ext_p")
-# myres[,1] <- apply(my, 1, mean)
-# myres[,2] <- apply(my, 1, sjstats::se)
-# myres[,3] <- myres[,1] / myCOPRspread[,"tot_0.0"]
 ```
-
-
-
-
-
-
-
-
+<br/><br/>
 
 
 
 Now there are many many tedious comparisons that must be drawn between the treatments in different environments....
 this will be 17 tests X 4 environments X 2 variables X 2 chemicals = 272 tests....
-I will write these tests here...but I am hesitant to copy the results down by hand again...Lets just get the code down in case we need it later.
-
+These tests are computed here and the p-values are stored in a set of matrices (n=16; 2 chemicals x 2 vars x 4 envs )
+* It is important to note that these are not ALL possible pairwise comparisons, but only those of particular interest!
 # SALT -------------------------------------------------------------------------
 # INCREASE -------------------------------------------------
 ```{r}
@@ -2883,9 +2909,6 @@ p_SALT_inc_000 <- myres
 
 
 
-
-
-
 # 0.4 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.4"]
@@ -2990,11 +3013,6 @@ p_SALT_inc_040 <- myres
 
 
 
-
-
-
-
-
 # 0.8 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.8"]
@@ -3095,11 +3113,6 @@ myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 # save results -----
 p_SALT_inc_080 <- myres
-
-
-
-
-
 
 
 
@@ -3212,6 +3225,7 @@ p_SALT_inc_080[is.nan(p_SALT_inc_080)] <- 1
 p_SALT_inc_120[is.nan(p_SALT_inc_120)] <- 1
 rm(my, myres, mytdata)
 ```
+<br/><br/>
 
 
 
@@ -3325,9 +3339,6 @@ p_SALT_dec_000 <- myres
 
 
 
-
-
-
 # 0.4 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.4"]
@@ -3432,11 +3443,6 @@ p_SALT_dec_040 <- myres
 
 
 
-
-
-
-
-
 # 0.8 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.8"]
@@ -3537,11 +3543,6 @@ myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 # save results -----
 p_SALT_dec_080 <- myres
-
-
-
-
-
 
 
 
@@ -3654,12 +3655,7 @@ p_SALT_dec_080[is.nan(p_SALT_dec_080)] <- 1
 p_SALT_dec_120[is.nan(p_SALT_dec_120)] <- 1
 rm(my, myres, mytdata)
 ```
-
-
-
-
-
-
+<br/><br/>
 
 
 
@@ -3774,9 +3770,6 @@ p_COPR_inc_000 <- myres
 
 
 
-
-
-
 # 0.4 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.4"]
@@ -3881,11 +3874,6 @@ p_COPR_inc_040 <- myres
 
 
 
-
-
-
-
-
 # 0.8 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.8"]
@@ -3986,11 +3974,6 @@ myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 # save results -----
 p_COPR_inc_080 <- myres
-
-
-
-
-
 
 
 
@@ -4103,6 +4086,7 @@ p_COPR_inc_080[is.nan(p_COPR_inc_080)] <- 1
 p_COPR_inc_120[is.nan(p_COPR_inc_120)] <- 1
 rm(my, myres, mytdata)
 ```
+<br/><br/>
 
 
 
@@ -4216,9 +4200,6 @@ p_COPR_dec_000 <- myres
 
 
 
-
-
-
 # 0.4 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.4"]
@@ -4323,11 +4304,6 @@ p_COPR_dec_040 <- myres
 
 
 
-
-
-
-
-
 # 0.8 --------------------------------------------
 # 0 vs ---------------------------------
 my[1,1] <- mytdata["EH0", "0.8"]
@@ -4428,11 +4404,6 @@ myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
 
 # save results -----
 p_COPR_dec_080 <- myres
-
-
-
-
-
 
 
 
