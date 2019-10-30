@@ -2434,7 +2434,7 @@ colnames(mySALTtot) <- colnames(mySALTin)
 # SALT in CM -------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
 my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp == 0.0,]
-mySALTtot[,c(1:4)] <- table(my$treat)/4
+x <- table(my$treat)/4; mySALTtot[,c(1:4)] <- x[c(1, 5, 7, 2, 4, 3, 6)]
 my <- my[!is.na(my$dw),]
 
 # model & diagnostic plots ---------------------------------
@@ -2616,7 +2616,7 @@ colnames(myCOPRtot) <- colnames(myCOPRin)
 # COPR in CM -------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
 my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-myCOPRtot[,c(1:4)] <- table(my$treat)/4
+x <- table(my$treat)/4; myCOPRtot[,c(1:4)] <- x[c(1, 5, 7, 2, 4, 3, 6)]
 my <- my[!is.na(my$dw),]
 
 # model & diagnostic plots ---------------------------------
@@ -2835,68 +2835,1233 @@ for (i in 1:nrow(my)) {
 mydwcw <- my
 ```
 
+
+SALT ---------------------------------------------------------------------------
+Create summary tables:
+Set 1: 0, 0_80, 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in80),]
 my <- my[!is.na(my$in0) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
+div_tot <- mySALTtot[c("EH0", "EH0_80", "EH80"),1]
+
 
 # how many increase in both environments
 x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
-summary(x$treat)
-
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
-summary(x$treat)
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
 
 # how many increase in the .00 but not .80 env
 x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
-summary(x$treat)
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
 
 # how many increase in neither the .80 nor .00 env
 x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
-summary(x$treat)
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
 
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_80", "EH80")
+rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+
+write.csv(mymat,  file = "table1_SALT_s_g_fs_inc_raw.csv")
+write.csv(mymat2, file = "table1_SALT_s_g_fs_inc_divtot.csv")
+write.csv(mymat3, file = "table1_SALT_s_g_fs_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
+div_tot <- mySALTtot[c("EH0", "EH0_80", "EH80"),1]
 
 
 # how many increase in both environments
-x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
-summary(x$treat)
-
-# how many increase in the .80 but not .00 env
-x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
-summary(x$treat)
+x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
 
 # how many increase in the .00 but not .80 env
-x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
-summary(x$treat)
+x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
 
 # how many increase in neither the .80 nor .00 env
-x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
-summary(x$treat)
+x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_80", "EH80")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table1_SALT_s_g_fs_dec_raw.csv")
+write.csv(mymat2, file = "table1_SALT_s_g_fs_dec_divtot.csv")
+write.csv(mymat3, file = "table1_SALT_s_g_fs_dec_divext.csv")
 ```
 
+
+
+Set 2: 0, 0_40, 40
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40),]
+my <- my[!is.na(my$in0) & !is.na(my$in40),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_40",]),
+             nrow(mynot[mynot$treat == "EH40",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+             mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
+div_tot <- mySALTtot[c("EH0", "EH0_40", "EH40"),1]
+
+
+# how many increase in both environments
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$in0 > 0.05 & my$in40 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_40", "EH40")
+rownames(mymat) <- c("in_both", "in_0", "in_40", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table2_SALT_s_g_ls_inc_raw.csv")
+write.csv(mymat2, file = "table2_SALT_s_g_ls_inc_divtot.csv")
+write.csv(mymat3, file = "table2_SALT_s_g_ls_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_40",]),
+             nrow(mynot[mynot$treat == "EH40",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+             mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
+div_tot <- mySALTtot[c("EH0", "EH0_40", "EH40"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_40", "EH40")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_40", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table2_SALT_s_g_ls_dec_raw.csv")
+write.csv(mymat2, file = "table2_SALT_s_g_ls_dec_divtot.csv")
+write.csv(mymat3, file = "table2_SALT_s_g_ls_dec_divext.csv")
+```
+
+
+
+Set 3: 40, 40_80, 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in40) | is.na(my$in80),]
+my <- my[!is.na(my$in40) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH40",]),
+             nrow(mynot[mynot$treat == "EH40_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+             mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
+             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
+div_tot <- mySALTtot[c("EH40", "EH40_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$in40 <= 0.05 & my$in80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .40 but not .80 env
+x <- my[my$in40 <= 0.05 & my$in80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .80 but not .40 env
+x <- my[my$in40 > 0.05 & my$in80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in neither the .80 nor .40 env
+x <- my[my$in40 > 0.05 & my$in80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH40", "EH40_80", "EH80")
+rownames(mymat) <- c("in_both", "in_40", "in_80", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table3_SALT_s_g_hs_inc_raw.csv")
+write.csv(mymat2, file = "table3_SALT_s_g_hs_inc_divtot.csv")
+write.csv(mymat3, file = "table3_SALT_s_g_hs_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
+my <- my[!is.na(my$dec40) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH40",]),
+             nrow(mynot[mynot$treat == "EH40_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+             mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
+             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
+div_tot <- mySALTtot[c("EH40", "EH40_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec40 <= 0.05 & my$dec80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .40 but not .80 env
+x <- my[my$dec40 <= 0.05 & my$dec80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .80 but not .40 env
+x <- my[my$dec40 > 0.05 & my$dec80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in neither the .80 nor .40 env
+x <- my[my$dec40 > 0.05 & my$dec80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH40", "EH40_80", "EH80")
+rownames(mymat) <- c("dec_both", "dec_40", "dec_80", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table3_SALT_s_g_hs_dec_raw.csv")
+write.csv(mymat2, file = "table3_SALT_s_g_hs_dec_divtot.csv")
+write.csv(mymat3, file = "table3_SALT_s_g_hs_dec_divext.csv")
+```
+
+
+
+ALL -- all treatments in 00 and 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in80),]
+my <- my[!is.na(my$in0) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+
+# how many increase in both environments
+x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .0 but not .80 env
+x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .80 but not .0 env
+x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in neither the .80 nor .0 env
+x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table4_SALT_at_00s80s_inc_raw.csv")
+write.csv(mymat2, file = "table4_SALT_at_00s80s_inc_divtot.csv")
+write.csv(mymat3, file = "table4_SALT_at_00s80s_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .0 but not .80 env
+x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .80 but not .0 env
+x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in neither the .80 nor .0 env
+x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_none", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table4_SALT_at_00s80s_dec_raw.csv")
+write.csv(mymat2, file = "table4_SALT_at_00s80s_dec_divtot.csv")
+write.csv(mymat3, file = "table4_SALT_at_00s80s_dec_divext.csv")
+```
+
+
+ALL -- All treatments in all four environments
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80) | is.na(my$in120),]
+my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80) & !is.na(my$in120),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 0000 # in none
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+ 
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 1000 # in 0 only
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 0100 # in 40 only
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 0010 # in 80 only
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 0001 # in 120 only
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 1100 # 0 and 40
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 1010 # 0 and 80
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 1001 # 0 and 120
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 0101 # 40 and 120
+r9 <- round(summary(x$treat), digits = 3); r9 <- r9[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 0110 # 40 and 80
+r10 <- round(summary(x$treat), digits = 3); r10 <- r10[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 0011 # 80 and 120
+r11 <- round(summary(x$treat), digits = 3); r11 <- r11[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 1110 # 0, 40, 80
+r12 <- round(summary(x$treat), digits = 3); r12 <- r12[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 1101 # 0, 40, 120
+r13 <- round(summary(x$treat), digits = 3); r13 <- r13[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 1011 # 0, 80, 120
+r14 <- round(summary(x$treat), digits = 3); r14 <- r14[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 0111 # 40, 80, 120
+r15 <- round(summary(x$treat), digits = 3); r15 <- r15[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 1111 # all
+r16 <- round(summary(x$treat), digits = 3); r16 <- r16[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("0000", "1000", "0100", "0010", "0001", "1100", "1010", "1001", "0101", "0110", "0011", "1110", "1101", "1011", "0111", "1111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot; mymat2[10,] <- mymat2[10,] / div_tot;
+mymat2[11,] <- mymat2[11,] / div_tot; mymat2[12,] <- mymat2[12,] / div_tot; mymat2[13,] <- mymat2[13,] / div_tot; mymat2[14,] <- mymat2[14,] / div_tot; mymat2[15,] <- mymat2[15,] / div_tot; mymat2[16,] <- mymat2[16,] / div_tot; mymat2[17,] <- mymat2[17,] / div_tot;
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext; mymat3[9,] <- mymat3[9,] / div_ext; mymat3[10,] <- mymat3[10,] / div_ext;
+mymat3[11,] <- mymat3[11,] / div_ext; mymat3[12,] <- mymat3[12,] / div_ext; mymat3[13,] <- mymat3[13,] / div_ext; mymat3[14,] <- mymat3[14,] / div_ext; mymat3[15,] <- mymat3[15,] / div_ext; mymat3[16,] <- mymat3[16,] / div_ext;
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table5_SALT_at_allenv_inc_raw.csv")
+write.csv(mymat2, file = "table5_SALT_at_allenv_inc_divtot.csv")
+write.csv(mymat3, file = "table5_SALT_at_allenv_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80) | is.na(my$dec120),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80) & !is.na(my$dec120),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 0000 # in none
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+ 
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 1000 # in 0 only
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 0100 # in 40 only
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 0010 # in 80 only
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 0001 # in 120 only
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 1100 # 0 and 40
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 1010 # 0 and 80
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 1001 # 0 and 120
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 0101 # 40 and 120
+r9 <- round(summary(x$treat), digits = 3); r9 <- r9[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 0110 # 40 and 80
+r10 <- round(summary(x$treat), digits = 3); r10 <- r10[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 0011 # 80 and 120
+r11 <- round(summary(x$treat), digits = 3); r11 <- r11[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 1110 # 0, 40, 80
+r12 <- round(summary(x$treat), digits = 3); r12 <- r12[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 1101 # 0, 40, 120
+r13 <- round(summary(x$treat), digits = 3); r13 <- r13[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 1011 # 0, 80, 120
+r14 <- round(summary(x$treat), digits = 3); r14 <- r14[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 0111 # 40, 80, 120
+r15 <- round(summary(x$treat), digits = 3); r15 <- r15[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 1111 # all
+r16 <- round(summary(x$treat), digits = 3); r16 <- r16[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("0000", "1000", "0100", "0010", "0001", "1100", "1010", "1001", "0101", "0110", "0011", "1110", "1101", "1011", "0111", "1111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot; mymat2[10,] <- mymat2[10,] / div_tot;
+mymat2[11,] <- mymat2[11,] / div_tot; mymat2[12,] <- mymat2[12,] / div_tot; mymat2[13,] <- mymat2[13,] / div_tot; mymat2[14,] <- mymat2[14,] / div_tot; mymat2[15,] <- mymat2[15,] / div_tot; mymat2[16,] <- mymat2[16,] / div_tot; mymat2[17,] <- mymat2[17,] / div_tot;
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext; mymat3[9,] <- mymat3[9,] / div_ext; mymat3[10,] <- mymat3[10,] / div_ext;
+mymat3[11,] <- mymat3[11,] / div_ext; mymat3[12,] <- mymat3[12,] / div_ext; mymat3[13,] <- mymat3[13,] / div_ext; mymat3[14,] <- mymat3[14,] / div_ext; mymat3[15,] <- mymat3[15,] / div_ext; mymat3[16,] <- mymat3[16,] / div_ext;
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table5_SALT_at_allenv_dec_raw.csv")
+write.csv(mymat2, file = "table5_SALT_at_allenv_dec_divtot.csv")
+write.csv(mymat3, file = "table5_SALT_at_allenv_dec_divext.csv")
+```
+
+
+
+
+
+COPR ---------------------------------------------------------------------------
+Create summary tables:
+Set 1: 0, 0_80, 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in80),]
+my <- my[!is.na(my$in0) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
+div_tot <- myCOPRtot[c("EH0", "EH0_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_80", "EH80")
+rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+
+write.csv(mymat,  file = "table1_COPR_s_g_fs_inc_raw.csv")
+write.csv(mymat2, file = "table1_COPR_s_g_fs_inc_divtot.csv")
+write.csv(mymat3, file = "table1_COPR_s_g_fs_inc_divext.csv")
+```
 
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
+div_tot <- myCOPRtot[c("EH0", "EH0_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
+# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
+# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_80", "EH80")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table1_COPR_s_g_fs_dec_raw.csv")
+write.csv(mymat2, file = "table1_COPR_s_g_fs_dec_divtot.csv")
+write.csv(mymat3, file = "table1_COPR_s_g_fs_dec_divext.csv")
+```
+
+
+
+Set 2: 0, 0_40, 40
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40),]
+my <- my[!is.na(my$in0) & !is.na(my$in40),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_40",]),
+             nrow(mynot[mynot$treat == "EH40",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+             myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
+div_tot <- myCOPRtot[c("EH0", "EH0_40", "EH40"),1]
+
+
+# how many increase in both environments
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$in0 > 0.05 & my$in40 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_40", "EH40")
+rownames(mymat) <- c("in_both", "in_0", "in_40", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table2_COPR_s_g_ls_inc_raw.csv")
+write.csv(mymat2, file = "table2_COPR_s_g_ls_inc_divtot.csv")
+write.csv(mymat3, file = "table2_COPR_s_g_ls_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+             nrow(mynot[mynot$treat == "EH0_40",]),
+             nrow(mynot[mynot$treat == "EH40",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+             myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+             myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
+div_tot <- myCOPRtot[c("EH0", "EH0_40", "EH40"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .00 but not .80 env
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in the .80 but not .00 env
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
+
+# how many increase in neither the .80 nor .00 env
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH0_40", "EH40")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_40", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table2_COPR_s_g_ls_dec_raw.csv")
+write.csv(mymat2, file = "table2_COPR_s_g_ls_dec_divtot.csv")
+write.csv(mymat3, file = "table2_COPR_s_g_ls_dec_divext.csv")
+```
+
+
+
+Set 3: 40, 40_80, 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in40) | is.na(my$in80),]
+my <- my[!is.na(my$in40) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH40",]),
+             nrow(mynot[mynot$treat == "EH40_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+             myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
+             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
+div_tot <- myCOPRtot[c("EH40", "EH40_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$in40 <= 0.05 & my$in80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .40 but not .80 env
+x <- my[my$in40 <= 0.05 & my$in80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .80 but not .40 env
+x <- my[my$in40 > 0.05 & my$in80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in neither the .80 nor .40 env
+x <- my[my$in40 > 0.05 & my$in80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH40", "EH40_80", "EH80")
+rownames(mymat) <- c("in_both", "in_40", "in_80", "in_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table3_COPR_s_g_hs_inc_raw.csv")
+write.csv(mymat2, file = "table3_COPR_s_g_hs_inc_divtot.csv")
+write.csv(mymat3, file = "table3_COPR_s_g_hs_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
+my <- my[!is.na(my$dec40) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH40",]),
+             nrow(mynot[mynot$treat == "EH40_80",]),
+             nrow(mynot[mynot$treat == "EH80",]))
+div_ext <- cbind(myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+             myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
+             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
+div_tot <- myCOPRtot[c("EH40", "EH40_80", "EH80"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec40 <= 0.05 & my$dec80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .40 but not .80 env
+x <- my[my$dec40 <= 0.05 & my$dec80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in the .80 but not .40 env
+x <- my[my$dec40 > 0.05 & my$dec80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
+
+# how many increase in neither the .80 nor .40 env
+x <- my[my$dec40 > 0.05 & my$dec80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH40", "EH40_80", "EH80")
+rownames(mymat) <- c("dec_both", "dec_40", "dec_80", "dec_neither", "n_extinct", "n_tot")
+mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); mymat3
+
+write.csv(mymat,  file = "table3_COPR_s_g_hs_dec_raw.csv")
+write.csv(mymat2, file = "table3_COPR_s_g_hs_dec_divtot.csv")
+write.csv(mymat3, file = "table3_COPR_s_g_hs_dec_divext.csv")
+```
+
+
+
+ALL -- all treatments in 00 and 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in80),]
 my <- my[!is.na(my$in0) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
 
 # how many increase in both environments
 x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
-summary(x$treat)
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
 
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
-summary(x$treat)
-
-# how many increase in the .00 but not .80 env
+# how many increase in the .0 but not .80 env
 x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
-summary(x$treat)
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
 
-# how many increase in neither the .80 nor .00 env
+# how many increase in the .80 but not .0 env
+x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in neither the .80 nor .0 env
 x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
-summary(x$treat)
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table4_COPR_at_00s80s_inc_raw.csv")
+write.csv(mymat2, file = "table4_COPR_at_00s80s_inc_divtot.csv")
+write.csv(mymat3, file = "table4_COPR_at_00s80s_inc_divext.csv")
 ```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+
+# how many increase in both environments
+x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .0 but not .80 env
+x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in the .80 but not .0 env
+x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+# how many increase in neither the .80 nor .0 env
+x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_none", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table4_COPR_at_00s80s_dec_raw.csv")
+write.csv(mymat2, file = "table4_COPR_at_00s80s_dec_divtot.csv")
+write.csv(mymat3, file = "table4_COPR_at_00s80s_dec_divext.csv")
+```
+
+
+ALL -- All treatments in all four environments
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80) | is.na(my$in120),]
+my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80) & !is.na(my$in120),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 0000 # in none
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+ 
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 1000 # in 0 only
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 0100 # in 40 only
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 0010 # in 80 only
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 0001 # in 120 only
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05,] # 1100 # 0 and 40
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 1010 # 0 and 80
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 1001 # 0 and 120
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 0101 # 40 and 120
+r9 <- round(summary(x$treat), digits = 3); r9 <- r9[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 0110 # 40 and 80
+r10 <- round(summary(x$treat), digits = 3); r10 <- r10[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 0011 # 80 and 120
+r11 <- round(summary(x$treat), digits = 3); r11 <- r11[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05,] # 1110 # 0, 40, 80
+r12 <- round(summary(x$treat), digits = 3); r12 <- r12[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05,] # 1101 # 0, 40, 120
+r13 <- round(summary(x$treat), digits = 3); r13 <- r13[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 1011 # 0, 80, 120
+r14 <- round(summary(x$treat), digits = 3); r14 <- r14[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 0111 # 40, 80, 120
+r15 <- round(summary(x$treat), digits = 3); r15 <- r15[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05,] # 1111 # all
+r16 <- round(summary(x$treat), digits = 3); r16 <- r16[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("0000", "1000", "0100", "0010", "0001", "1100", "1010", "1001", "0101", "0110", "0011", "1110", "1101", "1011", "0111", "1111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot; mymat2[10,] <- mymat2[10,] / div_tot;
+mymat2[11,] <- mymat2[11,] / div_tot; mymat2[12,] <- mymat2[12,] / div_tot; mymat2[13,] <- mymat2[13,] / div_tot; mymat2[14,] <- mymat2[14,] / div_tot; mymat2[15,] <- mymat2[15,] / div_tot; mymat2[16,] <- mymat2[16,] / div_tot; mymat2[17,] <- mymat2[17,] / div_tot;
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext; mymat3[9,] <- mymat3[9,] / div_ext; mymat3[10,] <- mymat3[10,] / div_ext;
+mymat3[11,] <- mymat3[11,] / div_ext; mymat3[12,] <- mymat3[12,] / div_ext; mymat3[13,] <- mymat3[13,] / div_ext; mymat3[14,] <- mymat3[14,] / div_ext; mymat3[15,] <- mymat3[15,] / div_ext; mymat3[16,] <- mymat3[16,] / div_ext;
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table5_COPR_at_allenv_inc_raw.csv")
+write.csv(mymat2, file = "table5_COPR_at_allenv_inc_divtot.csv")
+write.csv(mymat3, file = "table5_COPR_at_allenv_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80) | is.na(my$dec120),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80) & !is.na(my$dec120),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 0000 # in none
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+ 
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 1000 # in 0 only
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 0100 # in 40 only
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 0010 # in 80 only
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 0001 # in 120 only
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05,] # 1100 # 0 and 40
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 1010 # 0 and 80
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 1001 # 0 and 120
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 0101 # 40 and 120
+r9 <- round(summary(x$treat), digits = 3); r9 <- r9[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 0110 # 40 and 80
+r10 <- round(summary(x$treat), digits = 3); r10 <- r10[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 0011 # 80 and 120
+r11 <- round(summary(x$treat), digits = 3); r11 <- r11[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05,] # 1110 # 0, 40, 80
+r12 <- round(summary(x$treat), digits = 3); r12 <- r12[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05,] # 1101 # 0, 40, 120
+r13 <- round(summary(x$treat), digits = 3); r13 <- r13[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 1011 # 0, 80, 120
+r14 <- round(summary(x$treat), digits = 3); r14 <- r14[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 0111 # 40, 80, 120
+r15 <- round(summary(x$treat), digits = 3); r15 <- r15[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05,] # 1111 # all
+r16 <- round(summary(x$treat), digits = 3); r16 <- r16[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("0000", "1000", "0100", "0010", "0001", "1100", "1010", "1001", "0101", "0110", "0011", "1110", "1101", "1011", "0111", "1111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot; mymat2[10,] <- mymat2[10,] / div_tot;
+mymat2[11,] <- mymat2[11,] / div_tot; mymat2[12,] <- mymat2[12,] / div_tot; mymat2[13,] <- mymat2[13,] / div_tot; mymat2[14,] <- mymat2[14,] / div_tot; mymat2[15,] <- mymat2[15,] / div_tot; mymat2[16,] <- mymat2[16,] / div_tot; mymat2[17,] <- mymat2[17,] / div_tot;
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext; mymat3[9,] <- mymat3[9,] / div_ext; mymat3[10,] <- mymat3[10,] / div_ext;
+mymat3[11,] <- mymat3[11,] / div_ext; mymat3[12,] <- mymat3[12,] / div_ext; mymat3[13,] <- mymat3[13,] / div_ext; mymat3[14,] <- mymat3[14,] / div_ext; mymat3[15,] <- mymat3[15,] / div_ext; mymat3[16,] <- mymat3[16,] / div_ext;
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table5_COPR_at_allenv_dec_raw.csv")
+write.csv(mymat2, file = "table5_COPR_at_allenv_dec_divtot.csv")
+write.csv(mymat3, file = "table5_COPR_at_allenv_dec_divext.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
