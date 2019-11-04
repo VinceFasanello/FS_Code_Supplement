@@ -2865,115 +2865,7 @@ mydwcw <- my
 
 SALT ---------------------------------------------------------------------------
 Create summary tables:
-Set 1: 0, 0_80, 80
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in0) | is.na(my$in80),]
-my <- my[!is.na(my$in0) & !is.na(my$in80),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
-div_tot <- mySALTtot[c("EH0", "EH0_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_80", "EH80")
-rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-
-write.csv(mymat,  file = "table1_SALT_s_g_fs_inc_raw.csv")
-write.csv(mymat2, file = "table1_SALT_s_g_fs_inc_divtot.csv")
-write.csv(mymat3, file = "table1_SALT_s_g_fs_inc_divext.csv")
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
-my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
-div_tot <- mySALTtot[c("EH0", "EH0_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_80", "EH80")
-rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table1_SALT_s_g_fs_dec_raw.csv")
-write.csv(mymat2, file = "table1_SALT_s_g_fs_dec_divtot.csv")
-write.csv(mymat3, file = "table1_SALT_s_g_fs_dec_divext.csv")
-```
-
-
-
-Set 2: 0, 0_40, 40
+Set 1: 0, 0_40, 40
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
@@ -3072,7 +2964,7 @@ write.csv(mymat3, file = "table2_SALT_s_g_ls_dec_divext.csv")
 
 
 
-Set 3: 40, 40_80, 80
+Set 2: 40, 40_80, 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
@@ -3295,6 +3187,142 @@ write.csv(mymat3, file = "table4_SALT_at_00s80s_dec_divext.csv")
 ```
 
 
+
+ALL -- All treatments in 00, 40, 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80),]
+my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05,] # 000
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05,] # 100
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05,] # 010
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05,] # 001
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05,] # 110
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05,] # 101
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05,] # 011
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05,] # 111
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("000","100","010","001","110","101","011","111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table6_SALT_at_004080_inc_raw.csv")
+write.csv(mymat2, file = "table6_SALT_at_004080_inc_divtot.csv")
+write.csv(mymat3, file = "table6_SALT_at_004080_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05,] # 000
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05,] # 100
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05,] # 010
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05,] # 001
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05,] # 110
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05,] # 101
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05,] # 011
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05,] # 111
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("000","100","010","001","110","101","011","111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table6_SALT_at_004080_dec_raw.csv")
+write.csv(mymat2, file = "table6_SALT_at_004080_dec_divtot.csv")
+write.csv(mymat3, file = "table6_SALT_at_004080_dec_divext.csv")
+```
+
+
+
 ALL -- All treatments in all four environments
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
@@ -3474,115 +3502,7 @@ write.csv(mymat3, file = "table5_SALT_at_allenv_dec_divext.csv")
 
 COPR ---------------------------------------------------------------------------
 Create summary tables:
-Set 1: 0, 0_80, 80
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in0) | is.na(my$in80),]
-my <- my[!is.na(my$in0) & !is.na(my$in80),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
-div_tot <- myCOPRtot[c("EH0", "EH0_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$in0 <= 0.05 & my$in80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$in0 <= 0.05 & my$in80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$in0 > 0.05 & my$in80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_80", "EH80")
-rownames(mymat) <- c("in_both", "in_0", "in_80", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-
-write.csv(mymat,  file = "table1_COPR_s_g_fs_inc_raw.csv")
-write.csv(mymat2, file = "table1_COPR_s_g_fs_inc_divtot.csv")
-write.csv(mymat3, file = "table1_COPR_s_g_fs_inc_divext.csv")
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
-my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH0", "EH0_80", "EH80")
-div_tot <- myCOPRtot[c("EH0", "EH0_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec0 <= 0.05 & my$dec80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 > 0,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$dec0 <= 0.05 & my$dec80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 > 0,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$dec0 > 0.05 & my$dec80 <= 0.05,]
-# x <- my[my$mn_dw_0 > 0 & my$mn_dw_80 <= 0,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_80", "EH80")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$dec0 > 0.05 & my$dec80 > 0.05,]
-# x <- my[my$mn_dw_0 <= 0 & my$mn_dw_80 <= 0,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_80", "EH80")
-rownames(mymat) <- c("dec_both", "dec_0", "dec_80", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table1_COPR_s_g_fs_dec_raw.csv")
-write.csv(mymat2, file = "table1_COPR_s_g_fs_dec_divtot.csv")
-write.csv(mymat3, file = "table1_COPR_s_g_fs_dec_divext.csv")
-```
-
-
-
-Set 2: 0, 0_40, 40
+Set 1: 0, 0_40, 40
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- drop.levels(my$treat)
@@ -3681,7 +3601,7 @@ write.csv(mymat3, file = "table2_COPR_s_g_ls_dec_divext.csv")
 
 
 
-Set 3: 40, 40_80, 80
+Set 2: 40, 40_80, 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- drop.levels(my$treat)
@@ -3904,6 +3824,142 @@ write.csv(mymat3, file = "table4_COPR_at_00s80s_dec_divext.csv")
 ```
 
 
+
+ALL -- All treatments in 00, 40, 80
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80),]
+my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05,] # 000
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05,] # 100
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05,] # 010
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05,] # 001
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05,] # 110
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05,] # 101
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05,] # 011
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05,] # 111
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("000","100","010","001","110","101","011","111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table6_SALT_at_004080_inc_raw.csv")
+write.csv(mymat2, file = "table6_SALT_at_004080_inc_divtot.csv")
+write.csv(mymat3, file = "table6_SALT_at_004080_inc_divext.csv")
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- drop.levels(my$treat)
+mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80),]
+my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80),]
+ext <- c(nrow(mynot[mynot$treat == "EH0",]),
+         nrow(mynot[mynot$treat == "EH40",]),
+         nrow(mynot[mynot$treat == "EH80",]),
+         nrow(mynot[mynot$treat == "EH0_40",]),
+         nrow(mynot[mynot$treat == "EH20_60",]),
+         nrow(mynot[mynot$treat == "EH0_80",]),
+         nrow(mynot[mynot$treat == "EH40_80",]))
+div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05,] # 000
+r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05,] # 100
+r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05,] # 010
+r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05,] # 001
+r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05,] # 110
+r5 <- round(summary(x$treat), digits = 3); r5 <- r5[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05,] # 101
+r6 <- round(summary(x$treat), digits = 3); r6 <- r6[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05,] # 011
+r7 <- round(summary(x$treat), digits = 3); r7 <- r7[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05,] # 111
+r8 <- round(summary(x$treat), digits = 3); r8 <- r8[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
+
+mymat <- rbind(r1, r2, r3, r4, r5, r6, r7, r8, ext, div_tot)
+colnames(mymat) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+rownames(mymat) <- c("000","100","010","001","110","101","011","111", "n_extinct", "n_tot")
+# mymat
+
+mymat2 <- mymat
+mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
+mymat2[6,] <- mymat2[6,] / div_tot; mymat2[7,] <- mymat2[7,] / div_tot; mymat2[8,] <- mymat2[8,] / div_tot; mymat2[9,] <- mymat2[9,] / div_tot
+mymat2 <- round(mymat2, 3); # mymat2
+
+mymat3 <- mymat
+mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext; mymat3[5,] <- mymat3[5,] / div_ext
+mymat3[6,] <- mymat3[6,] / div_ext; mymat3[7,] <- mymat3[7,] / div_ext; mymat3[8,] <- mymat3[8,] / div_ext
+mymat3 <- round(mymat3, 3); # mymat3
+
+
+mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat
+mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
+mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
+
+write.csv(mymat,  file = "table6_SALT_at_004080_dec_raw.csv")
+write.csv(mymat2, file = "table6_SALT_at_004080_dec_divtot.csv")
+write.csv(mymat3, file = "table6_SALT_at_004080_dec_divext.csv")
+```
+
+
+
 ALL -- All treatments in all four environments
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
@@ -4080,2243 +4136,45 @@ write.csv(mymat3, file = "table5_COPR_at_allenv_dec_divext.csv")
 
 
 
-```{R}
 
 
-```
-
-
-
-
-
-
-
-
-
-# Take a look at extinction in without any stats tests.*, **
+# Take a look at extinction across environments without any stats tests.*, **
       * We will look at this in more depth in the longitudinal data (either as extinciton or fixation)
       ** slight variation in n bcs extinct in the different environments comes from the fact that some bcs (that already have v.low counts) are extirpated during the fit assay in some environments but not in others. 
 ```{R}
-# SALT first -------------------------------------------------------------------
-my <- mySALText
-myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my) # create res dataframe 
-colnames(myres) <- c("mean", "se", "mean.prop")
-myres[,1] <- apply(my, 1, mean) # calculate treat means
-myres[,2] <- apply(my, 1, sjstats::se) # calculate treatment ses
-myres[,3] <- myres[,1] / mySALTtot[,1] # report treatment means as proportions as well
-SALT_ext_res_summary <- myres # store in informative frame.
-
-# COPR -------------------------------------------------------------------------
-my <- mySALText
-myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
-colnames(myres) <- c("mean", "se", "mean.prop")
-myres[,1] <- apply(my, 1, mean)
-myres[,2] <- apply(my, 1, sjstats::se)
-myres[,3] <- myres[,1] / mySALTtot[,1]
-SALT_ext_res_summary <- myres
-
+# # SALT first -------------------------------------------------------------------
+# my <- mySALText
+# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my) # create res dataframe 
+# colnames(myres) <- c("mean", "se", "mean.prop")
+# myres[,1] <- apply(my, 1, mean) # calculate treat means
+# myres[,2] <- apply(my, 1, sjstats::se) # calculate treatment ses
+# myres[,3] <- myres[,1] / mySALTtot[,1] # report treatment means as proportions as well
+# SALT_ext_res_summary <- myres # store in informative frame.
+# 
+# # COPR -------------------------------------------------------------------------
+# my <- mySALText
+# myres <- matrix(nrow = 7, ncol = 3); rownames(myres) <- rownames(my)
+# colnames(myres) <- c("mean", "se", "mean.prop")
+# myres[,1] <- apply(my, 1, mean)
+# myres[,2] <- apply(my, 1, sjstats::se)
+# myres[,3] <- myres[,1] / mySALTtot[,1]
+# SALT_ext_res_summary <- myres
 ```
 <br/><br/>
 
 
 Create an increase table that is increasers out of the number remaining rather than out of total. 
 ```{R}
-# SALT first -------------------------------------------------------------------
-mySALTin_prop <- mySALTin/mySALTtot; mySALTin_prop <- round(mySALTin_prop, digits = 2)
-mySALTin_prop_le <- mySALTin / (mySALTtot - mySALText);  mySALTin_prop_le <- round(mySALTin_prop_le, digits = 2)
-
-myCOPRin_prop <- myCOPRin/myCOPRtot; myCOPRin_prop <- round(myCOPRin_prop, digits = 2)
-myCOPRin_prop_le <- myCOPRin / (myCOPRtot - myCOPRext);  myCOPRin_prop_le <- round(myCOPRin_prop_le, digits = 2)
-
-mySALTdec_prop <- mySALTdec/mySALTtot; mySALTdec_prop <- round(mySALTdec_prop, digits = 2)
-mySALTdec_prop_le <- mySALTdec / (mySALTtot - mySALText);  mySALTdec_prop_le <- round(mySALTdec_prop_le, digits = 2)
-
-myCOPRdec_prop <- myCOPRdec/myCOPRtot; myCOPRdec_prop <- round(myCOPRdec_prop, digits = 2)
-myCOPRdec_prop_le <- myCOPRdec / (myCOPRtot - myCOPRext);  myCOPRdec_prop_le <- round(myCOPRdec_prop_le, digits = 2)
+# # SALT first -------------------------------------------------------------------
+# mySALTin_prop <- mySALTin/mySALTtot; mySALTin_prop <- round(mySALTin_prop, digits = 2)
+# mySALTin_prop_le <- mySALTin / (mySALTtot - mySALText);  mySALTin_prop_le <- round(mySALTin_prop_le, digits = 2)
+# 
+# myCOPRin_prop <- myCOPRin/myCOPRtot; myCOPRin_prop <- round(myCOPRin_prop, digits = 2)
+# myCOPRin_prop_le <- myCOPRin / (myCOPRtot - myCOPRext);  myCOPRin_prop_le <- round(myCOPRin_prop_le, digits = 2)
+# 
+# mySALTdec_prop <- mySALTdec/mySALTtot; mySALTdec_prop <- round(mySALTdec_prop, digits = 2)
+# mySALTdec_prop_le <- mySALTdec / (mySALTtot - mySALText);  mySALTdec_prop_le <- round(mySALTdec_prop_le, digits = 2)
+# 
+# myCOPRdec_prop <- myCOPRdec/myCOPRtot; myCOPRdec_prop <- round(myCOPRdec_prop, digits = 2)
+# myCOPRdec_prop_le <- myCOPRdec / (myCOPRtot - myCOPRext);  myCOPRdec_prop_le <- round(myCOPRdec_prop_le, digits = 2)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Now there are many many tedious comparisons that must be drawn between the treatments in different environments....
-this will be 17 tests X 4 environments X 2 variables X 2 chemicals = 272 tests....
-These tests are computed here and the p-values are stored in a set of matrices (n=16; 2 chemicals x 2 vars x 4 envs )
-* It is important to note that these are not ALL possible pairwise comparisons, but only those of particular interest!
-# SALT -------------------------------------------------------------------------
-# INCREASE -------------------------------------------------
-```{r}
-mytdata <- mySALTin
-my <- matrix(nrow =2, ncol=2)
-myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(mySALTin); rownames(myres) <- colnames(myres)
-
-# 0.0 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0"]
-my[1,2] <- mySALTtot["EH0","0"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0"]
-my[2,2] <- mySALTtot["EH40","0"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0"]
-my[1,2] <- mySALTtot["EH40","0"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0"]
-my[1,2] <- mySALTtot["EH80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0"]
-my[1,2] <- mySALTtot["EH0_40","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0"]
-my[1,2] <- mySALTtot["EH20_60","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0"]
-my[1,2] <- mySALTtot["EH0_80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_inc_000 <- myres
-
-
-
-
-# 0.4 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.4"]
-my[1,2] <- mySALTtot["EH0","0.4"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.4"]
-my[2,2] <- mySALTtot["EH40","0.4"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.4"]
-my[1,2] <- mySALTtot["EH40","0.4"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.4"]
-my[1,2] <- mySALTtot["EH80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.4"]
-my[1,2] <- mySALTtot["EH0_40","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.4"]
-my[1,2] <- mySALTtot["EH20_60","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.4"]
-my[1,2] <- mySALTtot["EH0_80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_inc_040 <- myres
-
-
-
-
-# 0.8 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.8"]
-my[1,2] <- mySALTtot["EH0","0.8"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.8"]
-my[2,2] <- mySALTtot["EH40","0.8"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.8"]
-my[1,2] <- mySALTtot["EH40","0.8"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.8"]
-my[1,2] <- mySALTtot["EH80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.8"]
-my[1,2] <- mySALTtot["EH0_40","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.8"]
-my[1,2] <- mySALTtot["EH20_60","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.8"]
-my[1,2] <- mySALTtot["EH0_80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_inc_080 <- myres
-
-
-
-
-# 1.2 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "1.2"]
-my[1,2] <- mySALTtot["EH0","1.2"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","1.2"]
-my[2,2] <- mySALTtot["EH40","1.2"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "1.2"]
-my[1,2] <- mySALTtot["EH40","1.2"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "1.2"]
-my[1,2] <- mySALTtot["EH80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "1.2"]
-my[1,2] <- mySALTtot["EH0_40","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "1.2"]
-my[1,2] <- mySALTtot["EH20_60","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "1.2"]
-my[1,2] <- mySALTtot["EH0_80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_inc_120 <- myres
-
-# ----------
-p_SALT_inc_000[is.nan(p_SALT_inc_000)] <- 1
-p_SALT_inc_040[is.nan(p_SALT_inc_040)] <- 1
-p_SALT_inc_080[is.nan(p_SALT_inc_080)] <- 1
-p_SALT_inc_120[is.nan(p_SALT_inc_120)] <- 1
-rm(my, myres, mytdata)
-```
-<br/><br/>
-
-
-
-# DECREASE -------------------------------------------------
-```{r}
-mytdata <- mySALTdec
-my <- matrix(nrow =2, ncol=2)
-myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(mySALTin); rownames(myres) <- colnames(myres)
-
-# 0.0 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0"]
-my[1,2] <- mySALTtot["EH0","0"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0"]
-my[2,2] <- mySALTtot["EH40","0"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0"]
-my[1,2] <- mySALTtot["EH40","0"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- mySALTtot["EH80","0"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- mySALTtot["EH0_40","0"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0"]
-my[1,2] <- mySALTtot["EH80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0"]
-my[1,2] <- mySALTtot["EH0_40","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- mySALTtot["EH20_60","0"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0"]
-my[1,2] <- mySALTtot["EH20_60","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- mySALTtot["EH0_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0"]
-my[1,2] <- mySALTtot["EH0_80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- mySALTtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_dec_000 <- myres
-
-
-
-
-# 0.4 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.4"]
-my[1,2] <- mySALTtot["EH0","0.4"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.4"]
-my[2,2] <- mySALTtot["EH40","0.4"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.4"]
-my[1,2] <- mySALTtot["EH40","0.4"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- mySALTtot["EH80","0.4"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- mySALTtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.4"]
-my[1,2] <- mySALTtot["EH80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.4"]
-my[1,2] <- mySALTtot["EH0_40","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- mySALTtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.4"]
-my[1,2] <- mySALTtot["EH20_60","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- mySALTtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.4"]
-my[1,2] <- mySALTtot["EH0_80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- mySALTtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_dec_040 <- myres
-
-
-
-
-# 0.8 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.8"]
-my[1,2] <- mySALTtot["EH0","0.8"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.8"]
-my[2,2] <- mySALTtot["EH40","0.8"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.8"]
-my[1,2] <- mySALTtot["EH40","0.8"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- mySALTtot["EH80","0.8"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- mySALTtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.8"]
-my[1,2] <- mySALTtot["EH80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.8"]
-my[1,2] <- mySALTtot["EH0_40","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- mySALTtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.8"]
-my[1,2] <- mySALTtot["EH20_60","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- mySALTtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.8"]
-my[1,2] <- mySALTtot["EH0_80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- mySALTtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_dec_080 <- myres
-
-
-
-
-# 1.2 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "1.2"]
-my[1,2] <- mySALTtot["EH0","1.2"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","1.2"]
-my[2,2] <- mySALTtot["EH40","1.2"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "1.2"]
-my[1,2] <- mySALTtot["EH40","1.2"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- mySALTtot["EH80","1.2"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- mySALTtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "1.2"]
-my[1,2] <- mySALTtot["EH80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "1.2"]
-my[1,2] <- mySALTtot["EH0_40","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- mySALTtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "1.2"]
-my[1,2] <- mySALTtot["EH20_60","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- mySALTtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "1.2"]
-my[1,2] <- mySALTtot["EH0_80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- mySALTtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_SALT_dec_120 <- myres
-
-# ----------
-p_SALT_dec_000[is.nan(p_SALT_dec_000)] <- 1
-p_SALT_dec_040[is.nan(p_SALT_dec_040)] <- 1
-p_SALT_dec_080[is.nan(p_SALT_dec_080)] <- 1
-p_SALT_dec_120[is.nan(p_SALT_dec_120)] <- 1
-rm(my, myres, mytdata)
-```
-<br/><br/>
-
-
-
-# COPR -------------------------------------------------------------------------
-# INCREASE -------------------------------------------------
-```{r}
-mytdata <- myCOPRin
-my <- matrix(nrow =2, ncol=2)
-myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(myCOPRin); rownames(myres) <- colnames(myres)
-
-# 0.0 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0"]
-my[1,2] <- myCOPRtot["EH0","0"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0"]
-my[2,2] <- myCOPRtot["EH40","0"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0"]
-my[1,2] <- myCOPRtot["EH40","0"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0"]
-my[1,2] <- myCOPRtot["EH80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0"]
-my[1,2] <- myCOPRtot["EH0_40","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0"]
-my[1,2] <- myCOPRtot["EH20_60","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0"]
-my[1,2] <- myCOPRtot["EH0_80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_000 <- myres
-
-
-
-
-# 0.4 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.4"]
-my[1,2] <- myCOPRtot["EH0","0.4"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.4"]
-my[2,2] <- myCOPRtot["EH40","0.4"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.4"]
-my[1,2] <- myCOPRtot["EH40","0.4"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.4"]
-my[1,2] <- myCOPRtot["EH80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.4"]
-my[1,2] <- myCOPRtot["EH0_40","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.4"]
-my[1,2] <- myCOPRtot["EH20_60","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.4"]
-my[1,2] <- myCOPRtot["EH0_80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_040 <- myres
-
-
-
-
-# 0.8 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.8"]
-my[1,2] <- myCOPRtot["EH0","0.8"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.8"]
-my[2,2] <- myCOPRtot["EH40","0.8"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.8"]
-my[1,2] <- myCOPRtot["EH40","0.8"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.8"]
-my[1,2] <- myCOPRtot["EH80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.8"]
-my[1,2] <- myCOPRtot["EH0_40","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.8"]
-my[1,2] <- myCOPRtot["EH20_60","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.8"]
-my[1,2] <- myCOPRtot["EH0_80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_080 <- myres
-
-
-
-
-# 1.2 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "1.2"]
-my[1,2] <- myCOPRtot["EH0","1.2"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","1.2"]
-my[2,2] <- myCOPRtot["EH40","1.2"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "1.2"]
-my[1,2] <- myCOPRtot["EH40","1.2"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "1.2"]
-my[1,2] <- myCOPRtot["EH80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "1.2"]
-my[1,2] <- myCOPRtot["EH0_40","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "1.2"]
-my[1,2] <- myCOPRtot["EH20_60","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "1.2"]
-my[1,2] <- myCOPRtot["EH0_80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_120 <- myres
-
-# ----------
-p_COPR_inc_000[is.nan(p_COPR_inc_000)] <- 1
-p_COPR_inc_040[is.nan(p_COPR_inc_040)] <- 1
-p_COPR_inc_080[is.nan(p_COPR_inc_080)] <- 1
-p_COPR_inc_120[is.nan(p_COPR_inc_120)] <- 1
-rm(my, myres, mytdata)
-```
-<br/><br/>
-
-
-
-# DECREASE -------------------------------------------------
-```{r}
-mytdata <- myCOPRdec
-my <- matrix(nrow =2, ncol=2)
-myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(myCOPRin); rownames(myres) <- colnames(myres)
-
-# 0.0 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0"]
-my[1,2] <- myCOPRtot["EH0","0"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0"]
-my[2,2] <- myCOPRtot["EH40","0"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0"]
-my[1,2] <- myCOPRtot["EH40","0"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0"]
-my[1,2] <- myCOPRtot["EH80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0"]
-my[1,2] <- myCOPRtot["EH0_40","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0"]
-my[1,2] <- myCOPRtot["EH20_60","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0"]
-my[1,2] <- myCOPRtot["EH0_80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_dec_000 <- myres
-
-
-
-
-# 0.4 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.4"]
-my[1,2] <- myCOPRtot["EH0","0.4"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.4"]
-my[2,2] <- myCOPRtot["EH40","0.4"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.4"]
-my[1,2] <- myCOPRtot["EH40","0.4"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.4"]
-my[1,2] <- myCOPRtot["EH80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.4"]
-my[1,2] <- myCOPRtot["EH0_40","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.4"]
-my[1,2] <- myCOPRtot["EH20_60","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.4"]
-my[1,2] <- myCOPRtot["EH0_80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_dec_040 <- myres
-
-
-
-
-# 0.8 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.8"]
-my[1,2] <- myCOPRtot["EH0","0.8"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.8"]
-my[2,2] <- myCOPRtot["EH40","0.8"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.8"]
-my[1,2] <- myCOPRtot["EH40","0.8"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.8"]
-my[1,2] <- myCOPRtot["EH80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.8"]
-my[1,2] <- myCOPRtot["EH0_40","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.8"]
-my[1,2] <- myCOPRtot["EH20_60","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.8"]
-my[1,2] <- myCOPRtot["EH0_80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_dec_080 <- myres
-
-
-
-
-# 1.2 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "1.2"]
-my[1,2] <- myCOPRtot["EH0","1.2"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","1.2"]
-my[2,2] <- myCOPRtot["EH40","1.2"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "1.2"]
-my[1,2] <- myCOPRtot["EH40","1.2"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "1.2"]
-my[1,2] <- myCOPRtot["EH80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "1.2"]
-my[1,2] <- myCOPRtot["EH0_40","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "1.2"]
-my[1,2] <- myCOPRtot["EH20_60","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "1.2"]
-my[1,2] <- myCOPRtot["EH0_80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_dec_120 <- myres
-
-# ----------
-p_COPR_dec_000[is.nan(p_COPR_dec_000)] <- 1
-p_COPR_dec_040[is.nan(p_COPR_dec_040)] <- 1
-p_COPR_dec_080[is.nan(p_COPR_dec_080)] <- 1
-p_COPR_dec_120[is.nan(p_COPR_dec_120)] <- 1
-rm(my, myres, mytdata)
-```
-
-
-
-# COPR -------------------------------------------------------------------------
-# INCREASE_v2 -------------------------------------------------
-```{r}
-myCOPRtot_holder <- myCOPRtot
-myCOPRtot <- myCOPRtot - myCOPRext
-
-mytdata <- myCOPRin
-my <- matrix(nrow =2, ncol=2)
-myres <- matrix(nrow=7, ncol=7); colnames(myres) <- rownames(myCOPRin); rownames(myres) <- colnames(myres)
-
-# 0.0 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0"]
-my[1,2] <- myCOPRtot["EH0","0"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0"]
-my[2,2] <- myCOPRtot["EH40","0"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0"]
-my[1,2] <- myCOPRtot["EH40","0"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0"]
-my[2,2] <- myCOPRtot["EH80","0"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0"]
-my[2,2] <- myCOPRtot["EH0_40","0"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0"]
-my[1,2] <- myCOPRtot["EH80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0"]
-my[1,2] <- myCOPRtot["EH0_40","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0"]
-my[2,2] <- myCOPRtot["EH20_60","0"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0"]
-my[1,2] <- myCOPRtot["EH20_60","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0"]
-my[2,2] <- myCOPRtot["EH0_80","0"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0"]
-my[1,2] <- myCOPRtot["EH0_80","0"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0"]
-my[2,2] <- myCOPRtot["EH40_80","0"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_000_v2 <- myres
-
-
-
-
-# 0.4 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.4"]
-my[1,2] <- myCOPRtot["EH0","0.4"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.4"]
-my[2,2] <- myCOPRtot["EH40","0.4"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.4"]
-my[1,2] <- myCOPRtot["EH40","0.4"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.4"]
-my[2,2] <- myCOPRtot["EH80","0.4"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.4"]
-my[2,2] <- myCOPRtot["EH0_40","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.4"]
-my[1,2] <- myCOPRtot["EH80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.4"]
-my[1,2] <- myCOPRtot["EH0_40","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.4"]
-my[2,2] <- myCOPRtot["EH20_60","0.4"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.4"]
-my[1,2] <- myCOPRtot["EH20_60","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.4"]
-my[2,2] <- myCOPRtot["EH0_80","0.4"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.4"]
-my[1,2] <- myCOPRtot["EH0_80","0.4"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.4"]
-my[2,2] <- myCOPRtot["EH40_80","0.4"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_040_v2 <- myres
-
-
-
-
-# 0.8 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "0.8"]
-my[1,2] <- myCOPRtot["EH0","0.8"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","0.8"]
-my[2,2] <- myCOPRtot["EH40","0.8"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "0.8"]
-my[1,2] <- myCOPRtot["EH40","0.8"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","0.8"]
-my[2,2] <- myCOPRtot["EH80","0.8"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","0.8"]
-my[2,2] <- myCOPRtot["EH0_40","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "0.8"]
-my[1,2] <- myCOPRtot["EH80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "0.8"]
-my[1,2] <- myCOPRtot["EH0_40","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","0.8"]
-my[2,2] <- myCOPRtot["EH20_60","0.8"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "0.8"]
-my[1,2] <- myCOPRtot["EH20_60","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","0.8"]
-my[2,2] <- myCOPRtot["EH0_80","0.8"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "0.8"]
-my[1,2] <- myCOPRtot["EH0_80","0.8"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","0.8"]
-my[2,2] <- myCOPRtot["EH40_80","0.8"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_080_v2 <- myres
-
-
-
-
-# 1.2 --------------------------------------------
-# 0 vs ---------------------------------
-my[1,1] <- mytdata["EH0", "1.2"]
-my[1,2] <- myCOPRtot["EH0","1.2"] - my[1,1]
-# 40 ---------------
-my[2,1] <- mytdata["EH40","1.2"]
-my[2,2] <- myCOPRtot["EH40","1.2"] - my[2,1]; # my
-myres["EH0", "EH40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH0", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 40 vs ---------------------------------
-my[1,1] <- mytdata["EH40", "1.2"]
-my[1,2] <- myCOPRtot["EH40","1.2"] - my[1,1]
-# 80 ---------------
-my[2,1] <- mytdata["EH80","1.2"]
-my[2,2] <- myCOPRtot["EH80","1.2"] - my[2,1]; # my
-myres["EH40", "EH80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_40 -------------
-my[2,1] <- mytdata["EH0_40","1.2"]
-my[2,2] <- myCOPRtot["EH0_40","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_40"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 80 vs ---------------------------------
-my[1,1] <- mytdata["EH80", "1.2"]
-my[1,2] <- myCOPRtot["EH80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH80", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_40 vs ---------------------------------
-my[1,1] <- mytdata["EH0_40", "1.2"]
-my[1,2] <- myCOPRtot["EH0_40","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 20_60 -------------
-my[2,1] <- mytdata["EH20_60","1.2"]
-my[2,2] <- myCOPRtot["EH20_60","1.2"] - my[2,1]; # my
-myres["EH0_40", "EH20_60"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 20_60 vs ---------------------------------
-my[1,1] <- mytdata["EH20_60", "1.2"]
-my[1,2] <- myCOPRtot["EH20_60","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-# 0_80 -------------
-my[2,1] <- mytdata["EH0_80","1.2"]
-my[2,2] <- myCOPRtot["EH0_80","1.2"] - my[2,1]; # my
-myres["EH20_60", "EH0_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-
-# 0_80 vs ---------------------------------
-my[1,1] <- mytdata["EH0_80", "1.2"]
-my[1,2] <- myCOPRtot["EH0_80","1.2"] - my[1,1]
-# 40_80 -------------
-my[2,1] <- mytdata["EH40_80","1.2"]
-my[2,2] <- myCOPRtot["EH40_80","1.2"] - my[2,1]; # my
-myres["EH0_80", "EH40_80"] <- chisq.test(x = my, simulate.p.value = T)$p.value
-
-# save results -----
-p_COPR_inc_120_v2 <- myres
-
-# ----------
-p_COPR_inc_000_v2[is.nan(p_COPR_inc_000_v2)] <- 1
-p_COPR_inc_040_v2[is.nan(p_COPR_inc_040_v2)] <- 1
-p_COPR_inc_080_v2[is.nan(p_COPR_inc_080_v2)] <- 1
-p_COPR_inc_120_v2[is.nan(p_COPR_inc_120_v2)] <- 1
-myCOPRtot <- myCOPRtot_holder
-rm(my, myres, mytdata)
-```
-<br/><br/>
