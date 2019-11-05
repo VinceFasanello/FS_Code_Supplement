@@ -25,6 +25,7 @@ require(gridExtra) # used for multipanel plotting
 require(barnard)
 require(GGally)
 require(plotly)
+require(dplyr)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
@@ -1229,8 +1230,34 @@ my <- cbind(my0, my40$mn_dw, my40$mn_re_dw, my80$mn_dw, my80$mn_re_dw, my120$mn_
 colnames(my)[c(23:30)] <- c("mn_dw_0", "mn_re_dw_0","mn_dw_40", "mn_re_dw_40", "mn_dw_80", "mn_re_dw_80", "mn_dw_120", "mn_re_dw_120")
 mydwcw <- my
 
+# also need to make a 1-well per row version of the mydwc dataframe
+my <- mydwc
+myg <- NA
+my$colid <- paste0(my$epo, my$mpasp, my$well)
+for (i in unique(my$colid)) {
+  myt <- my[my$colid == i,]
+  myt1 <- myt[1, c("epo","mpamt","mpasp","bc1","bc2","treat","min","max","colid","mn_dw","mn_re_dw")]
+  myt2 <- myt[2, c("epo","mpamt","mpasp","bc1","bc2","treat","min","max","colid","mn_dw","mn_re_dw")]
+  colnames(myt2) <- paste0(colnames(myt2), "_bc2")
+  myt <- cbind(myt1, myt2[,c("mn_dw_bc2", "mn_re_dw_bc2")])
+  myg <- rbind(myg, myt)
+}
+
+myg$ps <- NA
+myg$ps[is.na(myg$mn_dw) & is.na(myg$mn_dw_bc2)] <- "XX"
+myg$ps[myg$mn_dw > 0 & is.na(myg$mn_dw_bc2)] <- "IX"
+myg$ps[is.na(myg$mn_dw) & myg$mn_dw_bc2 > 0] <- "IX"
+myg$ps[myg$mn_dw < 0 & is.na(myg$mn_dw_bc2)] <- "DX"
+myg$ps[is.na(myg$mn_dw) & myg$mn_dw_bc2 < 0] <- "DX"
+myg$ps[myg$mn_dw > 0 & myg$mn_dw_bc2 > 0] <- "II"
+myg$ps[myg$mn_dw > 0 & myg$mn_dw_bc2 < 0] <- "ID"
+myg$ps[myg$mn_dw < 0 & myg$mn_dw_bc2 > 0] <- "ID"
+myg$ps[myg$mn_dw < 0 & myg$mn_dw_bc2 < 0] <- "DD"
+myg$ps <- factor(myg$ps, levels = c("II", "ID", "DD", "IX", "DX", "XX"))
+
+welldata <- myg[2:nrow(myg),]
 # ------------------
-rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120)
+rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2)
 ```
 <br/><br/>
 
@@ -1241,18 +1268,21 @@ my <- myd[myd$mpar == 1 & myd$epo %in% c("SALT_A", "SALT_B") & myd$mpasp == 0.0,
 my <- my[,c("treat", "bc1cts_i_e")]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 summary(my$treat[my$bc1cts_i_e <= 15])
-# summary(my$treat[my$bc1cts_i_e <= 100])
-# summary(my$treat[my$bc1cts_i_e <= 250])
-# summary(my$treat[my$bc1cts_i_e <= 500])
+summary(my$treat[my$bc1cts_i_e <= 100])
+summary(my$treat[my$bc1cts_i_e <= 250])
+summary(my$treat[my$bc1cts_i_e <= 500])
 
 
 my <- myd[myd$mpar == 1 & myd$epo %in% c("COPR_A", "COPR_B") & myd$mpasp == 0.0,]
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
 my <- my[,c("treat", "bc1cts_i_e")]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 summary(my$treat[my$bc1cts_i_e <= 15])
-# summary(my$treat[my$bc1cts_i_e <= 100])
-# summary(my$treat[my$bc1cts_i_e <= 250])
-# summary(my$treat[my$bc1cts_i_e <= 500])
+summary(my$treat[my$bc1cts_i_e <= 100])
+summary(my$treat[my$bc1cts_i_e <= 250])
+summary(my$treat[my$bc1cts_i_e <= 500])
 
 # ------------------
 rm(my)
@@ -2643,7 +2673,9 @@ colnames(myCOPRtot) <- colnames(myCOPRin)
 # COPR in CM -------------------------------------------------------------------
 my <- myd[order(myd$bcpID),] 
 my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
-x <- table(my$treat)/4; myCOPRtot[,c(1:4)] <- x[c(1, 5, 7, 2, 4, 3, 6)]
+x <- table(my$treat)/4
+x["EH0"] <- 16; x["EH40"] <- 16;  x["EH80"] <- 16
+myCOPRtot[,c(1:4)] <- x[c(1, 5, 7, 2, 4, 3, 6)]
 my <- my[!is.na(my$dw),]
 
 # model & diagnostic plots ---------------------------------
@@ -2861,7 +2893,9 @@ for (i in 1:nrow(my)) {
 }
 mydwcw <- my
 ```
+<br/><br/>
 
+Code blocks below in order: Inc calc & table, Inc fig, Dec calc & table, Dec fig. COPR blocks follow SALT blocks. 
 
 SALT ---------------------------------------------------------------------------
 Create summary tables:
@@ -2915,6 +2949,30 @@ write.csv(mymat3, file = "table2_SALT_s_g_ls_inc_divext.csv")
 ```
 
 ```{R}
+mywidth <- 7
+myheight <- 7
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05] <- "Both"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05] <- "Low Only"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05] <- "High Only"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_lowset_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
@@ -2961,6 +3019,27 @@ write.csv(mymat,  file = "table2_SALT_s_g_ls_dec_raw.csv")
 write.csv(mymat2, file = "table2_SALT_s_g_ls_dec_divtot.csv")
 write.csv(mymat3, file = "table2_SALT_s_g_ls_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05] <- "Both"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05] <- "Low Only"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05] <- "High Only"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_lowset_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
 
 
 
@@ -3014,6 +3093,26 @@ write.csv(mymat3, file = "table3_SALT_s_g_hs_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in40 <= 0.05 & my$in80 <= 0.05] <- "Both"
+my$Environment[my$in40 <= 0.05 & my$in80 > 0.05] <- "Low Only"
+my$Environment[my$in40 > 0.05 & my$in80 <= 0.05] <- "High Only"
+my$Environment[my$in40 > 0.05 & my$in80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_highset_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
@@ -3060,6 +3159,27 @@ write.csv(mymat,  file = "table3_SALT_s_g_hs_dec_raw.csv")
 write.csv(mymat2, file = "table3_SALT_s_g_hs_dec_divtot.csv")
 write.csv(mymat3, file = "table3_SALT_s_g_hs_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "Both"
+my$Environment[my$dec40 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
+my$Environment[my$dec40 > 0.05 & my$dec80 <= 0.05] <- "High Only"
+my$Environment[my$dec40 > 0.05 & my$dec80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_highset_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
 
 
 
@@ -3126,6 +3246,26 @@ write.csv(mymat3, file = "table4_SALT_at_00s80s_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in0 <= 0.05 & my$in80 <= 0.05] <- "Both"
+my$Environment[my$in0 <= 0.05 & my$in80 > 0.05] <- "Low Only"
+my$Environment[my$in0 > 0.05 & my$in80 <= 0.05] <- "High Only"
+my$Environment[my$in0 > 0.05 & my$in80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_80_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
@@ -3185,6 +3325,27 @@ write.csv(mymat,  file = "table4_SALT_at_00s80s_dec_raw.csv")
 write.csv(mymat2, file = "table4_SALT_at_00s80s_dec_divtot.csv")
 write.csv(mymat3, file = "table4_SALT_at_00s80s_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec0 <= 0.05 & my$dec80 <= 0.05] <- "Both"
+my$Environment[my$dec0 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
+my$Environment[my$dec0 > 0.05 & my$dec80 <= 0.05] <- "High Only"
+my$Environment[my$dec0 > 0.05 & my$dec80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_80_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
 
 
 
@@ -3256,6 +3417,30 @@ write.csv(mymat3, file = "table6_SALT_at_004080_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05] <- "000"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05] <- "100"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05] <- "010"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05] <- "001"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05] <- "110"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05] <- "101"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05] <- "011"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05] <- "111"
+my$Environment <-  factor(my$Environment, levels = c("111", "011", "101", "110", "001", "010", "100", "000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_40_80_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80),]
@@ -3320,6 +3505,31 @@ write.csv(mymat,  file = "table6_SALT_at_004080_dec_raw.csv")
 write.csv(mymat2, file = "table6_SALT_at_004080_dec_divtot.csv")
 write.csv(mymat3, file = "table6_SALT_at_004080_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05] <- "000"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05] <- "100"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05] <- "010"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05] <- "001"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05] <- "110"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05] <- "101"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "011"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "111"
+my$Environment <-  factor(my$Environment, levels = c("111", "011", "101", "110", "001", "010", "100", "000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_40_80_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
 
 
 
@@ -3411,6 +3621,39 @@ write.csv(mymat3, file = "table5_SALT_at_allenv_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "0000" # 0000 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "1000" # 1000 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "0100" # 0100 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "0010" # 0010 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "0001" # 0001 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "1100" # 1100 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "1010" # 1010 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "1001" # 1001 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "0101" # 0101 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "0110" # 0110 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "0011" # 0011 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "1110" # 1110 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "1101" # 1101 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "1011" # 1011 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "0111" # 0111 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "1111" # 1111 # in none
+my$Environment <-  factor(my$Environment, levels = c("1111", "0111", "1011", "1101", "1110", "0011", "0110", "0101",
+                                                     "1001", "1010", "1100", "0001", "0010", "0100", "1000", "0000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_40_80_120_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80) | is.na(my$dec120),]
@@ -3496,6 +3739,41 @@ write.csv(mymat2, file = "table5_SALT_at_allenv_dec_divtot.csv")
 write.csv(mymat3, file = "table5_SALT_at_allenv_dec_divext.csv")
 ```
 
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "0000" # 0000 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "1000" # 1000 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "0100" # 0100 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "0010" # 0010 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "0001" # 0001 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "1100" # 1100 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "1010" # 1010 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "1001" # 1001 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "0101" # 0101 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "0110" # 0110 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "0011" # 0011 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "1110" # 1110 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "1101" # 1101 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "1011" # 1011 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "0111" # 0111 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "1111" # 1111 # in none
+my$Environment <-  factor(my$Environment, levels = c("1111", "0111", "1011", "1101", "1110", "0011", "0110", "0101",
+                                                     "1001", "1010", "1100", "0001", "0010", "0100", "1000", "0000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_SALT_alltreat_00_40_80_120_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
+
+
 
 
 
@@ -3505,6 +3783,11 @@ Create summary tables:
 Set 1: 0, 0_40, 40
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$in0) | is.na(my$in40),]
 my <- my[!is.na(my$in0) & !is.na(my$in40),]
@@ -3552,7 +3835,36 @@ write.csv(mymat3, file = "table2_COPR_s_g_ls_inc_divext.csv")
 ```
 
 ```{R}
+mywidth <- 7
+myheight <- 7
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05] <- "Both"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05] <- "Low Only"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05] <- "High Only"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_lowset_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
 my <- my[!is.na(my$dec0) & !is.na(my$dec40),]
@@ -3599,11 +3911,37 @@ write.csv(mymat2, file = "table2_COPR_s_g_ls_dec_divtot.csv")
 write.csv(mymat3, file = "table2_COPR_s_g_ls_dec_divext.csv")
 ```
 
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05] <- "Both"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05] <- "Low Only"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05] <- "High Only"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_lowset_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
+
 
 
 Set 2: 40, 40_80, 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$in40) | is.na(my$in80),]
 my <- my[!is.na(my$in40) & !is.na(my$in80),]
@@ -3651,7 +3989,32 @@ write.csv(mymat3, file = "table3_COPR_s_g_hs_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in40 <= 0.05 & my$in80 <= 0.05] <- "Both"
+my$Environment[my$in40 <= 0.05 & my$in80 > 0.05] <- "Low Only"
+my$Environment[my$in40 > 0.05 & my$in80 <= 0.05] <- "High Only"
+my$Environment[my$in40 > 0.05 & my$in80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_highset_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
 my <- my[!is.na(my$dec40) & !is.na(my$dec80),]
@@ -3698,11 +4061,37 @@ write.csv(mymat2, file = "table3_COPR_s_g_hs_dec_divtot.csv")
 write.csv(mymat3, file = "table3_COPR_s_g_hs_dec_divext.csv")
 ```
 
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "Both"
+my$Environment[my$dec40 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
+my$Environment[my$dec40 > 0.05 & my$dec80 <= 0.05] <- "High Only"
+my$Environment[my$dec40 > 0.05 & my$dec80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_highset_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
+
 
 
 ALL -- all treatments in 00 and 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$in0) | is.na(my$in80),]
 my <- my[!is.na(my$in0) & !is.na(my$in80),]
@@ -3763,7 +4152,32 @@ write.csv(mymat3, file = "table4_COPR_at_00s80s_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$in0 <= 0.05 & my$in80 <= 0.05] <- "Both"
+my$Environment[my$in0 <= 0.05 & my$in80 > 0.05] <- "Low Only"
+my$Environment[my$in0 > 0.05 & my$in80 <= 0.05] <- "High Only"
+my$Environment[my$in0 > 0.05 & my$in80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_80_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec80),]
 my <- my[!is.na(my$dec0) & !is.na(my$dec80),]
@@ -3823,11 +4237,37 @@ write.csv(mymat2, file = "table4_COPR_at_00s80s_dec_divtot.csv")
 write.csv(mymat3, file = "table4_COPR_at_00s80s_dec_divext.csv")
 ```
 
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "neither"
+my$Environment[my$dec0 <= 0.05 & my$dec80 <= 0.05] <- "Both"
+my$Environment[my$dec0 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
+my$Environment[my$dec0 > 0.05 & my$dec80 <= 0.05] <- "High Only"
+my$Environment[my$dec0 > 0.05 & my$dec80 > 0.05] <- "Neither"
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_80_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
+
 
 
 ALL -- All treatments in 00, 40, 80
 ```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80),]
 my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80),]
@@ -3838,14 +4278,14 @@ ext <- c(nrow(mynot[mynot$treat == "EH0",]),
          nrow(mynot[mynot$treat == "EH20_60",]),
          nrow(mynot[mynot$treat == "EH0_80",]),
          nrow(mynot[mynot$treat == "EH40_80",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
-                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
-                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
 
 x <- my[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05,] # 000
 r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
@@ -3887,13 +4327,42 @@ mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80
 mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
 mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
 
-write.csv(mymat,  file = "table6_SALT_at_004080_inc_raw.csv")
-write.csv(mymat2, file = "table6_SALT_at_004080_inc_divtot.csv")
-write.csv(mymat3, file = "table6_SALT_at_004080_inc_divext.csv")
+write.csv(mymat,  file = "table6_COPR_at_004080_inc_raw.csv")
+write.csv(mymat2, file = "table6_COPR_at_004080_inc_divtot.csv")
+write.csv(mymat3, file = "table6_COPR_at_004080_inc_divext.csv")
 ```
 
 ```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05] <- "000"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05] <- "100"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05] <- "010"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05] <- "001"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05] <- "110"
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05] <- "101"
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05] <- "011"
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05] <- "111"
+my$Environment <-  factor(my$Environment, levels = c("111", "011", "101", "110", "001", "010", "100", "000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_40_80_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
+my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80),]
 my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80),]
@@ -3904,14 +4373,14 @@ ext <- c(nrow(mynot[mynot$treat == "EH0",]),
          nrow(mynot[mynot$treat == "EH20_60",]),
          nrow(mynot[mynot$treat == "EH0_80",]),
          nrow(mynot[mynot$treat == "EH40_80",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-                 mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-                 mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
-                 mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-                 mySALTtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
-                 mySALTtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
-                 mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
-div_tot <- mySALTtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
+div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
+                 myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
+                 myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",]),
+                 myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
+                 myCOPRtot["EH20_60",1] - nrow(mynot[mynot$treat == "EH20_60",]),
+                 myCOPRtot["EH0_80",1] - nrow(mynot[mynot$treat == "EH0_80",]),
+                 myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",])); names(div_ext) <- c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")
+div_tot <- myCOPRtot[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80"),1]
 
 x <- my[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05,] # 000
 r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80")]
@@ -3953,16 +4422,46 @@ mymat <- mymat[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80
 mymat2 <- mymat2[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat2
 mymat3 <- mymat3[,c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")];mymat3
 
-write.csv(mymat,  file = "table6_SALT_at_004080_dec_raw.csv")
-write.csv(mymat2, file = "table6_SALT_at_004080_dec_divtot.csv")
-write.csv(mymat3, file = "table6_SALT_at_004080_dec_divext.csv")
+write.csv(mymat,  file = "table6_COPR_at_004080_dec_raw.csv")
+write.csv(mymat2, file = "table6_COPR_at_004080_dec_divtot.csv")
+write.csv(mymat3, file = "table6_COPR_at_004080_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05] <- "000"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05] <- "100"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05] <- "010"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05] <- "001"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05] <- "110"
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05] <- "101"
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "011"
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "111"
+my$Environment <-  factor(my$Environment, levels = c("111", "011", "101", "110", "001", "010", "100", "000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_40_80_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
 
 
 
 ALL -- All treatments in all four environments
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$in0) | is.na(my$in40) | is.na(my$in80) | is.na(my$in120),]
 my <- my[!is.na(my$in0) & !is.na(my$in40) & !is.na(my$in80) & !is.na(my$in120),]
@@ -4048,7 +4547,45 @@ write.csv(mymat3, file = "table5_COPR_at_allenv_inc_divext.csv")
 ```
 
 ```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "0000" # 0000 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "1000" # 1000 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "0100" # 0100 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "0010" # 0010 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "0001" # 0001 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 > 0.05] <- "1100" # 1100 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "1010" # 1010 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "1001" # 1001 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "0101" # 0101 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "0110" # 0110 # in none
+my$Environment[my$in0 > 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "0011" # 0011 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 > 0.05] <- "1110" # 1110 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 > 0.05 & my$in120 <= 0.05] <- "1101" # 1101 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 > 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "1011" # 1011 # in none
+my$Environment[my$in0 > 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "0111" # 0111 # in none
+my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05 & my$in80 <= 0.05 & my$in120 <= 0.05] <- "1111" # 1111 # in none
+my$Environment <-  factor(my$Environment, levels = c("1111", "0111", "1011", "1101", "1110", "0011", "0110", "0101",
+                                                     "1001", "1010", "1100", "0001", "0010", "0100", "1000", "0000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_40_80_120_inc.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+
+```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+
 my$treat <- drop.levels(my$treat)
 mynot <- my[is.na(my$dec0) | is.na(my$dec40) | is.na(my$dec80) | is.na(my$dec120),]
 my <- my[!is.na(my$dec0) & !is.na(my$dec40) & !is.na(my$dec80) & !is.na(my$dec120),]
@@ -4132,6 +4669,173 @@ write.csv(mymat,  file = "table5_COPR_at_allenv_dec_raw.csv")
 write.csv(mymat2, file = "table5_COPR_at_allenv_dec_divtot.csv")
 write.csv(mymat3, file = "table5_COPR_at_allenv_dec_divext.csv")
 ```
+
+```{R}
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+my$Environment <- "None"
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "0000" # 0000 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "1000" # 1000 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "0100" # 0100 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "0010" # 0010 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "0001" # 0001 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 > 0.05] <- "1100" # 1100 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "1010" # 1010 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "1001" # 1001 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "0101" # 0101 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "0110" # 0110 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "0011" # 0011 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 > 0.05] <- "1110" # 1110 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 > 0.05 & my$dec120 <= 0.05] <- "1101" # 1101 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "1011" # 1011 # in none
+my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "0111" # 0111 # in none
+my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05 & my$dec80 <= 0.05 & my$dec120 <= 0.05] <- "1111" # 1111 # in none
+my$Environment <-  factor(my$Environment, levels = c("1111", "0111", "1011", "1101", "1110", "0011", "0110", "0101",
+                                                     "1001", "1010", "1100", "0001", "0010", "0100", "1000", "0000"))
+
+# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+pdf(file = "000_stackedbar_COPR_alltreat_00_40_80_120_dec.pdf", width = mywidth, height = myheight)
+ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+       aes(treat, n, fill=Environment)) +
+  geom_bar(stat="identity") +
+  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
+  scale_fill_discrete(drop=FALSE)+
+  theme_classic()+
+  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+```
+<br/><br/>
+
+
+
+
+Explore the welldata dataset
+```{R}
+my <- welldata
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+tapply(my$ps, my$treat, summary)
+
+
+# SALT -------------------------------------------------------------------------
+# 00 -----------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.0,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_SALT_00.csv")
+
+# 40 -----------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.4,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_SALT_40.csv")
+
+# 80 -----------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.8,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_SALT_80.csv")
+
+# 120 -----------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 1.2,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_SALT_120.csv")
+
+
+
+# COPR -------------------------------------------------------------------------
+# 00 -----------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.0,]
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_COPR_00.csv")
+
+# 40 -----------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.4,]
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_COPR_40.csv")
+
+# 80 -----------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.8,]
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_COPR_80.csv")
+
+# 120 -----------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 1.2,]
+my$omit <- FALSE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my <- my[my$omit == FALSE,]
+x <- tapply(my$ps, my$treat, summary)
+y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
+y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
+write.csv(y, file = "000_welldata_COPR_120.csv")
+
+rm(my, x, y)
+```
+<br/><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
