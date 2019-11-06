@@ -456,7 +456,7 @@ Remomve problem entries.
 ```{R}
 my <- myd
 # remove rows with bc1 id == "d2C5" and "d2C9", these barcodes share a barcode sequence and therefore cannot be analyzed in the pooled fitness assay. 
-my <- my[my$bc1 != "d2C15" & my$bc1 != "d2C9",]
+my <- my[my$bc1 != "d2C5" & my$bc1 != "d2C9",]
 myd <- my # pass back to myfa
 ```
 <br/><br/>
@@ -467,8 +467,8 @@ Add a field that marks whether bc's became extinct across 500 gens or not.
 DEFINITION: omit = average counts < 2 for generation 500 fitness assay initial timepoint (indicates that the bc was not really present at generation 500, extinct, therefore shouldn't have a fitness and shouldn't be plotted!)
 ```{R}
 my <- myd
-my$omit <- FALSE
-my$omit[my$bc1cts_i_e < 2] <- TRUE
+my$extinct <- FALSE
+my$extinct[my$bc1cts_i_e < 15] <- TRUE
 #sum(my$omit)
 myd <- my
 ```

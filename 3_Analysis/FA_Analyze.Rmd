@@ -5,7 +5,7 @@ output:
     df_print: paged
 ---
 
-
+nrow(welldata[welldata$treat == "EH0_80" & welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.0,])
 ***
 ### Begin Code Blocks:
 
@@ -38,7 +38,6 @@ Add a field summarizing barcode 1 counts at time final in the ancestral fitness 
 load(file = "myd.Rdata")
 myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")]), 
                                                   as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
-
 ```
 <br/><br/>
 
@@ -1256,6 +1255,8 @@ myg$ps[myg$mn_dw < 0 & myg$mn_dw_bc2 < 0] <- "DD"
 myg$ps <- factor(myg$ps, levels = c("II", "ID", "DD", "IX", "DX", "XX"))
 
 welldata <- myg[2:nrow(myg),]
+welldata <- welldata[welldata$bc1 != "d1C5" & welldata$bc1 != "d1C9",]
+
 # ------------------
 rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2)
 ```
@@ -1270,7 +1271,8 @@ my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0
 summary(my$treat[my$bc1cts_i_e <= 15])
 summary(my$treat[my$bc1cts_i_e <= 100])
 summary(my$treat[my$bc1cts_i_e <= 250])
-summary(my$treat[my$bc1cts_i_e <= 500])
+summary(my$treat[my$bc1cts_i_e <= 5000000000])
+
 
 
 my <- myd[myd$mpar == 1 & myd$epo %in% c("COPR_A", "COPR_B") & myd$mpasp == 0.0,]
@@ -2674,7 +2676,7 @@ colnames(myCOPRtot) <- colnames(myCOPRin)
 my <- myd[order(myd$bcpID),] 
 my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp == 0.0,]
 x <- table(my$treat)/4
-x["EH0"] <- 16; x["EH40"] <- 16;  x["EH80"] <- 16
+x["EH0"] <- 16; x["EH40"] <- 16;  x["EH80"] <- 15
 myCOPRtot[,c(1:4)] <- x[c(1, 5, 7, 2, 4, 3, 6)]
 my <- my[!is.na(my$dw),]
 
@@ -4711,7 +4713,7 @@ Explore the welldata dataset
 ```{R}
 my <- welldata
 my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
+my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE; my$omit[my$bc1 == ""]
 my <- my[my$omit == FALSE,]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 tapply(my$ps, my$treat, summary)
