@@ -1,0 +1,465 @@
+---
+title: "ED_Prepare_Datasets"
+output: html_notebook
+---
+
+Prepare the evolutionary dynamics datasets from raw counts data from 500-generation flux exp evo project longitudinal samples.
+
+***
+# Setup Script
+Prepare the workspace set global options, load packages, set directories, etc..
+```{r}
+rm(list=ls()) # clear workspace
+knitr::opts_chunk$set(tidy = TRUE) # set global knitr options.
+options(scipen = 999) # turn off scientific notation
+require(plyr, quietly = T) # load required packages
+dir_in_1 <- paste0(getwd(),"/Counts_Data") # input: data
+dir_in_m <- paste0(getwd(),"/Metadata") # input: metadata
+dir_out_f <- paste0(getwd(),"/Formatted_Data") # output: dataframe formatted for analysis
+```
+<br/><br/>
+
+
+
+Load and prepare the metadata file
+```{r}
+setwd("..")
+setwd(dir_in_m)
+lay <- read.csv("Layout.csv", header = T, stringsAsFactors = F)
+```
+<br/><br/>
+
+
+
+Load and prepare the counts data
+```{r}
+setwd("..")
+setwd(dir_in_1)
+load(file = "Counts_Expected.Rdata") # expected counts
+ec <- counts.expected; rm(counts.expected)
+ec <- t(ec) # transpose to match metadata format: experiments are rows
+ec <- ec[,1:(ncol(ec) - 1)]
+
+load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
+uc <- counts.unexpected; rm(counts.unexpected)
+uc <- t(uc) # transpose to match metadata format: experiments are rows
+uc <- uc[,1:(ncol(uc) - 1)]
+```
+<br/><br/>
+
+
+
+Combine metadata with counts data
+```{r}
+myd <- cbind(lay, ec)
+myd$ppects <- rowSums(ec, na.rm = T) # primer pair expected counts  *BLANKS WILL BE ZERO HERE!!!!*
+myd$ppccts <- rowSums(uc, na.rm = T) # primer pair cross-contam counts *THESE ONLY MAKE SENSE FOR SINGLE WELL CONTROLS!!!*
+rm(lay, ec, uc)
+```
+<br/><br/>
+
+
+
+Calculate primer pair summary statistics for the only 5 available samples
+```{r}
+myd$cc <- (myd$ppccts / (myd$ppects + myd$ppccts)) 
+myd$cc[myd$sample.type %in% c("plate", "dna_blank", "pcr_blank")] <- NA
+```
+<br/><br/>
+
+
+
+Split out datasets of interest and save. Will procede working only with the actual ED data (no control wells, searches, or blanks included)
+```{r}
+setwd("..")
+setwd(dir_out_f)
+
+# read on cross contam
+swref <- myd[myd$sample.type == "sw",] # sequence of wells containing only the reference strain run through the fitness assay, for cross contamination estimation. 
+save(swref, file = "swref.Rdata")
+
+# controls...
+dnablnk <- myd[myd$sample.type == "dna_blank",] # dna blank -- samples processed through full processing with DNA free water added instead of resuspended yeast
+save(dnablnk, file = "dnablnk.Rdata")
+pcrblnk <- myd[myd$sample.type == "pcr_blank",] # pcr blanks -- samples from every round of pcr -- included all components necessary for replication other than yeast DNA 
+save(pcrblnk, file = "pcrblnk.Rdata")
+
+rm(swref, dnablnk, pcrblnk)
+# ------------------------------------------------
+myd <-  myd[myd$sample.type == "plate",] # the data for processing
+```
+
+
+***
+# Process the Evo dynamics data for analysis and visualization.  
+Create, arrange, and populate columns for barcode ID and barcode counts for all barcodes present in each pp.
+```{r}
+my <- myd
+for (i in 1:176) { # create columns for barcode counts in form (bc#cts) for 1:23
+  my[,paste0("bc", i, "cts")] <- NA 
+}
+
+for (i in 1:nrow(my)) { # for each primer pair....
+  #my$refcts[i] <- my[i,which(colnames(my) == my$ref[i])] # populate the ref counts cell.
+  for (j in 1:176) { # for each other barcode j...
+    if  (!is.na(my[i, paste0("barcode.", j)])){ # if there is a barcode j in this pp...
+      my[i,paste0("bc", j, "cts")] <-  my[i,which(colnames(my) == my[i, paste0("barcode.", j)])] # populate the bcjcts cell with counts from the corresponding column for bcj.
+    } else { # if there is not a barcode j in this pp....
+      my[i,paste0("bc", j, "cts")] <- NA # populate the bcjcts cell with an NA value (for now)
+    }
+  }
+}
+
+my <- my[,c(1, 6:8, 361:363, 9:184, 364:539)]# omit columns that are no longer needed
+myd <- my # pass the cleaned up dataframe back to myd
+rm(my)
+```
+<br/><br/>
+
+
+
+
+Convert the one-pp-per-row dataset to a dataset format with data for a single barcode (at a single fitness assay timepoint) (at either generation 0 or gereration 250) per row.
+```{R}
+my <- myd 
+myttg <- NA # start the new dataframe, this is where we will grow the one well per row dataset. 
+for(i in 1:nrow(my)){ # for each row in my...
+  myt <- my[i,] # make that row a new dataset
+  j <- 8 # set j to 8 (start column number)
+  while(j<96){ # while j is less than the index one past the last starting barcode for a pair...
+      mytt <- myt[c(1:5, j, j+176, j+88, j+264)] # create a dataset with all metadata, and the data for just that pair
+      colnames(mytt)[c(6:9)] <- c("bc1", "bc1cts", "bc2", "bc2cts") # fix colum names
+      myttg <- rbind(myttg, mytt) # append to the growing dataframe
+      j <- j+1 # increment j
+  }
+}
+my <- myttg # pass the dataframe back to my
+my <- my[!is.na(my$bc1),] # remove na entries (fully multiplexed dataset, so this will only remove the NA entry at the top that was used as the dataframe seed.)
+my$reads <- 2/((1/(my$bc1cts + my$bc2cts)) + (1/(my$ppects)))  # add reads column
+
+myd <- my # pass to myfa
+rm(my, myt, mytt, myttg, i, j) # clean up. 
+```
+<br/><br/>
+
+
+
+ubset myfa into datasets corresponding to fitness assay initial and fitness assay final timepoints, then combine these datasets into a single dataframe such that each row includes initial and final timepoint data for a single barcode at either generation 0 or generation 500.
+```{R}
+my <- myd
+my$tid <- paste0(my$evo.time.point, my$replicate)
+unique(my$tid)
+
+my0r1 <- my[my$tid == "T=0R=1",]; my0r1 <- rbind(my0r1, my0r1, my0r1, my0r1, my0r1, my0r1); colnames(my0r1) <- paste0(colnames(my0r1), "_0r1")
+my0r2 <- my[my$tid == "T=0R=2",]; my0r2 <- rbind(my0r2, my0r2, my0r2, my0r2, my0r2, my0r2); colnames(my0r2) <- paste0(colnames(my0r2), "_0r2")
+my0r3 <- my[my$tid == "T=0R=3",]; my0r3 <- rbind(my0r3, my0r3, my0r3, my0r3, my0r3, my0r3); colnames(my0r3) <- paste0(colnames(my0r3), "_0r3")
+
+my7 <- my[my$tid == "T=7",]; colnames(my7) <- paste0(colnames(my7), "_7")
+my13 <- my[my$tid == "T=13",]; colnames(my13) <- paste0(colnames(my13), "_13")
+my19 <- my[my$tid == "T=19",]; colnames(my19) <- paste0(colnames(my19), "_19")
+
+my25r1 <- my[my$tid == "T=25R=1",]; colnames(my25r1) <- paste0(colnames(my25r1), "_25r1")
+my25r2 <- my[my$tid == "T=25R=2",]; colnames(my25r2) <- paste0(colnames(my25r2), "_25r2") 
+my25r3 <- my[my$tid == "T=25R=3",]; colnames(my25r3) <- paste0(colnames(my25r3), "_25r3") 
+
+my31 <- my[my$tid == "T=31",]; colnames(my31) <- paste0(colnames(my31), "_31")
+my37 <- my[my$tid == "T=37",]; colnames(my37) <- paste0(colnames(my37), "_37") 
+my43 <- my[my$tid == "T=43",]; colnames(my43) <- paste0(colnames(my43), "_43") 
+
+my49r1 <- my[my$tid == "T=49R=1",]; colnames(my49r1) <- paste0(colnames(my49r1), "_49r1")
+my49r2 <- my[my$tid == "T=49R=2",]; colnames(my49r2) <- paste0(colnames(my49r2), "_49r2")
+my49r3 <- my[my$tid == "T=49R=3",]; colnames(my49r3) <- paste0(colnames(my49r3), "_49r3") 
+
+sum(my31$bc1 != my7$bc1) # sort order checks
+sum(my0r1$bc1 != my7$bc1) # and another.
+
+my <- cbind(my7$medium_7, my7$experiment.id_7, my7$bc1_7, my7$bc2_7, my0r1[,c(5,7,9,10)], my0r2[,c(5,7,9,10)], my0r3[,c(5,7,9,10)], my7[,c(5,7,9,10)], 
+            my13[,c(5,7,9,10)], my19[,c(5,7,9,10)], my25r1[,c(5,7,9,10)], my25r2[,c(5,7,9,10)], my25r3[,c(5,7,9,10)], 
+            my31[,c(5,7,9,10)], my37[,c(5,7,9,10)], my43[,c(5,7,9,10)], my49r1[,c(5,7,9,10)], my49r2[,c(5,7,9,10)], my49r3[,c(5,7,9,10)])
+colnames(my)[1:4] <- c("medium", "plate", "bc1", "bc2")
+my$plate <- substr(my$plate, start = 1, stop = 6)
+myd <- my
+
+rm(my, my0r1, my0r2, my0r3, my7, my13, my19, my25r1, my25r2, my25r3, my31, my37, my43, my49r1, my49r2, my49r3)
+```
+
+
+
+
+calculate means and mean reads for t=0,25,49 (where there are measures in triplicate)
+```{R}
+my <- myd 
+my$reads_0 <- rowMeans(cbind(my$reads_0r1, my$reads_0r2, my$reads_0r3))
+my$bc1cts_0 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_0r1", "bc1cts_0r2", "bc1cts_0r3")]), (x[c( "reads_0r1", "reads_0r2", "reads_0r3")]), na.rm = T))
+my$bc2cts_0 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc2cts_0r1", "bc2cts_0r2", "bc2cts_0r3")]), (x[c( "reads_0r1", "reads_0r2", "reads_0r3")]), na.rm = T))
+
+
+my$reads_25 <- rowMeans(cbind(my$reads_25r1, my$reads_25r2, my$reads_25r3))
+my$bc1cts_25 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_25r1", "bc1cts_25r2", "bc1cts_25r3")]), (x[c( "reads_25r1", "reads_25r2", "reads_25r3")]), na.rm = T)); my$bc1cts_25[is.nan(my$bc1cts_25)] <- NA
+my$bc2cts_25 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc2cts_25r1", "bc2cts_25r2", "bc2cts_25r3")]), (x[c( "reads_25r1", "reads_25r2", "reads_25r3")]), na.rm = T)); my$bc2cts_25[is.nan(my$bc2cts_25)] <- NA
+
+my$reads_49 <- rowMeans(cbind(my$reads_49r1, my$reads_49r2, my$reads_49r3))
+my$bc1cts_49 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_49r1", "bc1cts_49r2", "bc1cts_49r3")]), (x[c( "reads_49r1", "reads_49r2", "reads_49r3")]), na.rm = T)); my$bc1cts_49[is.nan(my$bc1cts_49)] <- NA
+my$bc2cts_49 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "bc2cts_49r1", "bc2cts_49r2", "bc2cts_49r3")]), (x[c( "reads_49r1", "reads_49r2", "reads_49r3")]), na.rm = T)); my$bc2cts_49[is.nan(my$bc2cts_49)] <- NA
+
+myd <- my
+rm(my)
+```
+<br/><br/>
+
+
+
+Calculate barcode 1 proportions at each timepoint in the longitudinal data. [*bc2 prop is 1-bc1prop] -- intermediate measure
+```{R}
+my <- myd
+# the proportions for bc1 @ t0, t10, t15, t20, t22, t24, and t25 in the longitudinal data
+my$p0 <- my$bc1cts_0 / (my$bc1cts_0 + my$bc2cts_0) # p bc1 gen0
+my$p7 <- my$bc1cts_7 / (my$bc1cts_7 + my$bc2cts_7) # p bc1 gen 70
+my$p13 <- my$bc1cts_13 / (my$bc1cts_13 + my$bc2cts_13) # p bc1 gen 130
+my$p19 <- my$bc1cts_19 / (my$bc1cts_19 + my$bc2cts_19) # p bc1 gen 190
+my$p25 <- my$bc1cts_25 / (my$bc1cts_25 + my$bc2cts_25) # p bc1 gen 250
+my$p31 <- my$bc1cts_31 / (my$bc1cts_31 + my$bc2cts_31) # p bc1 gen 310
+my$p37 <- my$bc1cts_37 / (my$bc1cts_37 + my$bc2cts_37) # p bc1 gen 370
+my$p43 <- my$bc1cts_43 / (my$bc1cts_43 + my$bc2cts_43) # p bc1 gen 430
+my$p49 <- my$bc1cts_49 / (my$bc1cts_49 + my$bc2cts_49) # p bc1 gen 490
+
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+
+Calculate rate of change in proportion for bc1 between adjacent timepoints (+cc and r for this measure). -- intermediate measure
+```{R}
+my <- myd
+
+# change in proportion between adjacent timepoints (correct for generations to get a rate)
+my$dp0_7 <- (my$p0 - my$p7) / 70 # rate from gen0 to gen70
+my$dp7_13 <- (my$p7 - my$p13) / 60
+my$dp13_19 <- (my$p13 - my$p19) / 60
+my$dp19_25 <- (my$p19 - my$p25) / 60
+my$dp25_31 <- (my$p25 - my$p31) / 60
+my$dp31_37 <- (my$p31 - my$p37) / 60
+my$dp37_43 <- (my$p37 - my$p43) / 60
+my$dp43_49 <- (my$p43 - my$p49) / 60
+
+# r for change in proporiton between adjacent timepoints
+my$rdp0_7 <-  2/((1/my$reads_0) + (1/my$reads_7)) # r gen0 to gen70
+my$rdp7_13 <-  2/((1/my$reads_7) + (1/my$reads_13))
+my$rdp13_19 <-  2/((1/my$reads_13) + (1/my$reads_19))
+my$rdp19_25 <-  2/((1/my$reads_19) + (1/my$reads_25))
+my$rdp25_31 <-  2/((1/my$reads_25) + (1/my$reads_31))
+my$rdp31_37 <-  2/((1/my$reads_31) + (1/my$reads_37))
+my$rdp37_43 <-  2/((1/my$reads_37) + (1/my$reads_43))
+my$rdp43_49 <-  2/((1/my$reads_43) + (1/my$reads_49))
+
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+
+Calculate magnitude (M-MAX-RATE) and timepoint (T-MAX-RATE) of absolute maximum rate of change in sympatric barcode proportion between adjacent timepoints (+cc and r for this measure)
+```{R}
+my <- myd
+# calculate magnitude of absolute maximum rate of change in sympatric barcode proportion between adjacent timepoints
+my$mmaxrate <- apply(X = abs(my[,c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]), 
+                     MARGIN = 1, FUN = max, na.rm = T) 
+
+# calculate the time of absolute maximum rate of change in sympatric barcode proportion between adjacent timepoints,
+# use that value to obtain cc and r values for this measure and for mmaxrate from the appropriate locations in the dataset. 
+for(i in 1:nrow(my)){
+  my$tmaxrate[i] <- which(abs(my[i,c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]) == my[i,"mmaxrate"])[1] # the time point
+  my$rmaxrate[i] <- as.numeric(my[i,c("rdp0_7", "rdp7_13", "rdp13_19", "rdp19_25", "rdp25_31", "rdp31_37", "rdp37_43", "rdp43_49")][my$tmaxrate[i]])[1] # r at that time point. 
+}
+
+my$tmaxrate[my$tmaxrate == 1] <- 70; my$tmaxrate[my$tmaxrate == 2] <- 130; my$tmaxrate[my$tmaxrate == 3] <- 190; # fix times appropriately
+my$tmaxrate[my$tmaxrate == 4] <- 250; my$tmaxrate[my$tmaxrate == 5] <- 310; my$tmaxrate[my$tmaxrate == 6] <- 370;
+my$tmaxrate[my$tmaxrate == 7] <- 430; my$tmaxrate[my$tmaxrate == 8] <- 490;   
+my$rmaxrate_rt0 <- 2/((1/my$rmaxrate)+(1/my$reads_0)) # create an additional reads value for max rate of change in bc prop for models that also incorporate the barcode initial proportions
+myd <- my # pass to myd
+```
+<br/><br/>
+
+
+Calculate change in proportion for bc1 between t0 and all other timepoints (+cc and r for this measure). -- intermediate measure
+```{R}
+my <- myd
+# change in proportion between initial and other timepoints
+my$dpz_7 <- (my$p7 - my$p0) 
+my$dpz_13 <- (my$p13 - my$p0)
+my$dpz_19 <- (my$p19 - my$p0)
+my$dpz_25 <- (my$p25 - my$p0) 
+my$dpz_31 <- (my$p31 - my$p0) 
+my$dpz_37 <- (my$p37 - my$p0) 
+my$dpz_43 <- (my$p43 - my$p0) 
+my$dpz_49 <- (my$p49 - my$p0) 
+
+# r for change in proporiton between adjacent timepoints
+my$rdpz_7 <-  2/((1/my$reads_0) + (1/my$reads_7))
+my$rdpz_13 <-  2/((1/my$reads_0) + (1/my$reads_13))
+my$rdpz_19 <-  2/((1/my$reads_0) + (1/my$reads_19))
+my$rdpz_25 <-  2/((1/my$reads_0) + (1/my$reads_25))
+my$rdpz_31 <-  2/((1/my$reads_0) + (1/my$reads_31))
+my$rdpz_37 <-  2/((1/my$reads_0) + (1/my$reads_37))
+my$rdpz_43 <-  2/((1/my$reads_0) + (1/my$reads_43))
+my$rdpz_49 <-  2/((1/my$reads_0) + (1/my$reads_49))
+
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+Calculate magnitude and timepoint (T-MAX-DEV) of magnitude (M-MAX-DEV) of the mamaximum deviation in sympatric barcode proportion between timepoint 0 and all other timepoints (+cc and r for this measure).
+```{R}
+my <- myd
+# calculate magnitude of maximum deviation in sympatric barcode proportion between t0 and all other timepoints
+my$mmaxdev <- apply(X = abs(my[,c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]), 
+                     MARGIN = 1, FUN = max, na.rm = T) # calculate magnitude of maxdev in bc prop from initial conditions
+
+# calculate the time of max dev max in bc proportion, and use that value to obtain cc and r values for this measure and for mmaxdev 
+for(i in 1:nrow(my)){
+  my$tmaxdev[i] <- which(abs(my[i,c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]) == my[i,"mmaxdev"])[1] # the time point
+  my$rmaxdev[i] <- as.numeric(my[i,c("rdpz_7", "rdpz_13", "rdpz_19", "rdpz_25", "rdpz_31", "rdpz_37", "rdpz_43", "rdpz_49")][my$tmaxdev[i]])[1] # r at that time point. 
+}
+
+my$tmaxdev[my$tmaxdev == 1] <- 70; my$tmaxdev[my$tmaxdev == 2] <- 130; my$tmaxdev[my$tmaxdev == 3] <- 190; # fix times appropriately
+my$tmaxdev[my$tmaxdev == 4] <- 250; my$tmaxdev[my$tmaxdev == 5] <- 310; my$tmaxdev[my$tmaxdev == 6] <- 370;  
+my$tmaxdev[my$tmaxdev == 7] <- 430; my$tmaxdev[my$tmaxdev == 8] <- 490;  
+my$rmaxdev_rt0 <- 2/((1/my$rmaxdev)+(1/my$reads_0)) # create an additional reads value for maxdev for models that also incorporate the barcode initial proportions
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+
+Calculate the magnitude of the inequality in barcode proportion at each timepoint -- intermediate measures
+Use this to get: magnitude max inequality (M-MAX-DIFF), time max inequality (T-MAX-DIFF), cc @tmax inequality, r @tmax inequality 
+```{R}
+my <- myd
+# calculate barcode proportion inequality at each timepoint as abs difference from a 0.5:0.5 split. 
+my[, c("diff0","diff7","diff13","diff19","diff25","diff31","diff37","diff43","diff49")] <- abs(my[, c("p0","p7","p13","p19","p25","p31","p37","p43","p49")] - 0.5)
+
+# calculate magnitude of maxdev in bc prop from initial conditions
+my$mmaxdiff <- apply(X = my[, c("diff0","diff7","diff13","diff19","diff25","diff31","diff37","diff43","diff49")], 
+                     MARGIN = 1, FUN = max, na.rm = T) 
+
+# calculate time of maxdev in bc prop from initial conditions,and use that value to obtain cc and r values for this measure and for mmaxdiff 
+for(i in 1:nrow(my)){
+  my$tmaxdiff[i] <- which(my[i,c("diff0","diff7","diff13","diff19","diff25","diff31","diff37","diff43","diff49")] == my[i,"mmaxdiff"])[1] # the time point
+  my$rmaxdiff[i] <- as.numeric(my[i,c("reads_0", "reads_7", "reads_13", "reads_19", "reads_25", "reads_31", "reads_37", "reads_43", "reads_49")][my$tmaxdiff[i]])# r at that time point. 
+}
+
+my$tmaxdiff[my$tmaxdiff == 1] <- 0; my$tmaxdiff[my$tmaxdiff == 2] <- 70; my$tmaxdiff[my$tmaxdiff == 3] <- 130; # fix times appropriately
+my$tmaxdiff[my$tmaxdiff == 4] <- 190; my$tmaxdiff[my$tmaxdiff == 5] <- 250; my$tmaxdiff[my$tmaxdiff == 6] <- 310;
+my$tmaxdiff[my$tmaxdiff == 7] <- 370; my$tmaxdiff[my$tmaxdiff == 8] <- 430;  my$tmaxdiff[my$tmaxdiff == 9] <- 490; 
+my$rmaxdiff_rt0 <- 2/((1/my$rmaxdiff)+(1/my$reads_0)) # create an additional reads value for maxdiff for models that also incorporate the barcode initial proportions
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+
+Calculate barcode fixation (really pseudofixation of p >= 0.95)
+```{R}
+my <- myd
+# Set some control values
+ft <- 0.45  # fixation threshold, anything that reaches and remains at this value is called 'fixed' (this corresponds to 95% --> 0.95 - 0.5 = 0.45)
+st <- 0.25  # start prop threshold, anything  that starts greater is ommited. (this corresponds to 75% --> 0.75 - 0.5 = 0.25)
+my$fixed <- FALSE; my$fixednsl <- FALSE # create columns to hold the fixed boolean value (nsl corresponds to no starting limit on proportion)
+my$fixed[my$diff0 <= st & my$diff25 >= ft] <- TRUE # calculated fixed
+my$fixednsl[my$diff25 >= ft] <- TRUE # calcualte fixed with no starting limit
+myevo <- my # pass to myevo
+```
+<br/><br/>
+
+
+
+Calculate accumulated change in barcode proportion (+cc and r for this measure) for each evolutionary well.
+```{R}
+my <- myd
+# accumulated change in barcode proporiton -- captures 'total dynamics' in well
+my$tcc <- rowSums(cbind(abs(my$dp0_7), abs(my$dp7_13), abs(my$dp13_19), abs(my$dp19_25), abs(my$dp25_31), abs(my$dp31_37), abs(my$dp37_43), abs(my$dp43_49)), na.rm = T)
+my$rtcc <- 8/((1/my$rdp0_7)+ (1/my$rdp7_13)+ (1/my$rdp13_19)+ (1/my$rdp19_25)+ (1/my$rdp25_31)+ (1/my$rdp31_37)+ (1/my$rdp37_43)+ (1/my$rdp43_49)) # reads for the same. 
+my$rtcc_rt0 <- 2/((1/my$rtcc)+(1/my$reads_0)) # create an additional reads value for total dynamics for models that also incorporate the barcode initial proportions
+
+myd <- my # pass to myevo
+```
+<br/><br/>
+
+
+FIX WAYYY UP ABOVE TO INCLUDE EXPERIMENT ID (for timepoint 7) all the way through -- I will use this to get plate info at the end. 
+
+ADD TREATMENT INFO! -- will need [[[[[FULL]]]]] list of bc to treat assignments -- currently is only a partial list --> need EH20, EH60, EH100, EH0_60
+```{R}
+my <- myd
+my$treat <- NA
+my$min <- NA # add quantitative info as well for calcs down the line that we may want. 
+my$max <- NA
+
+# setup some lists of Barcode IDs and their corresponding treatmnets and assign with quant info attached.
+# 0% stress, Uniform
+EH0 <- c("d1B12", "d2B12", "d1B1", "d2B1",  "d1C1", "d2C1",  "d1D1", "d2D1", 
+         "d1E1", "d2E1",  "d1F1", "d2F1",  "d1G1", "d2G1", "d1C12", "d2C12")
+my[my$bc1 %in% EH0, c("treat", "min", "max")] <- c(rep("EH0", times = nrow(my[my$bc1 %in% EH0,])),
+                                                   rep(0, times = nrow(my[my$bc1 %in% EH0,])),
+                                                   rep(0, times = nrow(my[my$bc1 %in% EH0,])))
+# 40% stress, Uniform
+EH40 <- c("d1A3", "d2A3", "d1B3", "d2B3", "d1C3", "d2C3", "d1D3", "d2D3",
+          "d1E3", "d2E3", "d1F3", "d2F3", "d1G3", "d2G3", "d1H3", "d2H3")
+my[my$bc1 %in% EH40, c("treat", "min", "max")] <- c(rep("EH40", times = nrow(my[my$bc1 %in% EH40,])),
+                                                   rep(40, times = nrow(my[my$bc1 %in% EH40,])),
+                                                   rep(40, times = nrow(my[my$bc1 %in% EH40,])))
+# 80% stress, Uniform
+EH80 <- c("d1G12", "d2G12", "d1B5", "d2B5", "d1C5", "d2C5", "d1D5", "d2D5",
+          "d1E5", "d2E5", "d1F5", "d2F5", "d1G5", "d2G5", "d1H5", "d2H5")
+my[my$bc1 %in% EH80, c("treat", "min", "max")] <- c(rep("EH80", times = nrow(my[my$bc1 %in% EH80,])),
+                                                   rep(80, times = nrow(my[my$bc1 %in% EH80,])),
+                                                   rep(80, times = nrow(my[my$bc1 %in% EH80,])))
+# 0/40% stress, Fluctuating
+EH0.40 <- c("d1A7", "d2A7", "d1B7", "d2B7", "d1C7", "d2C7", "d1D7", "d2D7",
+            "d1E7", "d2E7", "d1F7", "d2F7", "d1G7", "d2G7", "d1H7", "d2H7")
+my[my$bc1 %in% EH0.40, c("treat", "min", "max")] <- c(rep("EH0_40", times = nrow(my[my$bc1 %in% EH0.40,])),
+                                                   rep(0, times = nrow(my[my$bc1 %in% EH0.40,])),
+                                                   rep(40, times = nrow(my[my$bc1 %in% EH0.40,])))
+# 0/80% stress, Fluctuating
+EH0.80 <- c("d1A9", "d2A9", "d1B9", "d2B9", "d1C9", "d2C9", "d1D9", "d2D9",
+            "d1E9", "d2E9", "d1F9", "d2F9", "d1G9", "d2G9", "d1H9", "d2H9")
+my[my$bc1 %in% EH0.80, c("treat", "min", "max")] <- c(rep("EH0_80", times = nrow(my[my$bc1 %in% EH0.80,])),
+                                                   rep(0, times = nrow(my[my$bc1 %in% EH0.80,])),
+                                                   rep(80, times = nrow(my[my$bc1 %in% EH0.80,])))
+# 20/60% stress, Fluctuating
+EH20.60 <- c("d1A10", "d2A10", "d1B10", "d2B10", "d1C10", "d2C10", "d1D10",
+             "d2D10", "d1E10", "d2E10", "d1F10", "d2F10", "d1G10", "d2G10", 
+             "d1H10", "d2H10")
+my[my$bc1 %in% EH20.60, c("treat", "min", "max")] <- c(rep("EH20_60", times = nrow(my[my$bc1 %in% EH20.60,])),
+                                                   rep(20, times = nrow(my[my$bc1 %in% EH20.60,])),
+                                                   rep(60, times = nrow(my[my$bc1 %in% EH20.60,])))
+# 40/80% stress, Fluctuating 
+EH40.80 <- c("d1A11", "d2A11", "d1B11", "d2B11", "d1C11","d2C11", "d1D11", 
+             "d2D11", "d1E11", "d2E11", "d1F11", "d2F11", "d1G11", "d2G11", 
+             "d1H11", "d2H11")
+my[my$bc1 %in% EH40.80, c("treat", "min", "max")] <- c(rep("EH40_80", times = nrow(my[my$bc1 %in% EH40.80,])),
+                                                   rep(40, times = nrow(my[my$bc1 %in% EH40.80,])),
+                                                   rep(80, times = nrow(my[my$bc1 %in% EH40.80,])))
+myd <- my
+```
+
+DONT FORGET TO REMOVE ALL PROBLEM ENTRIES
+```{R}
+
+```
+
+DONT FORGET TO APPEND FIT ASSAY FIT VALUES
+```{R}
+
+```
+
+
+Finished processing the longitudinal evolutionary data for analysis and visualization, save. 
+```{R}
+# setwd("..")
+# setwd(dir_out_f)
+# myd$treat <- factor(myd$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# save(myevo, file = "myevo.Rdata") # save the myevo dataframe for downstream use. 
+```

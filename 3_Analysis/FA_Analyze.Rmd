@@ -1269,9 +1269,9 @@ my <- myd[myd$mpar == 1 & myd$epo %in% c("SALT_A", "SALT_B") & myd$mpasp == 0.0,
 my <- my[,c("treat", "bc1cts_i_e")]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 summary(my$treat[my$bc1cts_i_e <= 15])
-summary(my$treat[my$bc1cts_i_e <= 100])
-summary(my$treat[my$bc1cts_i_e <= 250])
-summary(my$treat[my$bc1cts_i_e <= 5000000000])
+# summary(my$treat[my$bc1cts_i_e <= 100])
+# summary(my$treat[my$bc1cts_i_e <= 250])
+# summary(my$treat[my$bc1cts_i_e <= 5000000000])
 
 
 
@@ -1282,9 +1282,9 @@ my <- my[my$omit == FALSE,]
 my <- my[,c("treat", "bc1cts_i_e")]
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 summary(my$treat[my$bc1cts_i_e <= 15])
-summary(my$treat[my$bc1cts_i_e <= 100])
-summary(my$treat[my$bc1cts_i_e <= 250])
-summary(my$treat[my$bc1cts_i_e <= 500])
+# summary(my$treat[my$bc1cts_i_e <= 100])
+# summary(my$treat[my$bc1cts_i_e <= 250])
+# summary(my$treat[my$bc1cts_i_e <= 500])
 
 # ------------------
 rm(my)
