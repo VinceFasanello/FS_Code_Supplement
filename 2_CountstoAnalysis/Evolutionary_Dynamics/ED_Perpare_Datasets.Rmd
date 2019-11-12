@@ -470,7 +470,16 @@ myd <- my
 
 DONT FORGET TO REMOVE ALL PROBLEM ENTRIES
 ```{R}
+my <- myd
+# remove rows with bc1 id == "d2C5" and "d2C9", these barcodes share a barcode sequence and therefore cannot be analyzed.
+my <- my[my$bc1 != "d1C5" & my$bc1 != "d2C5",]
+my <- my[my$bc1 != "d1C9" & my$bc1 != "d2C9",]
+# these other wells have one lineage with an unrecovered barcode -- need to omit as well. 
+my <- my[my$bc1 != "d1C4" & my$bc1 != "d2C4",]
+my <- my[my$bc1 != "d1D8" & my$bc1 != "d2D8",]
+my <- my[my$bc1 != "d1E8" & my$bc1 != "d2E8",]
 
+myd <- my # pass back to myfa
 ```
 
 DONT FORGET TO APPEND FIT ASSAY FIT VALUES
