@@ -388,7 +388,6 @@ myd <- my # pass to myevo
 <br/><br/>
 
 
-FIX WAYYY UP ABOVE TO INCLUDE EXPERIMENT ID (for timepoint 7) all the way through -- I will use this to get plate info at the end. 
 
 ADD TREATMENT INFO! -- will need [[[[[FULL]]]]] list of bc to treat assignments -- currently is only a partial list --> need EH20, EH60, EH100, EH0_60
 ```{R}
@@ -404,24 +403,48 @@ EH0 <- c("d1B12", "d2B12", "d1B1", "d2B1",  "d1C1", "d2C1",  "d1D1", "d2D1",
 my[my$bc1 %in% EH0, c("treat", "min", "max")] <- c(rep("EH0", times = nrow(my[my$bc1 %in% EH0,])),
                                                    rep(0, times = nrow(my[my$bc1 %in% EH0,])),
                                                    rep(0, times = nrow(my[my$bc1 %in% EH0,])))
+# 20% stress, Uniform
+EH20 <- c("d1A2", "d2A2", "d1B2", "d2B2", "d1C2", "d2C2", "d1D2", "d2D2",
+          "d1E2", "d2E2", "d1F2", "d2F2", "d1G2", "d2G2", "d1H2", "d2H2")
+my[my$bc1 %in% EH20, c("treat", "min", "max")] <- c(rep("EH20", times = nrow(my[my$bc1 %in% EH20,])),
+                                                   rep(20, times = nrow(my[my$bc1 %in% EH20,])),
+                                                   rep(20, times = nrow(my[my$bc1 %in% EH20,])))
 # 40% stress, Uniform
 EH40 <- c("d1A3", "d2A3", "d1B3", "d2B3", "d1C3", "d2C3", "d1D3", "d2D3",
           "d1E3", "d2E3", "d1F3", "d2F3", "d1G3", "d2G3", "d1H3", "d2H3")
 my[my$bc1 %in% EH40, c("treat", "min", "max")] <- c(rep("EH40", times = nrow(my[my$bc1 %in% EH40,])),
                                                    rep(40, times = nrow(my[my$bc1 %in% EH40,])),
                                                    rep(40, times = nrow(my[my$bc1 %in% EH40,])))
+# 60% stress, Uniform
+EH60 <- c("d1A4", "d2A4", "d1B4", "d2B4", "d1C4", "d2C4", "d1D4", "d2D4",
+          "d1E4", "d2E4", "d1F4", "d2F4", "d1G4", "d2G4", "d1H4", "d2H4")
+my[my$bc1 %in% EH60, c("treat", "min", "max")] <- c(rep("EH60", times = nrow(my[my$bc1 %in% EH60,])),
+                                                   rep(60, times = nrow(my[my$bc1 %in% EH60,])),
+                                                   rep(60, times = nrow(my[my$bc1 %in% EH60,])))
 # 80% stress, Uniform
 EH80 <- c("d1G12", "d2G12", "d1B5", "d2B5", "d1C5", "d2C5", "d1D5", "d2D5",
           "d1E5", "d2E5", "d1F5", "d2F5", "d1G5", "d2G5", "d1H5", "d2H5")
 my[my$bc1 %in% EH80, c("treat", "min", "max")] <- c(rep("EH80", times = nrow(my[my$bc1 %in% EH80,])),
                                                    rep(80, times = nrow(my[my$bc1 %in% EH80,])),
                                                    rep(80, times = nrow(my[my$bc1 %in% EH80,])))
+# 100% stress, Uniform
+EH100 <- c("d1A6", "d2A6", "d1B6", "d2B6", "d1C6", "d2C6", "d1D6", "d2D6",
+          "d1E6", "d2E6", "d1F6", "d2F6", "d1G6", "d2G6", "d1H6", "d2H6")
+my[my$bc1 %in% EH100, c("treat", "min", "max")] <- c(rep("EH100", times = nrow(my[my$bc1 %in% EH100,])),
+                                                   rep(100, times = nrow(my[my$bc1 %in% EH100,])),
+                                                   rep(100, times = nrow(my[my$bc1 %in% EH100,])))
 # 0/40% stress, Fluctuating
 EH0.40 <- c("d1A7", "d2A7", "d1B7", "d2B7", "d1C7", "d2C7", "d1D7", "d2D7",
             "d1E7", "d2E7", "d1F7", "d2F7", "d1G7", "d2G7", "d1H7", "d2H7")
 my[my$bc1 %in% EH0.40, c("treat", "min", "max")] <- c(rep("EH0_40", times = nrow(my[my$bc1 %in% EH0.40,])),
                                                    rep(0, times = nrow(my[my$bc1 %in% EH0.40,])),
                                                    rep(40, times = nrow(my[my$bc1 %in% EH0.40,])))
+# 0/60% stress, Fluctuating
+EH0.60 <- c("d1A8", "d2A8", "d1B8", "d2B8", "d1C8", "d2C8", "d1D8", "d2D8",
+            "d1E8", "d2E8", "d1F8", "d2F8", "d1G8", "d2G8", "d1H8", "d2H8")
+my[my$bc1 %in% EH0.60, c("treat", "min", "max")] <- c(rep("EH0_60", times = nrow(my[my$bc1 %in% EH0.60,])),
+                                                   rep(0, times = nrow(my[my$bc1 %in% EH0.60,])),
+                                                   rep(60, times = nrow(my[my$bc1 %in% EH0.60,])))
 # 0/80% stress, Fluctuating
 EH0.80 <- c("d1A9", "d2A9", "d1B9", "d2B9", "d1C9", "d2C9", "d1D9", "d2D9",
             "d1E9", "d2E9", "d1F9", "d2F9", "d1G9", "d2G9", "d1H9", "d2H9")
