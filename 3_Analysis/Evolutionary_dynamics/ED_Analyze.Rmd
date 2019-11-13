@@ -1,0 +1,389 @@
+---
+title: "ED_Analyze.rmd"
+output:
+  html_document:
+    df_print: paged
+---
+
+nrow(welldata[welldata$treat == "EH0_80" & welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.0,])
+***
+### Begin Code Blocks:
+
+Prepare the workspace: clean, set options, load packages, load and final formatting on inputs.
+```{r, warning = FALSE, message=FALSE}
+rm(list = ls()) # clear workspace
+knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE) # set global knitr options.
+# load required packages
+require(ggplot2); # used for plotting
+require(pwr); # used for power analysis
+require(lme4); # used for mixed effects models
+require(lmerTest); # used to interpret mixed effects models
+require(sjPlot); # used to output tables
+require(weights); # used for weighted t.test
+require(plyr); # used for dataframe manipulation
+require(gridExtra) # used for multipanel plotting
+require(barnard)
+require(GGally)
+require(plotly)
+require(dplyr)
+require(tidyr)
+require(ggthemes)
+require(viridis)
+require(gtable)
+require(cowplot)
+options(scipen = 999) # turn off scientific notation
+```
+<br/><br/>
+
+
+
+Load data
+```{r, warning = FALSE, message=FALSE}
+load(file = "myd.Rdata")
+```
+<br/><br/>
+
+
+
+Assess Fixation rate for wells that started between 50:50 and 25:75 prop. denom is all wells with init props less extreme than 25:75
+```{r, warning = FALSE, message=FALSE}
+mymin <- c(0,20,0,0,40,20,0,60,40,80,100)
+mymax <- c(0,20,40,60,40,60,80,60,80,80,100)
+
+my_fix <- myd[myd$plate %in% c("SALT_A", "SALT_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .25]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_SALT <- my_fix
+
+
+
+my_fix <- myd[myd$plate %in% c("COPR_A", "COPR_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .25]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_COPR <- my_fix
+
+
+
+my_fix <- myd[myd$plate %in% c("SULF_A", "SULF_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .25]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_SULF <- my_fix
+
+
+write.csv(my_fix_SALT,  file = "my_fix_SALT.csv")
+write.csv(my_fix_COPR,  file = "my_fix_COPR.csv")
+write.csv(my_fix_SULF,  file = "my_fix_SULF.csv")
+
+
+rm(my_fix, mymax, mymin)
+```
+<br/><br/>
+
+
+
+Assess Fixation rate with no starting limit on initial props. denom is al wells in treat
+```{r, warning = FALSE, message=FALSE}
+mymin <- c(0,20,0,0,40,20,0,60,40,80,100)
+mymax <- c(0,20,40,60,40,60,80,60,80,80,100)
+
+my_fix <- myd[myd$plate %in% c("SALT_A", "SALT_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = n(),
+            fixedtreat = length(treat[fixednsl]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fixnsl_SALT <- my_fix
+
+my_fix <- myd[myd$plate %in% c("COPR_A", "COPR_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = n(),
+            fixedtreat = length(treat[fixednsl]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fixnsl_COPR <- my_fix
+
+my_fix <- myd[myd$plate %in% c("SULF_A", "SULF_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = n(),
+            fixedtreat = length(treat[fixednsl]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fixnsl_SULF <- my_fix
+
+
+# high correpsondance between the restricted dataset results and the full dataset. 
+cor(my_fix_SALT$fixedprop, my_fixnsl_SALT$fixedprop)
+cor(my_fix_COPR$fixedprop, my_fixnsl_COPR$fixedprop)
+cor(my_fix_SULF$fixedprop, my_fixnsl_SULF$fixedprop)
+
+
+write.csv(my_fixnsl_SALT,  file = "my_fixnsl_SALT.csv")
+write.csv(my_fixnsl_COPR,  file = "my_fixnsl_COPR.csv")
+write.csv(my_fixnsl_SULF,  file = "my_fixnsl_SULF.csv")
+
+rm(my_fix, mymax, mymin)
+```
+
+
+
+
+```{r, warning = FALSE, message=FALSE}
+# https://stackoverflow.com/questions/54438495/shift-legend-into-empty-facets-of-a-faceted-plot-in-ggplot2
+shift_legend <- function(p){
+
+  # check if p is a valid object
+  if(!"gtable" %in% class(p)){
+    if("ggplot" %in% class(p)){
+      gp <- ggplotGrob(p) # convert to grob
+    } else {
+      message("This is neither a ggplot object nor a grob generated from ggplotGrob. Returning original plot.")
+      return(p)
+    }
+  } else {
+    gp <- p
+  }
+
+  # check for unfilled facet panels
+  facet.panels <- grep("^panel", gp[["layout"]][["name"]])
+  empty.facet.panels <- sapply(facet.panels, function(i) "zeroGrob" %in% class(gp[["grobs"]][[i]]))
+  empty.facet.panels <- facet.panels[empty.facet.panels]
+  if(length(empty.facet.panels) == 0){
+    message("There are no unfilled facet panels to shift legend into. Returning original plot.")
+    return(p)
+  }
+
+  # establish extent of unfilled facet panels (including any axis cells in between)
+  empty.facet.panels <- gp[["layout"]][empty.facet.panels, ]
+  empty.facet.panels <- list(min(empty.facet.panels[["t"]]), min(empty.facet.panels[["l"]]),
+                             max(empty.facet.panels[["b"]]), max(empty.facet.panels[["r"]]))
+  names(empty.facet.panels) <- c("t", "l", "b", "r")
+
+  # extract legend & copy over to location of unfilled facet panels
+  guide.grob <- which(gp[["layout"]][["name"]] == "guide-box")
+  if(length(guide.grob) == 0){
+    message("There is no legend present. Returning original plot.")
+    return(p)
+  }
+  gp <- gtable_add_grob(x = gp,
+                        grobs = gp[["grobs"]][[guide.grob]],
+                        t = empty.facet.panels[["t"]],
+                        l = empty.facet.panels[["l"]],
+                        b = empty.facet.panels[["b"]],
+                        r = empty.facet.panels[["r"]],
+                        name = "new-guide-box")
+
+  # squash the original guide box's row / column (whichever applicable)
+  # & empty its cell
+  guide.grob <- gp[["layout"]][guide.grob, ]
+  if(guide.grob[["l"]] == guide.grob[["r"]]){
+    gp <- gtable_squash_cols(gp, cols = guide.grob[["l"]])
+  }
+  if(guide.grob[["t"]] == guide.grob[["b"]]){
+    gp <- gtable_squash_rows(gp, rows = guide.grob[["t"]])
+  }
+  gp <- gtable_remove_grobs(gp, "guide-box")
+
+  return(gp)
+}
+
+```
+
+
+SALT
+DIFF heatmaps [truncated]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "SALT_diff_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Deviation from 50:50 proportion [TRUNCATED]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SALT
+DIFF heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "SALT_diff_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Deviation from 50:50 proportion [FULL]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+COPR
+DIFF heatmaps [truncated]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "COPR_diff_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Deviation from 50:50 proportion [TRUNCATED]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+COPR
+DIFF heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "COPR_diff_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Deviation from 50:50 proportion [FULL]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

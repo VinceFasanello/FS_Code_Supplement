@@ -112,7 +112,7 @@ for (i in 1:nrow(my)) { # for each primer pair....
 
 my <- my[,c(1, 6:8, 361:363, 9:184, 364:539)]# omit columns that are no longer needed
 myd <- my # pass the cleaned up dataframe back to myd
-rm(my)
+rm(my, i, j)
 ```
 <br/><br/>
 
@@ -224,6 +224,7 @@ my$p43 <- my$bc1cts_43 / (my$bc1cts_43 + my$bc2cts_43) # p bc1 gen 430
 my$p49 <- my$bc1cts_49 / (my$bc1cts_49 + my$bc2cts_49) # p bc1 gen 490
 
 myd <- my # pass to myevo
+rm(my)
 ```
 <br/><br/>
 
@@ -254,6 +255,7 @@ my$rdp37_43 <-  2/((1/my$reads_37) + (1/my$reads_43))
 my$rdp43_49 <-  2/((1/my$reads_43) + (1/my$reads_49))
 
 myd <- my # pass to myevo
+rm(my)
 ```
 <br/><br/>
 
@@ -278,6 +280,7 @@ my$tmaxrate[my$tmaxrate == 4] <- 250; my$tmaxrate[my$tmaxrate == 5] <- 310; my$t
 my$tmaxrate[my$tmaxrate == 7] <- 430; my$tmaxrate[my$tmaxrate == 8] <- 490;   
 my$rmaxrate_rt0 <- 2/((1/my$rmaxrate)+(1/my$reads_0)) # create an additional reads value for max rate of change in bc prop for models that also incorporate the barcode initial proportions
 myd <- my # pass to myd
+rm(my, i)
 ```
 <br/><br/>
 
@@ -306,6 +309,7 @@ my$rdpz_43 <-  2/((1/my$reads_0) + (1/my$reads_43))
 my$rdpz_49 <-  2/((1/my$reads_0) + (1/my$reads_49))
 
 myd <- my # pass to myevo
+rm(my)
 ```
 <br/><br/>
 
@@ -328,6 +332,7 @@ my$tmaxdev[my$tmaxdev == 4] <- 250; my$tmaxdev[my$tmaxdev == 5] <- 310; my$tmaxd
 my$tmaxdev[my$tmaxdev == 7] <- 430; my$tmaxdev[my$tmaxdev == 8] <- 490;  
 my$rmaxdev_rt0 <- 2/((1/my$rmaxdev)+(1/my$reads_0)) # create an additional reads value for maxdev for models that also incorporate the barcode initial proportions
 myd <- my # pass to myevo
+rm(my, i)
 ```
 <br/><br/>
 
@@ -355,6 +360,7 @@ my$tmaxdiff[my$tmaxdiff == 4] <- 190; my$tmaxdiff[my$tmaxdiff == 5] <- 250; my$t
 my$tmaxdiff[my$tmaxdiff == 7] <- 370; my$tmaxdiff[my$tmaxdiff == 8] <- 430;  my$tmaxdiff[my$tmaxdiff == 9] <- 490; 
 my$rmaxdiff_rt0 <- 2/((1/my$rmaxdiff)+(1/my$reads_0)) # create an additional reads value for maxdiff for models that also incorporate the barcode initial proportions
 myd <- my # pass to myevo
+rm(my, i)
 ```
 <br/><br/>
 
@@ -369,7 +375,8 @@ st <- 0.25  # start prop threshold, anything  that starts greater is ommited. (t
 my$fixed <- FALSE; my$fixednsl <- FALSE # create columns to hold the fixed boolean value (nsl corresponds to no starting limit on proportion)
 my$fixed[my$diff0 <= st & my$diff25 >= ft] <- TRUE # calculated fixed
 my$fixednsl[my$diff25 >= ft] <- TRUE # calcualte fixed with no starting limit
-myevo <- my # pass to myevo
+myd <- my # pass to myevo
+rm(my, ft, st)
 ```
 <br/><br/>
 
@@ -384,12 +391,13 @@ my$rtcc <- 8/((1/my$rdp0_7)+ (1/my$rdp7_13)+ (1/my$rdp13_19)+ (1/my$rdp19_25)+ (
 my$rtcc_rt0 <- 2/((1/my$rtcc)+(1/my$reads_0)) # create an additional reads value for total dynamics for models that also incorporate the barcode initial proportions
 
 myd <- my # pass to myevo
+rm(my)
 ```
 <br/><br/>
 
 
 
-ADD TREATMENT INFO! -- will need [[[[[FULL]]]]] list of bc to treat assignments -- currently is only a partial list --> need EH20, EH60, EH100, EH0_60
+ADD TREATMENT INFO! 
 ```{R}
 my <- myd
 my$treat <- NA
@@ -466,6 +474,7 @@ my[my$bc1 %in% EH40.80, c("treat", "min", "max")] <- c(rep("EH40_80", times = nr
                                                    rep(40, times = nrow(my[my$bc1 %in% EH40.80,])),
                                                    rep(80, times = nrow(my[my$bc1 %in% EH40.80,])))
 myd <- my
+rm(EH0, EH20, EH40, EH60, EH80, EH100, EH0.40, EH0.60, EH0.80, EH20.60, EH40.80, my)
 ```
 
 DONT FORGET TO REMOVE ALL PROBLEM ENTRIES
@@ -480,18 +489,19 @@ my <- my[my$bc1 != "d1D8" & my$bc1 != "d2D8",]
 my <- my[my$bc1 != "d1E8" & my$bc1 != "d2E8",]
 
 myd <- my # pass back to myfa
+rm(my)
 ```
 
 DONT FORGET TO APPEND FIT ASSAY FIT VALUES
 ```{R}
-
+# do not implement unless requested. 
 ```
 
 
 Finished processing the longitudinal evolutionary data for analysis and visualization, save. 
 ```{R}
-# setwd("..")
-# setwd(dir_out_f)
-# myd$treat <- factor(myd$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-# save(myevo, file = "myevo.Rdata") # save the myevo dataframe for downstream use. 
+setwd("..")
+setwd(dir_out_f)
+myd$treat <- factor(myd$treat, levels = c("EH0", "EH20", "EH0_40", "EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+save(myd, file = "myd.Rdata") # save the myevo dataframe for downstream use.
 ```
