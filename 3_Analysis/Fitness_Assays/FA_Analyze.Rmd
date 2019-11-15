@@ -1262,6 +1262,149 @@ rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, m
 ```
 <br/><br/>
 
+# Look at within well VS between well fitness differences!
+```{r}
+my <- mydwcw
+my <- my[!(my$bcID %in% c("d1C5", "d2C5", "d1C9", "d2C9", "d1C4", "d2C4", "d1D8", "d2D8", "d1E8", "d2E8")),]
+
+my$wd0 <- NA
+my$wd40 <- NA
+my$wd80 <- NA
+my$wd120 <- NA
+
+for (i in 1:nrow(my)) {
+  my$wd0[i] <- abs(my$mn_dw_0[i] - my$mn_dw_0[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
+  my$wd40[i] <- abs(my$mn_dw_40[i] - my$mn_dw_40[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
+  my$wd80[i] <- abs(my$mn_dw_80[i] - my$mn_dw_80[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
+  my$wd120[i] <- abs(my$mn_dw_120[i] - my$mn_dw_120[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
+}
+sum(is.na(my$mn_dw_0))
+sum(is.na(my$wd0))
+
+my$td0_mn <- NA; my$td0_se <- NA
+my$td40_mn <- NA; my$td40_se <- NA
+my$td80_mn <- NA; my$td80_se <- NA
+my$td120_mn <- NA; my$td120_se <- NA
+for (i in 1:nrow(my)) {
+  pids <- c(paste0(substring(my$epo[i], 1,4), "_A"), paste0(substring(my$epo[i], 1,4), "_B"))
+  tmp_data <- my[my$epo %in% pids & my$treat == my$treat[i],]
+  ind <- as.character(my$bcpID[i])
+  
+  tmp_diffs0 <- abs(tmp_data$mn_dw_0[tmp_data$bcpID == ind] - tmp_data$mn_dw_0[tmp_data$bcpID != ind])
+  my$td0_mn[i] <- mean(tmp_diffs0, na.rm = T)
+  my$td0_se[i] <- sjstats::se(tmp_diffs0, na.rm = T)
+  
+  tmp_diffs40 <- abs(tmp_data$mn_dw_40[tmp_data$bcpID == ind] - tmp_data$mn_dw_40[tmp_data$bcpID != ind])
+  my$td40_mn[i] <- mean(tmp_diffs40, na.rm = T)
+  my$td40_se[i] <- sjstats::se(tmp_diffs40, na.rm = T)
+    
+  tmp_diffs80 <-  abs(tmp_data$mn_dw_80[tmp_data$bcpID == ind] - tmp_data$mn_dw_80[tmp_data$bcpID != ind])
+  my$td80_mn[i] <- mean(tmp_diffs80, na.rm = T)
+  my$td80_se[i] <- sjstats::se(tmp_diffs80, na.rm = T)
+   
+  tmp_diffs120 <-  abs(tmp_data$mn_dw_120[tmp_data$bcpID == ind] - tmp_data$mn_dw_120[tmp_data$bcpID != ind])
+  my$td120_mn[i] <- mean(tmp_diffs120, na.rm = T)
+  my$td120_se[i] <- sjstats::se(tmp_diffs120, na.rm = T)
+}
+mydwcw <- my
+# now have well difference and treatment difference for each row. 
+# When analying need to only count one copy of the well differece data (not for bc1 v bc2 AND bc2 v bc2), but should keep all of the treatment difference data!
+# This gives us one entry per well for our distribution of within well difference in fit and one entry per bcid for our distribution of treatment difference in fit.
+```
+
+```{r}
+mytrim <- F
+mywdn <- "wd0"
+tdn_mn <-"td0_mn"
+
+
+
+# all treats by chemical, sep by treat ---------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value, color = treat, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value, color = treat, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+
+# by chemical, ignore treats -------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+
+# by chemical, treats by const vs flux ----------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$group <- NA
+my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
+my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat", "group")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value,color = group, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$group <- NA
+my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
+my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
+my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+myt <- my[,c("wdn","tdn_mn", "treat", "group")]
+sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+myt <- reshape::melt(myt)
+ggplot(myt, aes(x=value,color = group, lty = variable))+
+  geom_density(alpha = 0.1, trim = mytrim)+
+  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+  theme_tufte(base_family="Helvetica")
+
+# once settled on which plots to use --- will need to create for all environments -- NOW JUST IN 00 (NEED 40, 80, 120)
+
+```
+
+
+
+
+
+
 # look at extinction pre-fit assay -- patterns are a little weaker here than if the post fit assay data are used. 
 ```{r}
 # create the frame, omitting most cols not necessary for these upcoming plots and tests.

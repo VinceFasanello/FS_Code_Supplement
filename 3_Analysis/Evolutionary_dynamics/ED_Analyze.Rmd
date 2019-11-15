@@ -195,6 +195,17 @@ shift_legend <- function(p){
   return(gp)
 }
 
+
+
+
+
+# log transformation for modeling. ---------------------------------------------
+log_transform <- function(myvar){
+  myvar <- log(((myvar - min(myvar))/(max(myvar) - min(myvar))) + 1) 
+  return(myvar)
+}
+
+
 ```
 
 
@@ -374,12 +385,657 @@ rm(my, myl, p, p.new)
 
 
 
+SULF
+DIFF heatmaps [truncated]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "SULF_diff_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Deviation from 50:50 proportion [TRUNCATED]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SULF
+DIFF heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49")]
+myl <- gather(my, condition, measurement, diff0, diff7, diff13, diff19, diff25, diff31, diff37, diff43, diff49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("diff0", "diff7", "diff13", "diff19", "diff25", "diff31", "diff37", "diff43", "diff49"))
+
+
+pdf(file = "SULF_diff_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Deviation from 50:50 proportion [FULL]")+
+  scale_x_discrete(labels=c("diff0" = "0", "diff7" = "7", "diff13" = "13", "diff19" = "19",
+                            "diff25" = "25", "diff31" = "31", "diff37" = "37", "diff43" = "43", 
+                            "diff49" = "49"))
+
+p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+                                breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+                                name = "Deviation from 50:50 Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
 
 
 
 
 
 
+SALT
+rate heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SALT_dp_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SALT
+rate heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SALT_dp_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+COPR
+rate heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "COPR_dp_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+COPR
+rate heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "COPR_dp_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+
+SULF
+rate heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SULF_dp_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SULF
+rate heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49")]
+myl <- gather(my, condition, measurement, dp0_7, dp7_13, dp13_19, dp19_25, dp25_31, dp31_37, dp37_43, dp43_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dp0_7", "dp7_13", "dp13_19", "dp19_25", "dp25_31", "dp31_37", "dp37_43", "dp43_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SULF_dp_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Rate of Change in BC Prop [FULL]")+
+  scale_x_discrete(labels=c("dp0_7" = "0_7", "dp7_13" = "7_13", "dp13_19" = "13_19", "dp19_25" = "19_25",
+                            "dp25_31" = "25_31", "dp31_37" = "31_37", "dp37_43" = "37_43", "dp43_49" = "43_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Rate of Change in BC Prop")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+SALT
+dpz heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SALT_dpz_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3, shrink = T) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SALT
+dpz heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SALT_dpz_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3, shrink = T) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SALT: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+
+COPR
+dpz heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "COPR_dpz_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+COPR
+dpz heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("COPR_A", "COPR_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "COPR_dpz_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("COPR: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+
+
+SULF
+dpz heatmaps [trunc]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B") & myd$diff0 <= 0.25,]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SULF_dpz_trunc.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
+
+SULF
+dpz heatmaps [full]
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SULF_A", "SULF_B"),]
+my$diff0_ret <- my$diff0
+my <- my[,c("treat","diff0_ret","plate","bc1", "dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49")]
+myl <- gather(my, condition, measurement, dpz_7, dpz_13, dpz_19, dpz_25, dpz_31, dpz_37, dpz_43, dpz_49)
+
+
+myl <- myl[order(myl$treat, -myl$diff0_ret),]
+myl$x <- paste0(myl$bc1, myl$plate, myl$diff0_ret); myl$x <- factor(myl$x, levels = unique(myl$x))
+myl$condition <- factor(myl$condition, levels = c("dpz_7", "dpz_13", "dpz_19", "dpz_25", "dpz_31", "dpz_37", "dpz_43", "dpz_49"))
+myl$measurement <- abs(myl$measurement)
+# myl$measurement <- log_transform(myl$measurement)
+# hist(myl$measurement)
+
+pdf(file = "SULF_dpz_full.pdf", width = 10, height = 10)
+p <- ggplot(myl, aes(x = condition, y = x, fill = measurement)) + 
+  geom_tile()+
+  theme_tufte(base_family="Helvetica")+
+  facet_wrap(~treat, switch = "y", scales = "free_y", ncol = 3) + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  ylab("Treatment") +
+  xlab("Day")+
+  ggtitle("SULF: Change in BC Prop relative to Day 0 [FULL]")+
+  scale_x_discrete(labels=c("dpz_7" = "_7", "dpz_13" = "_13", "dpz_19" = "_19", "dpz_25" = "_25",
+                            "dpz_31" = "_31", "dpz_37" = "_37", "dpz_43" = "_43", "dpz_49" = "_49"))
+
+# p.new <- p + scale_fill_viridis(limits = c(0,0.5), 
+#                                 breaks = c(0,0.1,0.2,0.3,0.4,0.5 ), 
+#                                 name = "Rate of Change in BC Prop")+
+p.new <- p + scale_fill_viridis(name = "Change in BC Prop relative to Day 0")+
+  guides(fill = guide_colorbar(title.position = "top",
+                               label.position = "bottom")) +
+  theme(legend.direction = "horizontal")
+grid::grid.draw(shift_legend(p.new))
+
+dev.off()
+
+rm(my, myl, p, p.new)
+```
 
 
 
