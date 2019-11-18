@@ -49,8 +49,33 @@ uc <- uc[,1:(ncol(uc) - 1)]
 
 
 
-Combine metadata with counts data
+Fix A's and B's assignment for COPR timepointws 43 and 49.
 ```{r}
+# plates COPR A and COPR B LABELS were switched for day 43 and day 49 data collection (relative to other timepoints). This block updates formatting to reflect this.
+#time 43
+tmpa <- ec[81,]
+tmpb <- ec[90,]
+ec[81,] <- tmpb; rownames(ec)[81] 
+ec[90,] <- tmpa; rownames(ec)[90]
+
+tmpa <- uc[22:24,]; rownames(tmpa) <- rownames(uc[25:27,])
+tmpb <- uc[25:27,]; rownames(tmpb) <- rownames(uc[22:24,])
+uc[22:24,] <- tmpb 
+uc[25:27,] <- tmpa
+
+
+#time 49
+tmpa <- ec[22:24,]; rownames(tmpa) <- rownames(ec[25:27,])
+tmpb <- ec[25:27,]; rownames(tmpb) <- rownames(ec[22:24,])
+ec[22:24,] <- tmpb 
+ec[25:27,] <- tmpa
+
+tmpa <- uc[22:24,]; rownames(tmpa) <- rownames(uc[25:27,])
+tmpb <- uc[25:27,]; rownames(tmpb) <- rownames(uc[22:24,])
+uc[22:24,] <- tmpb 
+uc[25:27,] <- tmpa
+
+
 myd <- cbind(lay, ec)
 myd$ppects <- rowSums(ec, na.rm = T) # primer pair expected counts  *BLANKS WILL BE ZERO HERE!!!!*
 myd$ppccts <- rowSums(uc, na.rm = T) # primer pair cross-contam counts *THESE ONLY MAKE SENSE FOR SINGLE WELL CONTROLS!!!*
@@ -144,9 +169,13 @@ rm(my, myt, mytt, myttg, i, j) # clean up.
 
 
 
+
+
+
 ubset myfa into datasets corresponding to fitness assay initial and fitness assay final timepoints, then combine these datasets into a single dataframe such that each row includes initial and final timepoint data for a single barcode at either generation 0 or generation 500.
 ```{R}
 my <- myd
+my <- my[order(my$experiment.id),]
 my$tid <- paste0(my$evo.time.point, my$replicate)
 unique(my$tid)
 
@@ -164,7 +193,8 @@ my25r3 <- my[my$tid == "T=25R=3",]; colnames(my25r3) <- paste0(colnames(my25r3),
 
 my31 <- my[my$tid == "T=31",]; colnames(my31) <- paste0(colnames(my31), "_31")
 my37 <- my[my$tid == "T=37",]; colnames(my37) <- paste0(colnames(my37), "_37") 
-my43 <- my[my$tid == "T=43",]; colnames(my43) <- paste0(colnames(my43), "_43") 
+my43 <- my[my$tid == "T=43",]; colnames(my43) <- paste0(colnames(my43), "_43")
+
 
 my49r1 <- my[my$tid == "T=49R=1",]; colnames(my49r1) <- paste0(colnames(my49r1), "_49r1")
 my49r2 <- my[my$tid == "T=49R=2",]; colnames(my49r2) <- paste0(colnames(my49r2), "_49r2")

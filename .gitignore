@@ -7,9 +7,9 @@
 .DS_Store
 .fastq.Rdata
 .zip
+
 *.Rproj.user
 *.Rhistory
-
 *.Ruserdata
 *.fastq
 *.fastq.gz

@@ -26,6 +26,13 @@ require(barnard)
 require(GGally)
 require(plotly)
 require(dplyr)
+require(tidyr)
+require(ggthemes)
+require(viridis)
+require(gtable)
+require(cowplot)
+require(MuMIn)
+require(simr)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
@@ -1314,90 +1321,112 @@ mydwcw <- my
 
 ```{r}
 mytrim <- F
-mywdn <- "wd0"
-tdn_mn <-"td0_mn"
+mywidth <- 7
+myheight <- 7
+
+envs <- c(0,40,80,120) #0,40,80,120
+for (env in envs) {
+  mywdn <- paste0("wd", env)
+  tdn_mn <-paste0("td", env, "_mn")
+  
+  SaltOutByTreat <- paste0("000_WvT_ByTreat_SALT_", env, ".pdf")
+  SaltOutIgTreat <- paste0("000_WvT_IgTreat_SALT_", env, ".pdf")
+  SaltOutCvF <- paste0("000_WvT_CvF_SALT_", env, ".pdf")
+  
+  CoprOutByTreat <- paste0("000_WvT_ByTreat_COPR_", env, ".pdf")
+  CoprOutIgTreat <- paste0("000_WvT_IgTreat_COPR_", env, ".pdf")
+  CoprOutCvF <- paste0("000_WvT_CvF_COPR_", env, ".pdf")
+  
+  # all treats by chemical, sep by treat ---------------------------------------------
+  my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value, color = treat, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(SaltOutByTreat), width = mywidth, height = myheight); print(p); dev.off()
+  
+  
+  
+  my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value, color = treat, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(CoprOutByTreat), width = mywidth, height = myheight); print(p); dev.off()
+  
+  
+  # by chemical, ignore treats -------------------------------------------------------
+  my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(SaltOutIgTreat), width = mywidth, height = myheight); print(p); dev.off()
+  
+  my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(CoprOutIgTreat), width = mywidth, height = myheight); print(p); dev.off()
+  
+  
+  # by chemical, treats by const vs flux ----------------------------------------------
+  my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+  my$group <- NA
+  my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
+  my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat", "group")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value,color = group, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(SaltOutCvF), width = mywidth, height = myheight); print(p); dev.off()
+  
+  
+  my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+  my$group <- NA
+  my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
+  my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
+  my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
+  myt <- my[,c("wdn","tdn_mn", "treat", "group")]
+  sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
+  myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
+  myt <- reshape::melt(myt)
+  p <- ggplot(myt, aes(x=value,color = group, lty = variable))+
+    geom_density(alpha = 0.1, trim = mytrim)+
+    xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
+    theme_tufte(base_family="Helvetica")+xlab("Difference in deltaFitness")
+  pdf(file = paste(CoprOutCvF), width = mywidth, height = myheight); print(p); dev.off()
+  
+}
 
 
 
-# all treats by chemical, sep by treat ---------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value, color = treat, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value, color = treat, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-
-# by chemical, ignore treats -------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-
-# by chemical, treats by const vs flux ----------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$group <- NA
-my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
-my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat", "group")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value,color = group, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$group <- NA
-my$group[my$treat %in% c("EH0", "EH40", "EH80")] <- "constant" 
-my$group[my$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80")] <- "flux" 
-my$wdn <- my[, mywdn]; my$tdn_mn <- my[, tdn_mn]
-myt <- my[,c("wdn","tdn_mn", "treat", "group")]
-sum(myt$wdn[(nrow(myt)/2+1):nrow(myt)] != myt$wdn[1:(nrow(myt)/2)], na.rm = T)
-myt$wdn[(nrow(myt)/2+1):nrow(myt)] <- NA
-myt <- reshape::melt(myt)
-ggplot(myt, aes(x=value,color = group, lty = variable))+
-  geom_density(alpha = 0.1, trim = mytrim)+
-  xlim(min(myt$value, na.rm = T), max(myt$value, na.rm = T))+
-  theme_tufte(base_family="Helvetica")
-
-# once settled on which plots to use --- will need to create for all environments -- NOW JUST IN 00 (NEED 40, 80, 120) -- code is flexible, control block at top of block. 
-# need to do outputs too for all plots!
 ```
 
 
@@ -1516,6 +1545,57 @@ pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
 <br/><br/>
 
+
+# POWER ANALYSIS FOR TREATMENT EFFECT MODELS
+```{r}
+# u = degrees of freedom in numerator = 1
+# v = degrees of freedom in denominator = n-entries - u - 1 = 256 (entries per 2 treatments) - 1 -1 = 254
+# f2 = effect size (Rm^2 / (1-Rm^2))
+# sig.level = 0.05 
+# power = NULL (to be calculated by pwr.f2.test)
+
+myheight <- 7
+mywidth <- 7
+
+mypower <- matrix(nrow=100, ncol = 5); colnames(mypower) <- c("u", "v", "power", "f2", "sig.level")
+mypower <- as.data.frame(mypower)
+mypower$u <- 1
+mypower$v <- c(254, 254*0.9, 254*0.8, 254*0.7, 254*0.6, 254*0.5, 254*0.4, 254*0.3, 254*0.2, 254*0.1)
+mypower$power <- NA
+mypower$f2 <- c(rep(0.8,10), rep(0.4,10), rep(0.2,10), rep(0.1,10), rep(0.05,10), rep(0.025,10), rep(0.0125,10), rep(0.00625,10), rep(0.003125,10), rep(0.0015625,10))
+mypower$sig.level <- 0.05
+mypower$group <- c(rep(1,10), rep(2,10), rep(3,10), rep(4,10), rep(5,10), rep(6,10), rep(7,10), rep(8,10), rep(9,10), rep(10,10)); mypower$group <- as.factor(mypower$group)
+for(i in 1:nrow(mypower)){
+  pow <- pwr.f2.test(u=mypower$u[i],
+                               v=mypower$v[i],
+                               f2=mypower$f2[i],
+                               sig.level = mypower$sig.level[i])
+  mypower$power[i] <- pow$power
+}
+
+mypower$v <- factor(mypower$v, levels =c(254,254*0.9,254*0.8,254*0.7,254*0.6,254*0.5,254*0.4,254*0.3,254*0.2,254*0.1 ))
+mypower$f2 <- factor(mypower$f2, levels = c(0.0015625, 0.003125,0.006250, 0.0125, 0.025, 0.05, 0.1, 0.2, 0.4, 0.8))
+p<-ggplot(mypower, aes(x=f2, y=power, group=v)) +
+  geom_line(aes(color=v))+
+  geom_point(aes(color=v))+
+  theme_classic()+
+  ggtitle("power to detect fitness differences between two treatments \n with (v+2)/2 entries ea")
+p
+pdf(file = paste("000_FitChangeTreatDif_PowerByDesign_f2xpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+
+mypower$v <- factor(mypower$v, levels =c(254*0.1,254*0.2,254*0.3,254*0.4,254*0.5,254*0.6,254*0.7,254*0.8,254*0.9,254 ))
+mypower$f2 <- factor(mypower$f2, levels = c(0.8, 0.4, 0.2, 0.1, 0.05, 0.025, 0.0125, 0.00625, 0.003125, 0.0015625))
+p<-ggplot(mypower, aes(x=v, y=power, group=f2)) +
+  geom_line(aes(color=f2))+
+  geom_point(aes(color=f2))+
+  theme_classic()+
+  ggtitle("power to detect fitness differences between two treatments \n with (v+2)/2 entries ea")
+p
+pdf(file = paste("000_FitChangeTreatDif_PowerByDesign_vxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+```
+
+
+
 # models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
@@ -1524,6 +1604,9 @@ my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),
 
 my$treat <- relevel(my$treat, ref = "EH0")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+# powerSim(mymod, nsim = 1000)
+# pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=r.squaredGLMM(mymod)[1]/(1-r.squaredGLMM(mymod)[1]), sig.level = 0.05)
+# pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=.01, sig.level = 0.05)
 
 # model eval ---------------------------
 # hist(residuals(mymod), breaks = 100)
