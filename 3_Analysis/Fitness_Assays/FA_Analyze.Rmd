@@ -135,6 +135,13 @@ get_se <- function(x){
   tmp <- sd(x, na.rm=TRUE) /  sqrt(length(x[!is.na(x)]))
   return(tmp)
 }
+
+# http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
 ```
 <br/><br/>
 
@@ -1604,6 +1611,19 @@ my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),
 
 my$treat <- relevel(my$treat, ref = "EH0")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
 # powerSim(mymod, nsim = 1000)
 # pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=r.squaredGLMM(mymod)[1]/(1-r.squaredGLMM(mymod)[1]), sig.level = 0.05)
 # pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=.01, sig.level = 0.05)
@@ -1615,18 +1635,48 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # --------------------------------------
 
 # run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH20_60")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH0_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH40_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 # ------------------------------------------------------------------------------
 
 # ------------------
@@ -1634,6 +1684,47 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
+Heatmap
+```{r}
+
+
+
+
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 3)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+
+
+image(1:ncol(m), 1:nrow(m), t(m), col = terrain.colors(60), axes = FALSE)
+axis(1, 1:ncol(m), colnames(m))
+axis(2, 1:nrow(m), rownames(m))
+for (x in 1:ncol(m))
+  for (y in 1:nrow(m))
+    text(x, y, m[y,x])
+
+p <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(color = "white")+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 4) +
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_blank())+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+    name="Estimate")
+p
+
+
+```
+<br/><br/>
 
 
 # SALT evolved in SALT 0.4
