@@ -1470,89 +1470,6 @@ rm(my)
 ```
 
 
-
-
-
-
-# SALT data...
-# Set universal guides for SALT plotting
-```{r}
-my <- mydwc[!is.na(mydwc$dw),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-
-mylowlim <- round(min(my$dw, na.rm = T)*1.10, 2)
-myhighlim <- round(max(my$dw, na.rm = T)*1.10, 2)
-mytitle <- NULL
-myylab <- "Fitness change"
-myxlab <- "Treatment"
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myptalpha <- 0.5
-myrugalpha <- 0.7
-mypalette <- dichrompalette_br_cy
-mytextsize <- 8
-myheight <- 3.5
-mywidth <- 7
-mymeanptsize <- 1
-mywtmeanpttype <- 1
-mywtmeanptcol <- "black"
-
-# ------------------
-rm(my)
-```
-<br/><br/>
-
-
-
-# SALT evolved in CM
-# Plot: violin plots; treatment effect on dw
-```{r}
-# data -------------------------------------------------------------------------
-my <- mydwc[!is.na(mydwc$mn_dw),]
-my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-myx <- my$treat
-myy <- my$mn_dw
-myr <- my$mn_re_dw
-myc <- my$treat
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
-
-p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
-                     limits = c(mylowlim, myhighlim),
-                     labels = scales::number_format(accuracy = 0.01))+
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
-# figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off()
-```
-<br/><br/>
-
-
 # POWER ANALYSIS FOR TREATMENT EFFECT MODELS
 ```{r}
 # u = degrees of freedom in numerator = 1
@@ -1603,6 +1520,37 @@ pdf(file = paste("000_FitChangeTreatDif_PowerByDesign_vxpower.pdf"), width = myw
 
 
 
+# SALT data...
+# Set universal guides for SALT plotting
+```{r}
+my <- mydwc[!is.na(mydwc$dw),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+
+mylowlim <- round(min(my$dw, na.rm = T)*1.10, 2)
+myhighlim <- round(max(my$dw, na.rm = T)*1.10, 2)
+mytitle <- NULL
+myylab <- "Fitness change"
+myxlab <- "Treatment"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 0.5
+myrugalpha <- 0.7
+mypalette <- dichrompalette_br_cy
+mytextsize <- 8
+myheight <- 3.5
+mywidth <- 7
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+mywtmeanptcol <- "black"
+
+# ------------------
+rm(my)
+```
+<br/><br/>
+
+
+
+# SALT evolved in CM
 # models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
@@ -1621,12 +1569,6 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
-
-
-# powerSim(mymod, nsim = 1000)
-# pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=r.squaredGLMM(mymod)[1]/(1-r.squaredGLMM(mymod)[1]), sig.level = 0.05)
-# pwr.f2.test(u=1,v=((nrow(my2[!is.na(my2$dw),]))-1)-1, power=NULL, f2=.01, sig.level = 0.05)
 
 # model eval ---------------------------
 # hist(residuals(mymod), breaks = 100)
@@ -1684,16 +1626,51 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-Heatmap
+# Plot: violin plots; treatment effect on dw
 ```{r}
+# data -------------------------------------------------------------------------
+my <- mydwc[!is.na(mydwc$mn_dw),]
+my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
 
+# Visualize -------------------------------------------------------------------
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$mn_dw
+myr <- my$mn_re_dw
+myc <- my$treat
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
 
-
-
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
 
 myp <- 0.05
 myres_est[myres_p >= myp] <- NA
-m <- round(myres_est, 3)
+m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
 m <- get_lower_tri(m)
@@ -1701,33 +1678,131 @@ melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 
-
-
-image(1:ncol(m), 1:nrow(m), t(m), col = terrain.colors(60), axes = FALSE)
-axis(1, 1:ncol(m), colnames(m))
-axis(2, 1:nrow(m), rownames(m))
-for (x in 1:ncol(m))
-  for (y in 1:nrow(m))
-    text(x, y, m[y,x])
-
-p <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(color = "white")+
-  geom_text(aes(X1, X2, label = value), color = "black", size = 4) +
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
   theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
   theme(axis.ticks = element_blank(),
         plot.title = element_text(face = "bold"),
-        axis.title = element_blank())+
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-    name="Estimate")
-p
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
 
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
 
 # SALT evolved in SALT 0.4
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+```{r}
+# MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
+
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# model eval ---------------------------
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
+# --------------------------------------
+
+# run same model with ea of the 7 treats as base level -------------------------
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+# ------------------------------------------------------------------------------
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+```
+<br/><br/>
+
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -1769,50 +1844,146 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp
+
 # figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
-```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
 
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
-```
-<br/><br/>
 
 
 
 # SALT evolved in SALT 0.8
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+```{r}
+# MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
+
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# model eval ---------------------------
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
+# --------------------------------------
+
+# run same model with ea of the 7 treats as base level -------------------------
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+# ------------------------------------------------------------------------------
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+```
+<br/><br/>
+
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -1854,50 +2025,144 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp
+
 # figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); p; dev.off()
-```
-<br/><br/>
-
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
-```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
-
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
 
 
 # SALT evolved in SALT 1.2
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+```{r}
+# MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
+
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# model eval ---------------------------
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
+# --------------------------------------
+
+# run same model with ea of the 7 treats as base level -------------------------
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+# ------------------------------------------------------------------------------
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+```
+<br/><br/>
+
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -1939,46 +2204,78 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
+pppp
+
 # figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
-```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
 
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
 
-# run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# ------------------------------------------------------------------------------
 
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
-```
-<br/><br/>
+
+
+
+
+
+
+
+
 
 
 
@@ -2013,6 +2310,81 @@ rm(my)
 
 
 # COPR evolved in CM
+# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+```{r}
+# MODELS -----------------------------------------------------------------------
+my <- myd[!is.na(myd$dw),] 
+my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
+
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# model eval ---------------------------
+# hist(residuals(mymod), breaks = 100)
+# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
+# anova(mymod) # test term significance
+# --------------------------------------
+
+# run same model with ea of the 7 treats as base level -------------------------
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+# ------------------------------------------------------------------------------
+
+# ------------------
+rm(my, myx, myy, myr, myc, myptsize, p, mymod)
+```
+<br/><br/>
+
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -2054,20 +2426,87 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
+pppp
 # figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
+
+
+
+# COPR in COPR 40
 # models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
 
 my$treat <- relevel(my$treat, ref = "EH0")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
 
 # model eval ---------------------------
 # hist(residuals(mymod), breaks = 100)
@@ -2076,18 +2515,48 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # --------------------------------------
 
 # run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH20_60")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH0_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH40_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 # ------------------------------------------------------------------------------
 
 # ------------------
@@ -2095,9 +2564,6 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-
-
-# COPR evolved in COPR 0.4
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -2139,20 +2605,87 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
+pppp
 # figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
+
+
+
+# COPR in COPR 80
 # models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
 
 my$treat <- relevel(my$treat, ref = "EH0")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
 
 # model eval ---------------------------
 # hist(residuals(mymod), breaks = 100)
@@ -2161,18 +2694,48 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # --------------------------------------
 
 # run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH20_60")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH0_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH40_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 # ------------------------------------------------------------------------------
 
 # ------------------
@@ -2180,9 +2743,6 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-
-
-# COPR evolved in COPR 0.8
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -2224,20 +2784,87 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
+pppp
 # figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
+
+
+
+# COPR in COPR 120
 # models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
 ```{r}
 # MODELS -----------------------------------------------------------------------
 my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
+my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
 
 my$treat <- relevel(my$treat, ref = "EH0")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
 
 # model eval ---------------------------
 # hist(residuals(mymod), breaks = 100)
@@ -2246,18 +2873,48 @@ mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerC
 # --------------------------------------
 
 # run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
 my$treat <- relevel(my$treat, ref = "EH0_40")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH20_60")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH0_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 my$treat <- relevel(my$treat, ref = "EH40_80")
 mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
 # ------------------------------------------------------------------------------
 
 # ------------------
@@ -2265,9 +2922,6 @@ rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-
-
-# COPR evolved in COPR 1.2
 # Plot: violin plots; treatment effect on dw
 ```{r}
 # data -------------------------------------------------------------------------
@@ -2309,47 +2963,66 @@ p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
   theme(axis.text.x = element_text(size = 8, angle = 0))
-p 
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+m <- get_lower_tri(m)
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+m2 <- get_lower_tri(m2)
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
+pppp
 # figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
+pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); pppp; dev.off()
 ```
 <br/><br/>
 
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
-```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
-my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
 
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod, myfill, myheight, myhighlim, mylowlim, mymeanptsize, myoutline, mypalette, myptalpha, myrugalpha,
-   mytextsize, mytitle, mywidth, mywtmeanptcol, mywtmeanpttype, myxlab, myylab)
-```
-<br/><br/>
 
 
 
