@@ -33,6 +33,7 @@ require(gtable)
 require(cowplot)
 require(MuMIn)
 require(simr)
+require(gtable)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
@@ -1275,6 +1276,112 @@ welldata <- welldata[welldata$bc1 != "d1C5" & welldata$bc1 != "d1C9",]
 rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2)
 ```
 <br/><br/>
+
+
+
+# visualize w/in well differences
+```{r}
+# for SALT ---------------------------------------------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B"),]
+my$id <- paste0(my$epo, my$bc1)
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
+my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
+my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
+sum(my0$id != my40$id)
+
+my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
+my$diff_0 <- abs(my$mn_dw - my$mn_dw_bc2); my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- abs(my$mn_dw_80 - my$mn_dw_bc2_80); my$diff_80 <- scale(my$diff_80, center = F)
+
+hull_treat <- my[!is.na(my$diff_0) & !is.na(my$diff_80),]  %>%
+  group_by(treat) %>%
+  slice(chull(diff_0, diff_80))
+
+p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0)+
+  geom_hline(yintercept = 0)+
+  geom_abline(intercept =0, slope = 1)+
+  geom_point(size = 5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 5)+
+  coord_equal()+
+  geom_rug()+ 
+  geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
+q <- ggplot(my, aes(x= disto,color= treat)) +
+  geom_density(alpha = 0.1, trim = F)
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_SALT_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+
+# for COPR ---------------------------------------------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B"),]
+my$id <- paste0(my$epo, my$bc1)
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
+my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
+my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
+sum(my0$id != my40$id)
+
+my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
+my$diff_0 <- abs(my$mn_dw - my$mn_dw_bc2); my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- abs(my$mn_dw_80 - my$mn_dw_bc2_80); my$diff_80 <- scale(my$diff_80, center = F)
+
+hull_treat <- my[!is.na(my$diff_0) & !is.na(my$diff_80),]  %>%
+  group_by(treat) %>%
+  slice(chull(diff_0, diff_80))
+
+p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0)+
+  geom_hline(yintercept = 0)+
+  geom_abline(intercept =0, slope = 1)+
+  geom_point(size = 5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 5)+
+  coord_equal()+
+  geom_rug()+ 
+  geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
+q <- ggplot(my, aes(x= disto,color= treat)) +
+  geom_density(alpha = 0.1, trim = F)
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
 
 # Look at within well VS between well fitness differences!
 ```{r}
