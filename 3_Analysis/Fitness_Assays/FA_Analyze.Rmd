@@ -1281,7 +1281,7 @@ rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, m
 
 # visualize w/in well differences
 ```{r}
-# for SALT ---------------------------------------------------------------------
+# for SALT condensed ---------------------------------------------------------------------
 my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B"),]
 my$id <- paste0(my$epo, my$bc1)
 my0 <- my[my$mpasp == 0.0,]
@@ -1291,17 +1291,29 @@ my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[
 sum(my0$id != my40$id)
 
 my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
-my$diff_0 <- abs(my$mn_dw - my$mn_dw_bc2); my$diff_0 <- scale(my$diff_0, center = F)
-my$diff_80 <- abs(my$mn_dw_80 - my$mn_dw_bc2_80); my$diff_80 <- scale(my$diff_80, center = F)
+my$diff_0 <- my$mn_dw - my$mn_dw_bc2
+my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
 
-hull_treat <- my[!is.na(my$diff_0) & !is.na(my$diff_80),]  %>%
-  group_by(treat) %>%
-  slice(chull(diff_0, diff_80))
+for (i in 1:nrow(my)) {
+  if(!is.na(my$diff_0[i])&!is.na(my$diff_80[i])){
+    if(my$diff_0[i] < 0 & my$diff_80[i] < 0){
+      my$diff_0[i] <- abs(my$diff_0[i])
+      my$diff_80[i] <- abs(my$diff_80[i])
+    }
+    if(my$diff_0[i] > 0 & my$diff_80[i] < 0){
+    my$diff_0[i] <- -1*my$diff_0[i]
+    my$diff_80[i] <- -1*my$diff_80[i]
+    }
+  }
+}
+my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- scale(my$diff_80, center = F)
 
 p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0)+
-  geom_hline(yintercept = 0)+
-  geom_abline(intercept =0, slope = 1)+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=0, y=0, xend=2.5, yend=2.5), linetype="dashed", size=0.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=0, y=0, xend=-2.5, yend=2.5), linetype="solid", size=0.5, inherit.aes=F)+
   geom_point(size = 5, alpha = 0.5) + 
   geom_point(shape = 1, colour = "black", size = 5)+
   coord_equal()+
@@ -1309,14 +1321,22 @@ p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
   geom_density_2d(aes(colour = treat, alpha = ..piece..))
 
 my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
-q <- ggplot(my, aes(x= disto,color= treat)) +
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$diff_0 > 0  & dendata$diff_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$diff_0 < 0 & dendata$diff_80 > 0) | (dendata$diff_0 > 0 & dendata$diff_80 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
   geom_density(alpha = 0.1, trim = F)
+
 
 p1 <- p + facet_wrap(~treat, nrow = 1)
 q1 <- q + facet_wrap(~treat, nrow = 1)
 p1 <- ggplotGrob(p1)
 q1 <- ggplotGrob(q1)
-
+# 
 x <-rbind(p1, q1, size = "first")
 x$widths <- grid::unit.pmax(p1$widths, q1$widths)
 grid::grid.newpage()
@@ -1325,8 +1345,7 @@ grid::grid.draw(x)
 pdf(file = paste("000_SALT_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
 
 
-
-# for COPR ---------------------------------------------------------------------
+# for COPR condensed ---------------------------------------------------------------------
 my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B"),]
 my$id <- paste0(my$epo, my$bc1)
 my0 <- my[my$mpasp == 0.0,]
@@ -1336,17 +1355,81 @@ my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[
 sum(my0$id != my40$id)
 
 my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
-my$diff_0 <- abs(my$mn_dw - my$mn_dw_bc2); my$diff_0 <- scale(my$diff_0, center = F)
-my$diff_80 <- abs(my$mn_dw_80 - my$mn_dw_bc2_80); my$diff_80 <- scale(my$diff_80, center = F)
+my$diff_0 <- my$mn_dw - my$mn_dw_bc2
+my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
 
-hull_treat <- my[!is.na(my$diff_0) & !is.na(my$diff_80),]  %>%
-  group_by(treat) %>%
-  slice(chull(diff_0, diff_80))
+for (i in 1:nrow(my)) {
+  if(!is.na(my$diff_0[i])&!is.na(my$diff_80[i])){
+    if(my$diff_0[i] < 0 & my$diff_80[i] < 0){
+      my$diff_0[i] <- abs(my$diff_0[i])
+      my$diff_80[i] <- abs(my$diff_80[i])
+    }
+    if(my$diff_0[i] > 0 & my$diff_80[i] < 0){
+    my$diff_0[i] <- -1*my$diff_0[i]
+    my$diff_80[i] <- -1*my$diff_80[i]
+    }
+  }
+}
+my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- scale(my$diff_80, center = F)
+
+p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=0, y=0, xend=2.5, yend=2.5), linetype="dashed", size=0.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=0, y=0, xend=-2.5, yend=2.5), linetype="solid", size=0.5, inherit.aes=F)+
+  geom_point(size = 5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 5)+
+  coord_equal()+
+  geom_rug()+ 
+  geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$diff_0 > 0  & dendata$diff_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$diff_0 < 0 & dendata$diff_80 > 0) | (dendata$diff_0 > 0 & dendata$diff_80 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+# for SALT unmanip---------------------------------------------------------------------
+my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B"),]
+my$id <- paste0(my$epo, my$bc1)
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
+my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
+my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
+sum(my0$id != my40$id)
+
+my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
+my$diff_0 <- my$mn_dw - my$mn_dw_bc2
+my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
+
+my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- scale(my$diff_80, center = F)
 
 p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
   geom_vline(xintercept=0)+
   geom_hline(yintercept = 0)+
-  geom_abline(intercept =0, slope = 1)+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
   geom_point(size = 5, alpha = 0.5) + 
   geom_point(shape = 1, colour = "black", size = 5)+
   coord_equal()+
@@ -1367,16 +1450,142 @@ x$widths <- grid::unit.pmax(p1$widths, q1$widths)
 grid::grid.newpage()
 grid::grid.draw(x)
 
-pdf(file = paste("000_COPR_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+pdf(file = paste("000_SALT_WellDifferences_00_80_unmanip.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
 
 
 
+# for COPR unmanip ---------------------------------------------------------------------
+my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B"),]
+my$id <- paste0(my$epo, my$bc1)
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
+my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
+my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
+sum(my0$id != my40$id)
 
+my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
+my$diff_0 <- my$mn_dw - my$mn_dw_bc2
+my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
+
+my$diff_0 <- scale(my$diff_0, center = F)
+my$diff_80 <- scale(my$diff_80, center = F)
+
+p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0)+
+  geom_hline(yintercept = 0)+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
+  geom_point(size = 5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 5)+
+  coord_equal()+
+  geom_rug()+ 
+  geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
+q <- ggplot(my, aes(x= disto,color= treat)) +
+  geom_density(alpha = 0.1, trim = F)
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_WellDifferences_00_80_unmanip.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
 ```
 
 
+# visualize fitness in two environments
+```{r}
+# for SALT  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$id <- paste0(my$epo, my$bc1)
+x <- my$mn_dw_0
+my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
+my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
+
+p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_80^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
 
 
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_SALT_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+# for COPR  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$id <- paste0(my$epo, my$bc1)
+
+my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
+my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
+
+p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_80^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+```
 
 
 
@@ -1577,25 +1786,40 @@ rm(my)
 ```
 
 
-# POWER ANALYSIS FOR TREATMENT EFFECT MODELS
+Power Analyses
 ```{r}
-# u = degrees of freedom in numerator = 1
-# v = degrees of freedom in denominator = n-entries - u - 1 = 256 (entries per 2 treatments) - 1 -1 = 254
-# f2 = effect size (Rm^2 / (1-Rm^2))
-# sig.level = 0.05 
-# power = NULL (to be calculated by pwr.f2.test)
+# get data and prep for power analysis
+my <- myd
+my$id <- paste0(my$bc1, my$epo, my$mpasp)
 
-myheight <- 7
-mywidth <- 7
 
+
+# power to detect treatment differences (LMER model) -----------------------------------------------
+# Run model ------------------------------------------------
+mymod <- lm(my$dw ~ my$id)
+x <- summary(mymod)
+
+# get effect size ------------------------------------------
+# myeffectsize <- x$adj.r.squared / (1 - x$adj.r.squared) # effect size as suggested by pwr package -- dont think this is right for us. 
+
+# effect size = f2 = 1/(rmse*100)
+myrmse <- sqrt(mean(residuals(mymod)^2))*100 # this is the rmse from the model*100 --> effect size of 1 corresonds to an ~2.42 fitness change 
+myeffectsize <- 1/myrmse # effect size of 1 is a 2.42 fitnesss change, so for a fitness change of 1.00, expect effect size of 1/myrmse
+mypowersize <- (pwr.f2.test(u = 1, v=64-1-1, f2 = myeffectsize, sig.level = 0.05))$power # powersize for plotting below
+# cohen.ES(test="f2", "small"); cohen.ES(test="f2", "medium"); cohen.ES(test="f2", "large") # our effect size is LARGE according to cohen. (.412407)
+
+# prepare plot data ----------------------------------------
 mypower <- matrix(nrow=100, ncol = 5); colnames(mypower) <- c("u", "v", "power", "f2", "sig.level")
 mypower <- as.data.frame(mypower)
 mypower$u <- 1
-mypower$v <- c(254, 254*0.9, 254*0.8, 254*0.7, 254*0.6, 254*0.5, 254*0.4, 254*0.3, 254*0.2, 254*0.1)
+mypower$v <- c(62, 62*0.9, 62*0.8, 62*0.7, 62*0.6, 62*0.5, 62*0.4, 62*0.3, 62*0.2, 62*0.1) # n - v - u = 64 - 1-1 = 62
 mypower$power <- NA
-mypower$f2 <- c(rep(0.8,10), rep(0.4,10), rep(0.2,10), rep(0.1,10), rep(0.05,10), rep(0.025,10), rep(0.0125,10), rep(0.00625,10), rep(0.003125,10), rep(0.0015625,10))
+mypower$f2 <- c(rep(myeffectsize*2,10), rep(myeffectsize*1.75,10), rep(myeffectsize*1.5,10),
+                rep(myeffectsize*1.25,10), rep(myeffectsize*1,10), rep(myeffectsize*.75,10), 
+                rep(myeffectsize*.5,10), rep(myeffectsize*.25,10),  rep(myeffectsize*.1,10),  rep(myeffectsize*.05,10))
 mypower$sig.level <- 0.05
-mypower$group <- c(rep(1,10), rep(2,10), rep(3,10), rep(4,10), rep(5,10), rep(6,10), rep(7,10), rep(8,10), rep(9,10), rep(10,10)); mypower$group <- as.factor(mypower$group)
+mypower$group <- c(rep(1,10), rep(2,10), rep(3,10), rep(4,10), rep(5,10), rep(6,10), rep(7,10), rep(8,10), rep(9,10), rep(10,10))
+mypower$group <- as.factor(mypower$group)
 for(i in 1:nrow(mypower)){
   pow <- pwr.f2.test(u=mypower$u[i],
                                v=mypower$v[i],
@@ -1604,26 +1828,133 @@ for(i in 1:nrow(mypower)){
   mypower$power[i] <- pow$power
 }
 
-mypower$v <- factor(mypower$v, levels =c(254,254*0.9,254*0.8,254*0.7,254*0.6,254*0.5,254*0.4,254*0.3,254*0.2,254*0.1 ))
-mypower$f2 <- factor(mypower$f2, levels = c(0.0015625, 0.003125,0.006250, 0.0125, 0.025, 0.05, 0.1, 0.2, 0.4, 0.8))
-p<-ggplot(mypower, aes(x=f2, y=power, group=v)) +
-  geom_line(aes(color=v))+
-  geom_point(aes(color=v))+
-  theme_classic()+
-  ggtitle("power to detect fitness differences between two treatments \n with (v+2)/2 entries ea")
-p
-pdf(file = paste("000_FitChangeTreatDif_PowerByDesign_f2xpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+# Plotting -------------------------------------------------
+# plotting setup -----------------------
+myheight <- 7
+mywidth <- 7
 
-mypower$v <- factor(mypower$v, levels =c(254*0.1,254*0.2,254*0.3,254*0.4,254*0.5,254*0.6,254*0.7,254*0.8,254*0.9,254 ))
-mypower$f2 <- factor(mypower$f2, levels = c(0.8, 0.4, 0.2, 0.1, 0.05, 0.025, 0.0125, 0.00625, 0.003125, 0.0015625))
-p<-ggplot(mypower, aes(x=v, y=power, group=f2)) +
+# plot effect size x power -------------
+mypower$n <- mypower$v + 2
+mypower$n <- factor(mypower$n, levels =c(62+2, (62*0.9)+2, (62*0.8)+2, (62*0.7)+2, (62*0.6)+2, (62*0.5)+2, (62*0.4)+2, (62*0.3)+2, (62*0.2)+2, (62*0.1)+2))
+mypower$v <- factor(mypower$v, levels =c(62, 62*0.9, 62*0.8, 62*0.7, 62*0.6, 62*0.5, 62*0.4, 62*0.3, 62*0.2, 62*0.1))
+
+p<-ggplot(mypower, aes(x=f2, y=power, group=n)) +
+  geom_vline(xintercept = myeffectsize, linetype = "dashed", color = "darkgray")+
+  geom_line(aes(color=n))+
+  geom_point(aes(color=n))+
+  geom_point(x = myeffectsize, y = mypowersize, pch = 1, size = 5, color = "darkgray")+
+  theme_classic()+
+  ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")+
+  labs(color = "n (total barcodes)")+
+  scale_x_continuous("Effect Size = 1/(rmse*100)")
+p
+pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_effectsizexpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+
+# plot n barcodes x power --------------
+mypower$n <- as.numeric(levels(mypower$n))[mypower$n]
+mypower$f2 <- factor(round(mypower$f2,2), levels = c(sort(unique(round(mypower$f2,2)), decreasing = T)))
+p<-ggplot(mypower, aes(x=n, y=power, group=f2)) +
+  geom_vline(xintercept = 64, linetype = "dashed", color = "darkgray")+
   geom_line(aes(color=f2))+
   geom_point(aes(color=f2))+
+  geom_point(x = 64, y = mypowersize, pch = 1, size = 5, color = "darkgray")+
   theme_classic()+
-  ggtitle("power to detect fitness differences between two treatments \n with (v+2)/2 entries ea")
+  scale_x_continuous(name = "n (total barcodes)", breaks = c(8, 16, 24, 32, 40, 48, 56, 64), labels = c(8, 16, 24, 32, 40, 48, 56, 64))+
+  labs(color = "Fitness Change")+
+  ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")
 p
-pdf(file = paste("000_FitChangeTreatDif_PowerByDesign_vxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+
+
+# power to detect fitness increase / decrease (t-tests) --------------------------------------------
+# d = m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
+# here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
+# population standard deviation of the four replicate sets in each row of the dataset.
+
+# get data and conduct population sd calculation -----------
+my <- mydwc
+my$psd_r1 <- (my$dw-my$mn_dw)^2
+my$psd_r2 <- (my$dw_2-my$mn_dw)^2
+my$psd_r3 <- (my$dw_3-my$mn_dw)^2
+my$psd_r4 <- (my$dw_4-my$mn_dw)^2
+my$psd_m <- rowMeans(cbind(my$psd_r1, my$psd_r2, my$psd_r3, my$psd_r4), na.rm = T)
+my$psd <- sqrt(my$psd_m)
+psd <- weighted.mean(my$psd, my$mn_re_dw, na.rm = T)
+
+# prepare plot data ----------------------------------------
+mypower <- matrix(nrow=22*3, ncol = 5); colnames(mypower) <- c("fitchange", "psd", "n", "power", "sig.level")
+mypower <- as.data.frame(mypower)
+mypower$fitchange <- c(0.0025, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22)
+mypower$psd <- psd
+mypower$n <- c(rep(2,22), rep(3,22), rep(4,22))
+mypower$power <- NA
+mypower$sig.level <- 0.05
+mypower$group <- c(rep(1,22), rep(2,22), rep(3,22))
+mypower$group <- as.factor(mypower$group)
+for(i in 1:nrow(mypower)){
+  pow <- pwr.t.test(d=mypower$fitchange[i] / mypower$psd[i],
+                               n=mypower$n[i],
+                               sig.level = mypower$sig.level[i])
+  mypower$power[i] <- pow$power
+}
+
+# Plotting -------------------------------------------------
+# plot effect size x power -------------
+mypower$n <- factor(mypower$n, levels = c(4,3,2))
+p<-ggplot(mypower, aes(x=fitchange, y=power, group=n)) +
+  geom_vline(xintercept = 0.01, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.025, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.05, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.1, linetype = "dashed", color = "gray")+
+  geom_line(aes(color=n))+
+  geom_point(aes(color=n))+
+  geom_point(x = 0.01, y = pwr.t.test(d = 0.01 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.025, y = pwr.t.test(d = 0.025 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.05, y = pwr.t.test(d = 0.05 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.1, y = pwr.t.test(d = 0.1 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  scale_x_continuous(name = "Fitness Change", breaks = c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2), labels = c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2))+
+  labs(color = "n (replicates \n per timepoint)")+
+  theme_classic()+
+  ggtitle("power to detect fitness change in 500 generations with n entries per timepoint")
+p
+
+pp<-ggplot(mypower, aes(x=fitchange, y=power, group=n)) +
+  geom_vline(xintercept = 0.01, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.025, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.05, linetype = "dashed", color = "gray")+
+  geom_vline(xintercept = 0.1, linetype = "dashed", color = "gray")+
+  geom_line(aes(color=n))+
+  geom_point(aes(color=n))+
+  geom_point(x = 0.01, y = pwr.t.test(d = 0.01 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.025, y = pwr.t.test(d = 0.025 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.05, y = pwr.t.test(d = 0.05 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  geom_point(x = 0.1, y = pwr.t.test(d = 0.1 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
+  ggtitle(NULL)+ xlab(NULL)+ ylab(NULL)+
+  theme_classic()+
+  theme(legend.position = "none")+
+  scale_x_continuous(limits = c(0, 0.05))+
+  theme(plot.background = element_rect(colour = "black"))
+pp
+
+ppp <- p + annotation_custom(ggplotGrob(pp), xmin = 0.125, xmax = .225, ymin = 0.025, ymax = 0.5)
+ppp
+pdf(file = paste("000_FitChangeIncDec_PowerByRMSE_effectsizexpower.pdf"), width = mywidth, height = myheight); ppp; dev.off()
+
+
+# plot n replicates x power -------------
+mypower$n <- as.numeric(levels(mypower$n))[mypower$n]
+mypower$fitchange <- factor(mypower$fitchange, levels = c(sort(unique(mypower$fitchange), decreasing = T)))
+p<-ggplot(mypower, aes(x=n, y=power, group=fitchange)) +
+  geom_line(aes(color=fitchange))+
+  geom_point(aes(color=fitchange))+
+  scale_x_continuous(name = "n (replicates per timepoint)", breaks = c(2, 3, 4), labels = c(2, 3, 4))+
+  labs(color = "Fitness Change")+
+  theme_classic()+
+  ggtitle("power to detect fitness change in 500 generations with n entries per timepoint")
+p
+pdf(file = paste("000_FitChangeIncDec_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
 ```
+
 
 
 
