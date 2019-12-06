@@ -1786,27 +1786,24 @@ rm(my)
 ```
 
 
+
 Power Analyses
 ```{r}
 # get data and prep for power analysis
 my <- myd
 my$id <- paste0(my$bc1, my$epo, my$mpasp)
 
-
-
 # power to detect treatment differences (LMER model) -----------------------------------------------
 # Run model ------------------------------------------------
-mymod <- lm(my$dw ~ my$id)
+mymod <- lm(my$dw ~ my$id, weights = my$re_dw)
 x <- summary(mymod)
 
 # get effect size ------------------------------------------
-# myeffectsize <- x$adj.r.squared / (1 - x$adj.r.squared) # effect size as suggested by pwr package -- dont think this is right for us. 
-
 # effect size = f2 = 1/(rmse*100)
-myrmse <- sqrt(mean(residuals(mymod)^2))*100 # this is the rmse from the model*100 --> effect size of 1 corresonds to an ~2.42 fitness change 
-myeffectsize <- 1/myrmse # effect size of 1 is a 2.42 fitnesss change, so for a fitness change of 1.00, expect effect size of 1/myrmse
+myrmse <- sqrt(mean(residuals(mymod)^2))*100 # this is the rmse from the model*100 --> effect size of 1 corresonds to an ~2.54% fitness change 
+myeffectsize <- 1/myrmse # effect size of 1 is a 2.54% fitnesss change, so for a fitness change of 1.00, expect effect size of 1/myrmse
 mypowersize <- (pwr.f2.test(u = 1, v=64-1-1, f2 = myeffectsize, sig.level = 0.05))$power # powersize for plotting below
-# cohen.ES(test="f2", "small"); cohen.ES(test="f2", "medium"); cohen.ES(test="f2", "large") # our effect size is LARGE according to cohen. (.412407)
+# cohen.ES(test="f2", "small"); cohen.ES(test="f2", "medium"); cohen.ES(test="f2", "large") # our effect size is LARGE according to cohen. (0.393938869...)
 
 # prepare plot data ----------------------------------------
 mypower <- matrix(nrow=100, ncol = 5); colnames(mypower) <- c("u", "v", "power", "f2", "sig.level")
@@ -1846,7 +1843,8 @@ p<-ggplot(mypower, aes(x=f2, y=power, group=n)) +
   theme_classic()+
   ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")+
   labs(color = "n (total barcodes)")+
-  scale_x_continuous("Effect Size = 1/(rmse*100)")
+  scale_x_continuous(name = "Fitness Difference between Treatments", breaks = c(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0), 
+                     labels = c("0.0%", "0.1%", "0.2%", "0.3%", "0.4%", "0.5%", "0.6%", "0.7%", "0.8%", "0.9%", "1.0%"))
 p
 pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_effectsizexpower.pdf"), width = mywidth, height = myheight); p; dev.off()
 
@@ -1860,7 +1858,7 @@ p<-ggplot(mypower, aes(x=n, y=power, group=f2)) +
   geom_point(x = 64, y = mypowersize, pch = 1, size = 5, color = "darkgray")+
   theme_classic()+
   scale_x_continuous(name = "n (total barcodes)", breaks = c(8, 16, 24, 32, 40, 48, 56, 64), labels = c(8, 16, 24, 32, 40, 48, 56, 64))+
-  labs(color = "Fitness Change")+
+  scale_color_discrete(name = "Fitness Difference \n between Treatments", labels = rev(c("0.02%", "0.04%", "0.1%", "0.2%", "0.3%", "0.39%", "0.49%", "0.59%", "0.69%", "0.79%")))+
   ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")
 p
 pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
@@ -1912,7 +1910,7 @@ p<-ggplot(mypower, aes(x=fitchange, y=power, group=n)) +
   geom_point(x = 0.025, y = pwr.t.test(d = 0.025 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
   geom_point(x = 0.05, y = pwr.t.test(d = 0.05 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
   geom_point(x = 0.1, y = pwr.t.test(d = 0.1 / psd, n = 4, sig.level = 0.05)$power, pch = 1, size = 5, color = "gray")+
-  scale_x_continuous(name = "Fitness Change", breaks = c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2), labels = c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2))+
+  scale_x_continuous(name = "Fitness Change", breaks = c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2), labels = c("1%", "2.5%", "5%", "10%", "15%", "20%"))+
   labs(color = "n (replicates \n per timepoint)")+
   theme_classic()+
   ggtitle("power to detect fitness change in 500 generations with n entries per timepoint")
@@ -1932,7 +1930,7 @@ pp<-ggplot(mypower, aes(x=fitchange, y=power, group=n)) +
   ggtitle(NULL)+ xlab(NULL)+ ylab(NULL)+
   theme_classic()+
   theme(legend.position = "none")+
-  scale_x_continuous(limits = c(0, 0.05))+
+  scale_x_continuous(limits = c(0, 0.05), breaks = c(0.01, 0.025, 0.05), labels = c("1%", "2.5%", "5%"))+
   theme(plot.background = element_rect(colour = "black"))
 pp
 
@@ -1948,14 +1946,14 @@ p<-ggplot(mypower, aes(x=n, y=power, group=fitchange)) +
   geom_line(aes(color=fitchange))+
   geom_point(aes(color=fitchange))+
   scale_x_continuous(name = "n (replicates per timepoint)", breaks = c(2, 3, 4), labels = c(2, 3, 4))+
-  labs(color = "Fitness Change")+
   theme_classic()+
-  ggtitle("power to detect fitness change in 500 generations with n entries per timepoint")
+  ggtitle("power to detect fitness change in 500 generations with n entries per timepoint")+
+  scale_color_discrete(name = "Fitness Change", labels = rev(c("0.25%", "0.5%", "1%", "1.5%", "2%", "2.5%", "3%", "3.5%",
+                                                               "4%", "45%", "5%", "6%", "7%", "8%", "9%", "10%", "12%", 
+                                                               "14%", "16%", "18%", "20%", "22%")))
 p
 pdf(file = paste("000_FitChangeIncDec_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
 ```
-
-
 
 
 
