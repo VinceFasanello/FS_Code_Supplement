@@ -1843,8 +1843,10 @@ p<-ggplot(mypower, aes(x=f2, y=power, group=n)) +
   theme_classic()+
   ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")+
   labs(color = "n (total barcodes)")+
-  scale_x_continuous(name = "Fitness Difference between Treatments", breaks = c(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0), 
-                     labels = c("0.0%", "0.1%", "0.2%", "0.3%", "0.4%", "0.5%", "0.6%", "0.7%", "0.8%", "0.9%", "1.0%"))
+  scale_x_continuous(name = "Fitness Difference between Treatments", breaks = c(myeffectsize*0.05, myeffectsize*0.1, myeffectsize*0.25, 
+                                                                                myeffectsize*0.5, myeffectsize*0.75, myeffectsize, 
+                                                                                myeffectsize*1.25, myeffectsize*1.5, myeffectsize*1.75, myeffectsize*2), 
+                     labels = c("0.05%","", "0.25%", "0.5%", "0.75%", "1.0%", "1.25%", "1.5%", "1.75%", "2.0%"))
 p
 pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_effectsizexpower.pdf"), width = mywidth, height = myheight); p; dev.off()
 
@@ -1858,7 +1860,7 @@ p<-ggplot(mypower, aes(x=n, y=power, group=f2)) +
   geom_point(x = 64, y = mypowersize, pch = 1, size = 5, color = "darkgray")+
   theme_classic()+
   scale_x_continuous(name = "n (total barcodes)", breaks = c(8, 16, 24, 32, 40, 48, 56, 64), labels = c(8, 16, 24, 32, 40, 48, 56, 64))+
-  scale_color_discrete(name = "Fitness Difference \n between Treatments", labels = rev(c("0.02%", "0.04%", "0.1%", "0.2%", "0.3%", "0.39%", "0.49%", "0.59%", "0.69%", "0.79%")))+
+  scale_color_discrete(name = "Fitness Difference \n between Treatments", labels = rev(c("0.05%","0.1%", "0.25%", "0.5%", "0.75%", "1.0%", "1.25%", "1.5%", "1.75%", "2.0%")))+
   ggtitle("power to detect fitness differences between two treatments \n with n total barcodes")
 p
 pdf(file = paste("000_FitChangeTreatDif_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
