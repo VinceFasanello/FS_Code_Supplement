@@ -2162,7 +2162,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2185,7 +2185,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2352,7 +2352,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2375,7 +2375,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2543,7 +2543,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2566,7 +2566,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2734,7 +2734,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+#m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2757,7 +2757,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+#m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
