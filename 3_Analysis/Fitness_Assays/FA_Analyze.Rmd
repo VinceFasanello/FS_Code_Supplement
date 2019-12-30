@@ -5,7 +5,6 @@ output:
     df_print: paged
 ---
 
-nrow(welldata[welldata$treat == "EH0_80" & welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.0,])
 ***
 ### Begin Code Blocks:
 
@@ -69,7 +68,7 @@ my <- myd
 my$omit <- FALSE # initially set to false (was T for all < 2 counts originally)
 my$omit[my$bc1cts_i_e <= 15 | my$bc1cts_f_e <= 15 | my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- T # see prev block comments, just assignment here. 
 
-#my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
+my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
 my$re_fit_a[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA
 my$fit500[my$omit == T] <- NA # na fit500 data for omits
 my$dw[my$omit == T] <- NA # na dw data for omits
@@ -256,37 +255,37 @@ myt$treat <- factor(myt$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "E
 # in CM ------------------------------------------------------------------------
 my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.0,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in SALT40 ------------------------------------------------------------------------
 my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.4,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in SALT80 ------------------------------------------------------------------------
 my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.8,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in SALT120 ------------------------------------------------------------------------
 my <- myt[myt$epo == "SALT_A" & myt$mpasp == 1.2,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in COPR40 ------------------------------------------------------------------------
 my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.4,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in COPR80 ------------------------------------------------------------------------
 my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.8,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # in COPR120 ------------------------------------------------------------------------
 my <- myt[myt$epo == "COPR_A" & myt$mpasp == 1.2,]
 mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-summary(mymod);anova(mymod)
+anova(mymod)
 
 # ----------------------------
 rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
@@ -589,7 +588,7 @@ dev.off() # one column wide, equal height
 rm(my, p, mybinwidth, myfillapha, myheight, myhighlight, mytextsize, mywidth, myxlab, myylab,
    legend, pcanc, pcdel, pcevo, psanc, psdel, psevo, mypalette_r1, mypalette_r2, myrugalpha,
    myxlim1, myxlim2, myxlim3, myxlim4, myxlim5, myxlim6, myymax1, myymax2, myymax3, myymax4,
-   myymax5, myymax6)
+   myymax5, myymax6, legend2)
 ```
 <br/><br/>
 
@@ -1273,7 +1272,7 @@ welldata <- myg[2:nrow(myg),]
 welldata <- welldata[welldata$bc1 != "d1C5" & welldata$bc1 != "d1C9",]
 
 # ------------------
-rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2)
+rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2, i)
 ```
 <br/><br/>
 
@@ -1407,99 +1406,11 @@ grid::grid.newpage()
 grid::grid.draw(x)
 
 pdf(file = paste("000_COPR_WellDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-
-
-# for SALT unmanip---------------------------------------------------------------------
-my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B"),]
-my$id <- paste0(my$epo, my$bc1)
-my0 <- my[my$mpasp == 0.0,]
-my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
-my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
-my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
-sum(my0$id != my40$id)
-
-my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
-my$diff_0 <- my$mn_dw - my$mn_dw_bc2
-my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
-
-my$diff_0 <- scale(my$diff_0, center = F)
-my$diff_80 <- scale(my$diff_80, center = F)
-
-p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0)+
-  geom_hline(yintercept = 0)+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
-  geom_point(size = 5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 5)+
-  coord_equal()+
-  geom_rug()+ 
-  geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
-q <- ggplot(my, aes(x= disto,color= treat)) +
-  geom_density(alpha = 0.1, trim = F)
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_SALT_WellDifferences_00_80_unmanip.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-
-
-
-# for COPR unmanip ---------------------------------------------------------------------
-my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B"),]
-my$id <- paste0(my$epo, my$bc1)
-my0 <- my[my$mpasp == 0.0,]
-my40 <- my[my$mpasp == 0.4,]; colnames(my40)[10:13] <- paste0(colnames(my40)[10:13], "_40")
-my80 <- my[my$mpasp == 0.8,]; colnames(my80)[10:13] <- paste0(colnames(my80)[10:13], "_80")
-my120 <- my[my$mpasp == 1.2,]; colnames(my120)[10:13] <- paste0(colnames(my120)[10:13], "_120")
-sum(my0$id != my40$id)
-
-my <- cbind(my0,my40[,10:13], my80[,10:13], my120[,10:13])
-my$diff_0 <- my$mn_dw - my$mn_dw_bc2
-my$diff_80 <- my$mn_dw_80 - my$mn_dw_bc2_80
-
-my$diff_0 <- scale(my$diff_0, center = F)
-my$diff_80 <- scale(my$diff_80, center = F)
-
-p <- ggplot(my, aes(x=diff_0, y=diff_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0)+
-  geom_hline(yintercept = 0)+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F)+
-  geom_point(size = 5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 5)+
-  coord_equal()+
-  geom_rug()+ 
-  geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$diff_0^2 + my$diff_80^2) 
-q <- ggplot(my, aes(x= disto,color= treat)) +
-  geom_density(alpha = 0.1, trim = F)
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_COPR_WellDifferences_00_80_unmanip.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+rm(dendata, my, my0, my120, my40, my80, p, p1, q, q1, x, i)
 ```
 
 
-# visualize fitness in two environments
+# visualize fitness in two environments (00 and 80)
 ```{r}
 # for SALT  ---------------------------------------------------------------------
 my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
@@ -1585,9 +1496,186 @@ grid::grid.newpage()
 grid::grid.draw(x)
 
 pdf(file = paste("000_COPR_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+rm(dendata, my, p, p1, q, q1, x)
 ```
 
+# visualize fitness in two environments (00 and 40)
+```{r}
+# for SALT  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$id <- paste0(my$epo, my$bc1)
+x <- my$mn_dw_0
+my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
+my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
 
+p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_40, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_40^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_40 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_40 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_40 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_SALT_BCDifferences_00_40.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+# for COPR  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$id <- paste0(my$epo, my$bc1)
+
+my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
+my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
+
+p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_40, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_40^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_40 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_40 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_40 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_BCDifferences_00_40.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+rm(dendata, my, p, p1, q, q1, x)
+```
+
+# visualize fitness in two environments (40 and 80)
+```{r}
+# for SALT  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$id <- paste0(my$epo, my$bc1)
+x <- my$mn_dw_40
+my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
+my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
+
+p <- ggplot(my, aes(x=mn_dw_40, y=mn_dw_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_40^2 + my$mn_dw_80^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_40 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_40 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_40 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_SALT_BCDifferences_40_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+
+
+# for COPR  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+my$id <- paste0(my$epo, my$bc1)
+
+my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
+my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
+
+p <- ggplot(my, aes(x=mn_dw_40, y=mn_dw_80, color=treat, fill = treat)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+my$disto <- sqrt(my$mn_dw_40^2 + my$mn_dw_80^2) 
+
+dendata <- my
+dendata$group <- NA
+dendata$group[which(dendata$mn_dw_40 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
+dendata$group[which((dendata$mn_dw_40 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_40 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
+
+
+q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
+  geom_density(alpha = 0.1, trim = F)
+
+
+p1 <- p + facet_wrap(~treat, nrow = 1)
+q1 <- q + facet_wrap(~treat, nrow = 1)
+p1 <- ggplotGrob(p1)
+q1 <- ggplotGrob(q1)
+# 
+x <-rbind(p1, q1, size = "first")
+x$widths <- grid::unit.pmax(p1$widths, q1$widths)
+grid::grid.newpage()
+grid::grid.draw(x)
+
+pdf(file = paste("000_COPR_BCDifferences_40_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+rm(dendata, my, p, p1, q, q1, x)
+```
 
 
 
@@ -1608,8 +1696,8 @@ for (i in 1:nrow(my)) {
   my$wd80[i] <- abs(my$mn_dw_80[i] - my$mn_dw_80[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
   my$wd120[i] <- abs(my$mn_dw_120[i] - my$mn_dw_120[my$bc2 == my$bc1[i] & my$epo == my$epo[i]])
 }
-sum(is.na(my$mn_dw_0))
-sum(is.na(my$wd0))
+# sum(is.na(my$mn_dw_0))
+# sum(is.na(my$wd0))
 
 my$td0_mn <- NA; my$td0_se <- NA
 my$td40_mn <- NA; my$td40_se <- NA
@@ -1640,6 +1728,8 @@ mydwcw <- my
 # now have well difference and treatment difference for each row. 
 # When analying need to only count one copy of the well differece data (not for bc1 v bc2 AND bc2 v bc2), but should keep all of the treatment difference data!
 # This gives us one entry per well for our distribution of within well difference in fit and one entry per bcid for our distribution of treatment difference in fit.
+
+rm(my, tmp_data, i, ind, pids, tmp_diffs0, tmp_diffs120, tmp_diffs40, tmp_diffs80)
 ```
 
 ```{r}
@@ -1747,9 +1837,7 @@ for (env in envs) {
   pdf(file = paste(CoprOutCvF), width = mywidth, height = myheight); print(p); dev.off()
   
 }
-
-
-
+rm(my, myt, p, CoprOutByTreat, CoprOutCvF, CoprOutIgTreat, env, envs, myheight, mytrim, mywdn, mywidth, SaltOutByTreat, SaltOutCvF, SaltOutIgTreat, tdn_mn)
 ```
 
 
@@ -1955,6 +2043,8 @@ p<-ggplot(mypower, aes(x=n, y=power, group=fitchange)) +
                                                                "14%", "16%", "18%", "20%", "22%")))
 p
 pdf(file = paste("000_FitChangeIncDec_PowerByRMSE_nxpower.pdf"), width = mywidth, height = myheight); p; dev.off()
+
+rm(mymod, mypower, p, pow, pp, ppp, x, i, myeffectsize, myheight, mypowersize, myrmse, mywidth, psd)
 ```
 
 
@@ -2003,15 +2093,8 @@ for(i in 1:nrow(my)){
   my$mncount0f[i] <- weighted.mean(my[i,c("bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")],
                                     my[i,c("re_f_r1a", "re_f_r2a", "re_f_r3a", "re_f_r4a")], na.rm = T)
 }
-sum(is.nan(my$mncount0i)) # no nans to replace here
-sum(is.nan(my$mncount0f))
-
-my$bc1cts_f_e
-
 my$medcount <- apply(cbind(my$mncount0i, my$mncount0f, my$bc1cts_i_e, my$bc1cts_f_e),
                   1, median, na.rm = T)
-sum(is.nan(my$medcount)) # still good
-
 
 # calcualte median proportion
 my$prop_i_0r1 <- my$bc1cts_r1i_a / (my$bc1cts_r1i_a + my$bc2cts_r1i_a)
@@ -2046,6 +2129,7 @@ for(i in 1:nrow(my)){
 my$medprop <- apply(cbind(my$mnprop0i, my$mnprop0f, my$mnprop500i, my$prop_f_500),
                   1, median, na.rm = T)
 my2 <- my
+rm(my, i)
 ```
 
 # SALT evolved in CM -- STATISTICAL TEST
@@ -2058,8 +2142,7 @@ mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(s
 car::vif(mymod) # VIF looks okay, proceed to model reduction
 AIC(mymod)
 
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) # weight of 0.986 on full model, with next highest weight being 0.020, only retain full model. 
-summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) # weight of 0.907 on full model, with next highest weight being 0.068, only retain full model (model averaging will fail here! with a delta AIC <=4). 
 
 mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
@@ -2072,42 +2155,42 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
@@ -2115,7 +2198,7 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 ```
 
-SALT Evolved in CM -- VIZ (Violin w/ heatmap)
+# SALT Evolved in CM -- VIZ (Violin w/ heatmap)
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -2212,6 +2295,9 @@ pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.
 pppp
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc)
 ```
 <br/><br/>
 
@@ -2222,11 +2308,11 @@ pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); pppp; dev.of
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 car::vif(mymod) # VIF looks okay, proceed to model reduction
 AIC(mymod)
 
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 # model averaging using delata AIC <= 4
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 summary(avgmod.delta4)
@@ -2244,8 +2330,8 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2254,8 +2340,8 @@ for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2264,8 +2350,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my
 }
 
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2274,8 +2360,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$tr
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
@@ -2284,8 +2370,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
@@ -2294,8 +2380,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
@@ -2403,6 +2489,9 @@ pppp
 
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
 ```
 <br/><br/>
 
@@ -2413,11 +2502,11 @@ pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); pppp; de
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 car::vif(mymod) # VIF looks okay, proceed to model reduction
 AIC(mymod)
 
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 # model averaging using delata AIC <= 4
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 summary(avgmod.delta4)
@@ -2435,8 +2524,8 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2445,8 +2534,8 @@ for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2455,8 +2544,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my
 }
 
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2465,8 +2554,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$tr
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
@@ -2475,8 +2564,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
@@ -2485,8 +2574,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
@@ -2594,6 +2683,9 @@ pppp
 
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
 ```
 <br/><br/>
 
@@ -2604,11 +2696,11 @@ pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); pppp; de
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 car::vif(mymod) # VIF looks okay, proceed to model reduction
 AIC(mymod)
 
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 # model averaging using delata AIC <= 4
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 summary(avgmod.delta4)
@@ -2626,8 +2718,8 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2636,8 +2728,8 @@ for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2646,8 +2738,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my
 }
 
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
@@ -2656,8 +2748,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$tr
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
@@ -2666,8 +2758,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
@@ -2676,8 +2768,8 @@ for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$t
 }
 
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mymod1 <- dredge(mymod, beta = "sd", fixed = c("my$treat")) 
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
 avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
 mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
@@ -2785,16 +2877,14 @@ pppp
 
 # figure output ---------------------------------------------------------------
 pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
+rm(mylowlim, myhighlim, mytitle, myylab, myxlab, myoutline, myfill, myptalpha, myrugalpha, mypalette, mytextsize,
+   myheight, mywidth, mymeanptsize, mywtmeanptcol, mywtmeanpttype, myp)
 ```
 <br/><br/>
-
-
-
-
-
-
-
-
 
 
 
@@ -2837,16 +2927,17 @@ rm(my)
 <br/><br/>
 
 
-
-# COPR evolved in CM
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+# COPR Evolved in CM -- STATISTICAL TEST
 ```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
+# Test - COPR DATA IN CM --------------------------------------------------------
+my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
-
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+car::vif(mymod) # VIF looks okay, proceed to model reduction
+AIC(mymod)
+
+mymod1 <- dredge(mymod, fixed = c("my$treat")) # weight of 0.989 on full model, with next highest weight being 0.006, only retain full model (model averaging will fail here! with a delta <=4). 
 
 mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
@@ -2858,63 +2949,53 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
   myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-# Plot: violin plots; treatment effect on dw
+
+# COPR Evolved in CM -- VIZ (Violin w/ heatmap)
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -2961,7 +3042,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -2984,7 +3065,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3011,89 +3092,103 @@ pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.
 pppp
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc)
 ```
 <br/><br/>
 
 
-
-
-# COPR in COPR 40
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+# COPR evolved in CM+40% COPR -- STATISTICAL TEST
 ```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
+my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
-
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+car::vif(mymod) # VIF looks okay, proceed to model reduction
+AIC(mymod)
 
-mysumm <- summary(mymod)$coefficients
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+# model averaging using delata AIC <= 4
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+summary(avgmod.delta4)
+importance(avgmod.delta4)
+confint(avgmod.delta4)
+
+mysumm <- summary(avgmod.delta4)$coefmat.full
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
 }
 
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
 }
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-# Plot: violin plots; treatment effect on dw
+
+# COPR evolved in CM+40% COPR -- VIZ (Violin w/ heatmap)
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -3140,7 +3235,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3163,7 +3258,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3188,91 +3283,106 @@ ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) +
 pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
 pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
 pppp
+
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
 ```
 <br/><br/>
 
 
-
-
-# COPR in COPR 80
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+# COPR evolved in CM+80% COPR -- STATISTICAL TEST
 ```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
+my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
-
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+car::vif(mymod) # VIF looks okay, proceed to model reduction
+AIC(mymod)
 
-mysumm <- summary(mymod)$coefficients
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+# model averaging using delata AIC <= 4
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+summary(avgmod.delta4)
+importance(avgmod.delta4)
+confint(avgmod.delta4)
+
+mysumm <- summary(avgmod.delta4)$coefmat.full
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
 }
 
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
 }
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-# Plot: violin plots; treatment effect on dw
+
+# COPR evolved in CM+80% COPR -- VIZ (Violin w/ heatmap)
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -3319,7 +3429,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3342,7 +3452,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3367,91 +3477,106 @@ ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) +
 pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
 pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
 pppp
+
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
 ```
 <br/><br/>
 
 
-
-
-# COPR in COPR 120
-# models: lmer dw~treat, random effect of bcpID to account for data structure (replicate measures of fitness)
+# COPR evolved in CM+120% COPR -- STATISTICAL TEST
 ```{r}
-# MODELS -----------------------------------------------------------------------
-my <- myd[!is.na(myd$dw),] 
+my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
-
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID) + 1, weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+car::vif(mymod) # VIF looks okay, proceed to model reduction
+AIC(mymod)
 
-mysumm <- summary(mymod)$coefficients
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+# model averaging using delata AIC <= 4
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+summary(avgmod.delta4)
+importance(avgmod.delta4)
+confint(avgmod.delta4)
+
+mysumm <- summary(avgmod.delta4)$coefmat.full
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
 }
 
-# model eval ---------------------------
-# hist(residuals(mymod), breaks = 100)
-# hist(expand_residuals(mymod, my$re_dw), breaks = 100) # this more accurately represents the distribution of residuals in the model output. -- tails look fine here. 
-# anova(mymod) # test term significance
-# --------------------------------------
-
-# run same model with ea of the 7 treats as base level -------------------------
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
 }
+
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4))); summary(mymod)
-mysumm <- summary(mymod)$coefficients
+mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod1 <- dredge(mymod, fixed = c("my$treat")) 
+avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
+mysumm <- summary(avgmod.delta4)$coefmat.full
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
 }
-# ------------------------------------------------------------------------------
-
-# ------------------
-rm(my, myx, myy, myr, myc, myptsize, p, mymod)
 ```
 <br/><br/>
 
-# Plot: violin plots; treatment effect on dw
+
+# COPR evolved in CM+120% COPR -- VIZ (Violin w/ heatmap)
 ```{r}
 # data -------------------------------------------------------------------------
 my <- mydwc[!is.na(mydwc$mn_dw),]
@@ -3498,7 +3623,7 @@ myres_est[myres_p >= myp] <- NA
 m <- round(myres_est, 2)
 colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
 rownames(m) <- colnames(m)
-m <- get_lower_tri(m)
+#m <- get_lower_tri(m) # uncomment for just lower triangle
 melt_m <- reshape::melt(m)
 melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3521,7 +3646,7 @@ pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) +
                        name="Estimate", na.value = "transparent")
 
 m2 <- m; m2[1:length(m2)] <- 0
-m2 <- get_lower_tri(m2)
+#m2 <- get_lower_tri(m2) # uncomment for just lower triangle
 melt_m2 <- reshape::melt(m2)
 melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
@@ -3546,10 +3671,20 @@ ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) +
 pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
 pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
 pppp
+
 # figure output ---------------------------------------------------------------
 pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); pppp; dev.off()
+
+
+rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
+   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
+rm(mylowlim, myhighlim, mytitle, myylab, myxlab, myoutline, myfill, myptalpha, myrugalpha, mypalette, mytextsize,
+   myheight, mywidth, mymeanptsize, mywtmeanptcol, mywtmeanpttype, myp)
 ```
 <br/><br/>
+
+
+
 
 
 

@@ -1038,8 +1038,1645 @@ rm(my, myl, p, p.new)
 ```
 
 
+NEW NEW NEW NEW
+
+MODELS!
+SALT
+
+shared viz settings for all salt plots
+```{r, warning = FALSE, message=FALSE}
+dichrompalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")
+mypalette <- dichrompalette_br_cy
+myoutline <- "grey20"
+myfill <- "grey90"
+myptalpha <- 0.5
+myrugalpha <- 0.7
+mywtmeanptcol <- "black"
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+myheight <- 7
+mywidth <- 7
+```
+
+tmaxdev
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$tmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
 
 
 
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "T-maxdev (Generations)"
+myxlab <- "Treatment"
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$tmaxdev
+myr <- my$rmaxdev
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 500
+myby <- 50
+myxextend <- 500
+myhmround <- 0
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = 1))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_tmaxdev.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+mmaxdev
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$mmaxdev ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdev_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
 
 
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "M-maxdev"
+myxlab <- "Treatment"
+myylabacc <- 0.01
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$mmaxdev
+myr <- my$rmaxdev
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 1
+myby <- 0.1
+myxextend <- 1
+myhmround <- 2
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = myylabacc))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 1, ymax = 2, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 1, ymax = 2, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_mmaxdev.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+tmaxrate
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$tmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "T-maxrate (Generations)"
+myxlab <- "Treatment"
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$tmaxrate
+myr <- my$rmaxrate
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 500
+myby <- 50
+myxextend <- 500
+myhmround <- 0
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = 1))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_tmaxrate.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+mmaxrate
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$mmaxrate ~ my$treat + I(scale(my$diff0)), weights = my$rmaxrate_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "M-maxrate"
+myxlab <- "Treatment"
+myylabacc <- 0.01
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$mmaxrate
+myr <- my$rmaxrate
+myc <- my$treat
+
+mylowlim <- 0.0001
+myhighlim <- 0.012
+myby <- 0.025
+myxextend <- 0.012
+myhmround <- 4
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = myylabacc))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 0.012, ymax = 0.024, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 0.012, ymax = 0.024, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_mmaxrate.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+tmaxdiff
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$tmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "T-maxdiff (Generations)"
+myxlab <- "Treatment"
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$tmaxdiff
+myr <- my$rmaxdiff
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 500
+myby <- 50
+myxextend <- 500
+myhmround <- 0
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = 1))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 550, ymax = 1050, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_tmaxdiff.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+mmaxdiff
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$mmaxdiff ~ my$treat + I(scale(my$diff0)), weights = my$rmaxdiff_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "M-maxdiff"
+myxlab <- "Treatment"
+myylabacc <- 0.01
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$mmaxdiff
+myr <- my$rmaxdiff
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 0.5
+myby <- 0.025
+myxextend <- 0.5
+myhmround <- 3
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = myylabacc))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 0.55, ymax = 1.05, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 0.55, ymax = 1.05, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_mmaxdiff.pdf", width = mywidth, height = myheight); pppp; dev.off()
+p
+```
+
+
+tcc
+```{r, warning = FALSE, message=FALSE}
+my <- myd[myd$plate %in% c("SALT_A", "SALT_B"),]
+
+# model and store results ------------------------------------------------------
+# create matrix to store results outputs
+myres <- matrix(nrow = 11, ncol=11)
+rownames(myres) <- c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+
+# EH0
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20
+my$treat <- relevel(my$treat, ref = "EH20")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_40
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_60","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_60
+my$treat <- relevel(my$treat, ref = "EH0_60")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH40","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH20_60",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH20_60
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH0_80", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH0_80
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH60","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH60
+my$treat <- relevel(my$treat, ref = "EH60")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH40_80","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH40_80
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH80", "my$treatEH100")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH80
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH100")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+# EH100
+my$treat <- relevel(my$treat, ref = "EH100")
+mymod <- lm(my$tcc ~ my$treat + I(scale(my$diff0)), weights = my$rtcc_rt0);# summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH20","my$treatEH0_40","my$treatEH0_60","my$treatEH40",
+                     "my$treatEH20_60", "my$treatEH0_80","my$treatEH60","my$treatEH40_80", "my$treatEH80")){
+  myres_est["my$treatEH100",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH100",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+
+
+# Visualize -------------------------------------------------------------------
+mytitle <- NULL
+myylab <- "tcc"
+myxlab <- "Treatment"
+myylabacc <- 0.01
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+myx <- my$treat
+myy <- my$tcc
+myr <- my$rtcc
+myc <- my$treat
+
+mylowlim <- 0
+myhighlim <- 0.03
+myby <- 0.005
+myxextend <- 0.03
+myhmround <- 4
+myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(x=11,y = weighted.mean(myy[myx == "EH100"], myr[myx == "EH100"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=10,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=9,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=8,y = weighted.mean(myy[myx == "EH60"], myr[myx == "EH60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=7,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=6,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=5,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=4,y = weighted.mean(myy[myx == "EH0_60"], myr[myx == "EH0_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=3,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=2,y = weighted.mean(myy[myx == "EH20"], myr[myx == "EH20"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
+  scale_color_manual(values =mypalette) + 
+  # geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=myby),
+                     limits = c(mylowlim, myhighlim+myxextend),
+                     labels = scales::number_format(accuracy = myylabacc))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, myhmround)
+colnames(m) <- c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH20", "EH0_40","EH0_60", "EH40", "EH20_60", "EH0_80", "EH60", "EH40_80", "EH80", "EH100"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), ymin = 0.03, ymax = 0.06, xmin = 3, xmax = 9)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), ymin = 0.03, ymax = 0.06, xmin = 3, xmax = 9)
+pppp
+
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALT_tcc.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
