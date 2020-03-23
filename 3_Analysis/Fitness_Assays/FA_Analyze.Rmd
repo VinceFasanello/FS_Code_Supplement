@@ -27,12 +27,20 @@ require(plotly)
 require(dplyr)
 require(tidyr)
 require(ggthemes)
-require(viridis)
 require(gtable)
 require(cowplot)
 require(MuMIn)
 require(simr)
 require(gtable)
+require(scales)
+require(viridis)
+require(reshape2)
+require(grid)
+require(gridExtra)
+require(remotes)
+require(devtools)
+devtools::install_github("rogiersbart/RTOOLZ")
+require(rtoolz)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
@@ -1414,6 +1422,8 @@ rm(dendata, my, my0, my120, my40, my80, p, p1, q, q1, x, i)
 ```{r}
 # for SALT  ---------------------------------------------------------------------
 my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
 my$id <- paste0(my$epo, my$bc1)
 x <- my$mn_dw_0
 my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
@@ -1498,6 +1508,48 @@ grid::grid.draw(x)
 pdf(file = paste("000_COPR_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
 rm(dendata, my, p, p1, q, q1, x)
 ```
+
+# visualize fitness in two environments (00 and 80) NO DENSITY
+```{r}
+# for SALT  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
+my$id <- paste0(my$epo, my$bc1)
+x <- my$mn_dw_0
+my$Fitness_in_CM <- scale(my$mn_dw_0, center = F)
+my$Fitness_in_High_Stress <- scale(my$mn_dw_80, center = F)
+
+mypalette <- dichrompalette_br_cy
+p <- ggplot(my, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color=Treatment, fill = Treatment)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
+  geom_point(size = 2.5, alpha = 0.5) + 
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  coord_equal()+
+  geom_rug()
+  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
+
+p1 <- p + facet_wrap(~Treatment, nrow = 2)
+p2 <- p + theme(legend.position = "none")
+
+
+x <- grid.arrange(p2, p1,
+             widths = c(1,2))
+grid::grid.draw(x)
+# 
+
+
+pdf(file = paste("000_SALT_BCDifferences_00_80_clean.pdf"),height = 6, width = 18); grid::grid.draw(x); dev.off()
+
+
+rm(dendata, my, p, p1, q, q1, x)
+```
+
 
 # visualize fitness in two environments (00 and 40)
 ```{r}
@@ -1893,6 +1945,7 @@ myrmse <- sqrt(mean(residuals(mymod)^2))*100 # this is the rmse from the model*1
 myeffectsize <- 1/myrmse # effect size of 1 is a 2.54% fitnesss change, so for a fitness change of 1.00, expect effect size of 1/myrmse
 mypowersize <- (pwr.f2.test(u = 1, v=64-1-1, f2 = myeffectsize, sig.level = 0.05))$power # powersize for plotting below
 # cohen.ES(test="f2", "small"); cohen.ES(test="f2", "medium"); cohen.ES(test="f2", "large") # our effect size is LARGE according to cohen. (0.393938869...)
+mypowersize <- (pwr.f2.test(u = 1, v=64-1-1, f2 = myeffectsize*0.393, sig.level = 0.05))$power # powersize for plotting below
 
 # prepare plot data ----------------------------------------
 mypower <- matrix(nrow=100, ncol = 5); colnames(mypower) <- c("u", "v", "power", "f2", "sig.level")
@@ -1986,6 +2039,7 @@ for(i in 1:nrow(mypower)){
                                sig.level = mypower$sig.level[i])
   mypower$power[i] <- pow$power
 }
+pwr.t.test(d= 0.025 / psd, n=4, sig.level = 0.05)
 
 # Plotting -------------------------------------------------
 # plot effect size x power -------------
@@ -2048,6 +2102,1749 @@ pdf(file = paste("000_FitChangeIncDec_PowerByRMSE_nxpower.pdf"), width = mywidth
 rm(mymod, mypower, p, pow, pp, ppp, x, i, myeffectsize, myheight, mypowersize, myrmse, mywidth, psd)
 ```
 
+
+Fitness correlation test
+```{r}
+mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata$mn_re_dw_0_80 <- rowMeans(cbind(mydata$mn_re_dw_0, mydata$mn_re_dw_80), na.rm = T)
+mydata$mn_re_dw_0_80[is.nan(mydata$mn_re_dw_0_80)] <- NA
+
+mydata$mn_re_dw_0_40 <- rowMeans(cbind(mydata$mn_re_dw_0, mydata$mn_re_dw_40), na.rm = T)
+mydata$mn_re_dw_0_40[is.nan(mydata$mn_re_dw_0_40)] <- NA
+
+mydata$mn_re_dw_40_80 <- rowMeans(cbind(mydata$mn_re_dw_40, mydata$mn_re_dw_80), na.rm = T)
+mydata$mn_re_dw_40_80[is.nan(mydata$mn_re_dw_40_80)] <- NA
+
+x <- c(); xx <- c();# xxx <- c(); xxxx <- c()
+y <- c(); yy <- c();# yyy <- c(); yyyy <- c()
+z <- c(); zz <- c();# zzz <- c(); zzzz <- c()
+
+
+# all data together
+mytemp <- cor.test(mydata$mn_dw_0, mydata$mn_dw_80) # overall correlation between envs. 0 and 80 isn egative (-0.29)
+mytempw <- wtd.cor(mydata$mn_dw_0, mydata$mn_dw_80, weight = mydata$mn_re_dw_0_80) # (-0.35)
+
+# constant lines
+myg <- c("EH0", "EH40", "EH80")
+mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg]) # -0.39
+mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg], weight = mydata$mn_re_dw_0_80[mydata$treat %in% myg]) # -0.48
+
+# flux lines
+myg <- c("EH0_40", "EH20_60", "EH0_80", "EH40_80")
+mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg]) # -0.12
+mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg], weight = mydata$mn_re_dw_0_80[mydata$treat %in% myg]) # -0.124
+
+for (i in c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) {
+  mytemp <- cor.test(mydata$mn_dw_0[mydata$treat == i], mydata$mn_dw_80[mydata$treat == i])
+  mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat == i], mydata$mn_dw_80[mydata$treat == i], weight = mydata$mn_re_dw_0_80[mydata$treat == i])
+  
+  # mytemps0 <- mean(mydata$mn_dw_0[mydata$treat == i], na.rm = T)
+  # mytemps80 <- mean(mydata$mn_dw_80[mydata$treat == i], na.rm = T)
+  # if(mytemps0 >=0 & mytemps80 >=0){mytemps <- "+"
+  # }else if(mytemps0 <0 & mytemps80 <0){mytemps <- "-"
+  # } else {mytemps <- ""}
+  
+  # mytemps0w <- weighted.mean(mydata$mn_dw_0[mydata$treat == i],mydata$mn_re_dw_0[mydata$treat == i], na.rm = T)
+  # mytemps80w <- weighted.mean(mydata$mn_dw_80[mydata$treat == i],mydata$mn_re_dw_80[mydata$treat == i], na.rm = T)
+  # if(mytemps0w >=0 & mytemps80w >=0){mytempsw <- "+"
+  # }else if(mytemps0w <0 & mytemps80w <0){mytempsw <- "-"
+  # } else {mytempsw <- ""}
+  
+  x <- c(x, mytemp$estimate)
+  xx <- c(xx, mytempw[1])
+  # xxx <- c(xxx, mytemps)
+  # xxxx <- c(xxxx, mytempsw)
+
+  
+  
+  mytemp <- cor.test(mydata$mn_dw_0[mydata$treat == i], mydata$mn_dw_40[mydata$treat == i])
+  mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat == i], mydata$mn_dw_40[mydata$treat == i], weight = mydata$mn_re_dw_0_40[mydata$treat == i])
+  
+  # mytemps0 <- mean(mydata$mn_dw_0[mydata$treat == i], na.rm = T)
+  # mytemps40 <- mean(mydata$mn_dw_40[mydata$treat == i], na.rm = T)
+  # if(mytemps0 >=0 & mytemps40 >=0){mytemps <- "+"
+  # }else if(mytemps0 <0 & mytemps40 <0){mytemps <- "-"
+  # } else {mytemps <- ""}
+  
+  # mytemps0w <- weighted.mean(mydata$mn_dw_0[mydata$treat == i],mydata$mn_re_dw_0[mydata$treat == i], na.rm = T)
+  # mytemps40w <- weighted.mean(mydata$mn_dw_40[mydata$treat == i],mydata$mn_re_dw_40[mydata$treat == i], na.rm = T)
+  # if(mytemps0w >=0 & mytemps40w >=0){mytempsw <- "+"
+  # }else if(mytemps0w <0 & mytemps40w <0){mytempsw <- "-"
+  # } else {mytempsw <- ""}
+  
+  y <- c(y, mytemp$estimate)
+  yy <- c(yy, mytempw[1])
+  # yyy <- c(yyy, mytemps)
+  # yyyy <- c(yyyy, mytempsw)
+  
+  
+  
+  mytemp <- cor.test(mydata$mn_dw_40[mydata$treat == i], mydata$mn_dw_80[mydata$treat == i])
+  mytempw <- wtd.cor(mydata$mn_dw_40[mydata$treat == i], mydata$mn_dw_80[mydata$treat == i], weight = mydata$mn_re_dw_40_80[mydata$treat == i])
+    
+  mytemps40 <- mean(mydata$mn_dw_40[mydata$treat == i], na.rm = T)
+  # mytemps80 <- mean(mydata$mn_dw_80[mydata$treat == i], na.rm = T)
+  # if(mytemps40 >=0 & mytemps80 >=0){mytemps <- "+"
+  # }else if(mytemps40 <0 & mytemps80 <0){mytemps <- "-"
+  # } else {mytemps <- ""}
+  # 
+  # mytemps40w <- weighted.mean(mydata$mn_dw_40[mydata$treat == i],mydata$mn_re_dw_40[mydata$treat == i], na.rm = T)
+  # mytemps80w <- weighted.mean(mydata$mn_dw_80[mydata$treat == i],mydata$mn_re_dw_80[mydata$treat == i], na.rm = T)
+  # if(mytemps40w >=0 & mytemps80w >=0){mytempsw <- "+"
+  # }else if(mytemps40w <0 & mytemps80w <0){mytempsw <- "-"
+  # } else {mytempsw <- ""}
+  
+  z <- c(z, mytemp$estimate)
+  zz <- c(zz, mytempw[1])
+  # zzz <- c(zzz, mytemps)
+  # zzzz <- c(zzzz, mytempsw)
+}
+
+# not weighted by reads
+xyz <- cbind(as.matrix(x), as.matrix(y), as.matrix(z))
+colnames(xyz) <- c("CM (No Stress), \n 80% Stress", "CM (No Stress), \n 40% Stress", "40% Stress,\n 80% Stress")
+rownames(xyz) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+xyz
+xyz <- as.data.frame(xyz)
+xyz$Treatment <- rownames(xyz)
+xyz$Treatment <- factor(xyz$Treatment, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+write.csv(xyz, file = "cor.csv")
+xyz <- melt(xyz)
+colnames(xyz)[colnames(xyz) == "value"] <- "Correlation"
+xyz$col <- 1
+
+# mysign <- cbind(as.matrix(xxx), as.matrix(yyy), as.matrix(zzz))
+# colnames(mysign) <- c("0,80", "0,40", "40,80")
+# rownames(mysign) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+# mysign
+# mysign <- as.data.frame(mysign)
+# mysign$Treatment <- rownames(mysign)
+# mysign <- melt(mysign, id.vars = "Treatment")
+# mysign$sign <- mysign$value
+# 
+# xyz <- cbind(xyz, mysign$sign)
+# colnames(xyz)[ncol(xyz)] <- "sign"
+p <- ggplot(xyz, aes(col, Treatment, fill = Correlation))+
+  geom_tile()+
+  geom_text(aes(label=round(Correlation, 2)))+
+  # geom_text(aes(label=xyz$sign),inherit.aes = T, nudge_x = 0.3, nudge_y = -0.3, size = 3.5)+
+  coord_fixed(1/1.75)+
+  scale_fill_viridis(discrete = F, limits = c(-1, 1))+
+  theme_blank()+
+  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
+  xlab("Assay Environment")+
+  facet_grid(~variable, switch = "x")
+pdf(file = paste("000_SALT_Fitness_Cor_Heatmaps_uw.pdf"),height = 5.5, width = 5.5);
+grid::grid.draw(p); dev.off()
+
+
+
+# weighted by reads
+xxyyzz <- cbind(as.matrix(xx), as.matrix(yy), as.matrix(zz))
+colnames(xxyyzz) <- c("CM (No Stress), \n 80% Stress", "CM (No Stress), \n 40% Stress", "40% Stress,\n 80% Stress")
+rownames(xxyyzz) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+xxyyzz
+xxyyzz <- as.data.frame(xxyyzz)
+xxyyzz$Treatment <- rownames(xxyyzz)
+xxyyzz$Treatment <- factor(xxyyzz$Treatment, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+write.csv(xxyyzz, file = "corw.csv")
+xxyyzz <- melt(xxyyzz)
+colnames(xxyyzz)[colnames(xxyyzz) == "value"] <- "Correlation"
+xxyyzz$col <- 1
+
+# mysign <- cbind(as.matrix(xxxx), as.matrix(yyyy), as.matrix(zzzz))
+# colnames(mysign) <- c("0,80", "0,40", "40,80")
+# rownames(mysign) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+# mysign
+# mysign <- as.data.frame(mysign)
+# mysign$Treatment <- rownames(mysign)
+# mysign <- melt(mysign, id.vars = "Treatment")
+# mysign$sign <- mysign$value
+# 
+# xxxyyzzyz <- cbind(xxxyyzzyz, mysign$sign)
+# colnames(xxxyyzzyz)[ncol(xxxyyzzyz)] <- "sign"
+p <- ggplot(xxyyzz, aes(col, Treatment, fill = Correlation))+
+  geom_tile()+
+  geom_text(aes(label=round(Correlation, 2)))+
+  # geom_text(aes(label=xxxyyzzyz$sign),inherit.aes = T, nudge_x = 0.3, nudge_y = -0.3, size = 3.5)+
+  coord_fixed(1/1.75)+
+  scale_fill_viridis(discrete = F, limits = c(-1, 1))+
+  theme_blank()+
+  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
+  xlab("Assay Environment")+
+  facet_grid(~variable, switch = "x")
+pdf(file = paste("000_SALT_Fitness_Cor_Heatmaps_w.pdf"),height = 5.5, width = 5.5); grid::grid.draw(p); dev.off()
+
+```
+
+
+```{r}
+
+mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
+mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0, mydata$mn_dw_80), na.rm = F)
+mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+
+# modified from modi package
+weighted.var <- function (x, w, na.rm = FALSE) 
+{
+  if (missing(w)) {
+    w <- rep.int(1, length(x))
+  }
+  else if (length(w) != length(x)) {
+    stop("x and w must have the same length")
+  }
+  # if (min(w) < 0) {
+  #   stop("there are negative weights")
+  # }
+  
+  if (is.integer(w)) {
+    w <- as.numeric(w)
+  }
+  if (na.rm) {
+    w <- w[obs.ind <- !is.na(x)]
+    x <- x[obs.ind]
+  }
+  w <- w * length(w)/sum(w)
+  return(sum(w * (x - weighted.mean(x, w))^2)/(sum(w) - 1))
+}
+
+mydata$var_dw_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), na.rm = F))
+mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+
+# viz -- all 0_80-----------------------
+# weighted -------------------
+mypalette <- dichrompalette_br_cy
+mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = F); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = F)
+p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3.5), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_A_TOSHARE_SALT_Fitness_Cor_Heatmaps_w.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
+
+
+```
+
+
+```{r}
+mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
+mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + abs(min(mydata$mn_dw_0, na.rm = T)); mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + abs(min(mydata$mn_dw_80, na.rm = T));
+mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0_p1, mydata$mn_dw_80_p1), na.rm = F)
+mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+
+mydata$mn_dw_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]))) # I checked this math, its good.
+mydata$mn_re_dw_0_geomean <- scale(mydata$mn_re_dw_0, center = F); mydata$mn_re_dw_80_geomean <- scale(mydata$mn_re_dw_80, center = F);
+mydata$mn_dw_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+                                                  w=as.numeric(x[c( "mn_re_dw_0_geomean", "mn_re_dw_80_geomean")]), na.rm = F))
+
+
+weighted.var <- function (x, w, na.rm = FALSE) 
+{
+  if (missing(w)) {
+    w <- rep.int(1, length(x))
+  }
+  else if (length(w) != length(x)) {
+    stop("x and w must have the same length")
+  }
+  # if (min(w) < 0) {
+  #   stop("there are negative weights")
+  # }
+  
+  if (is.integer(w)) {
+    w <- as.numeric(w)
+  }
+  if (na.rm) {
+    w <- w[obs.ind <- !is.na(x)]
+    x <- x[obs.ind]
+  }
+  w <- w * length(w)/sum(w)
+  return(sum(w * (x - weighted.mean(x, w))^2)/(sum(w) - 1))
+}
+
+mydata$var_dw_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), na.rm = F))
+mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+
+# viz -- all 0_80-----------------------
+# weighted -------------------
+mypalette <- dichrompalette_br_cy
+mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = T); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = T)
+p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 4.790458/myrange, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+
+mypalette <- dichrompalette_br_cy
+mydata$mn_dw_0_80gs <- scale(mydata$mn_dw_0_80g, center = F); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = F)
+p <- ggplot(mydata, aes(x=mn_dw_0_80gs, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 4.790458/myrange, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+```
+
+
+
+```{r}
+
+mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
+mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + abs(min(mydata$mn_dw_0, na.rm = T)); mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + abs(min(mydata$mn_dw_80, na.rm = T));
+
+mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0_p1, mydata$mn_dw_80_p1), na.rm = F)
+mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+mydata$mn_dw_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]))) # I checked this math, its good.
+mydata$mn_re_dw_0_geomean <- scale(mydata$mn_re_dw_0, center = F); mydata$mn_re_dw_80_geomean <- scale(mydata$mn_re_dw_80, center = F);
+mydata$mn_dw_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+                                                  w=as.numeric(x[c( "mn_re_dw_0_geomean", "mn_re_dw_80_geomean")]), na.rm = F))
+
+# viz -- all 0_80-----------------------
+# weighted -------------------
+mypalette <- dichrompalette_br_cy
+mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = T); mydata$mn_dw_0_80gs <- scale(mydata$mn_dw_0_80g, center = T)
+p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=mn_dw_0_80gs, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+
+
+
+mypalette <- dichrompalette_br_cy
+myx <- mydata$Treatment
+myy <- mydata$mn_dw_0_80s
+myc <- mydata$Treatment
+mytitle <- ""
+myxlab <- "Treatment"
+myylab <- "Arithmetic Mean Fitness in 00, 80"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 1
+mymeanptsize <- 1
+myptsize <- 0.1
+myrugalpha <- 0.7
+mywtmeanptcol <- "black"
+
+
+p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+p
+
+
+
+myy <- mydata$mn_dw_0_80gs
+myylab <- "Geometric Mean Fitness in 00, 80"
+
+p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+p
+
+
+```
+
+
+mean fitness vs. var fitness
+```{r}
+
+
+mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+
+mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0, mydata$mn_dw_80), na.rm = F)
+mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+# mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + 1; mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + 1; 
+# mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + abs(min(mydata$mn_dw_0, na.rm = T)); mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + abs(min(mydata$mn_dw_80, na.rm = T)); 
+# 
+# mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0_p1, mydata$mn_dw_80_p1), na.rm = F)
+# mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+#                                                   w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+# mydata$mn_dw_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]))) # I checked this math, its good. 
+# mydata$mn_re_dw_0_geomean <- scale(mydata$mn_re_dw_0, center = F); mydata$mn_re_dw_80_geomean <- scale(mydata$mn_re_dw_80, center = F);
+# mydata$mn_dw_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
+#                                                   w=as.numeric(x[c( "mn_re_dw_0_geomean", "mn_re_dw_80_geomean")]), na.rm = F))
+# 
+# plot(mydata$mn_dw_0_80uw ~ mydata$mn_dw_0_80uwg)
+# abline(a = 0, b = 1)
+# 
+# plot(mydata$mn_dw_0_80 , mydata$mn_dw_0_80g)
+# abline(a = 0, b = 1)
+# hist(mydata$mn_dw_0_80uw, col = rgb(1,0,0,0.5)); hist(mydata$mn_dw_0_80uwg, col = rgb(0,0,1,0.5), add = T)
+
+
+mydata$mn_dw_0_40uw <- rowMeans(cbind(mydata$mn_dw_0, mydata$mn_dw_40), na.rm = F)
+mydata$mn_dw_0_40 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0", "mn_dw_40")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_40")]), na.rm = F)) # calculate wtd.var dw across reps
+
+mydata$mn_dw_40_80uw <- rowMeans(cbind(mydata$mn_dw_40, mydata$mn_dw_80), na.rm = F)
+mydata$mn_dw_40_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_40", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_40", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+# modified from modi package
+weighted.var <- function (x, w, na.rm = FALSE) 
+{
+  if (missing(w)) {
+    w <- rep.int(1, length(x))
+  }
+  else if (length(w) != length(x)) {
+    stop("x and w must have the same length")
+  }
+  # if (min(w) < 0) {
+  #   stop("there are negative weights")
+  # }
+  
+  if (is.integer(w)) {
+    w <- as.numeric(w)
+  }
+  if (na.rm) {
+    w <- w[obs.ind <- !is.na(x)]
+    x <- x[obs.ind]
+  }
+  w <- w * length(w)/sum(w)
+  return(sum(w * (x - weighted.mean(x, w))^2)/(sum(w) - 1))
+}
+
+mydata$var_dw_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), na.rm = F))
+mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+mydata$var_dw_0_40uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_40")]), na.rm = F))
+mydata$var_dw_0_40 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_40")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_40")]), na.rm = F)) # calculate wtd.var dw across reps
+
+mydata$var_dw_40_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_40", "mn_dw_80")]), na.rm = F))
+mydata$var_dw_40_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_40", "mn_dw_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_dw_40", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+
+
+# viz -- all 0_80-----------------------
+# weighted -------------------
+mypalette <- dichrompalette_br_cy
+mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = F); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = F)
+p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_MN_VS_VAR_00_80_ALLTREATw.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
+
+# unweighted -----------------
+mypalette <- dichrompalette_br_cy
+p <- ggplot(mydata, aes(x=mn_dw_0_80uw, y=var_dw_0_80uw, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_MN_VS_VAR_00_80_ALLTREATuw.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
+
+
+
+# viz -- target ----------------------------------
+# weighted -------------------
+mypalette <- dichrompalette_br_cy[c(1,5,7)]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_80", "EH80"),], aes(x=mn_dw_0_80, y=var_dw_0_80, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
+  geom_rug()
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+
+
+mypalette <- dichrompalette_br_cy[1:3]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_40", "EH40"),], aes(x=mn_dw_0_40, y=var_dw_0_40, color = Treatment, fill = Treatment)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 40% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 40% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
+  geom_rug()
+p3 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p4 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+
+
+mypalette <- dichrompalette_br_cy[c(3,6,7)]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH40", "EH40_80", "EH80"),], aes(x=mn_dw_40_80, y=var_dw_40_80, color = Treatment, fill = Treatment)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: 40% Stress, 80% Stress")+
+  ylab("Variance Fitness: 40% Stress, 80% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
+  geom_rug()
+p5 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p6 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.2,y=0.007), color = "gray75", label = "1:16")
+
+x <- grid.arrange(p2, p1, p4, p3, p6, p5, widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_MN_VS_VAR_TARTREATSw.pdf"),height = 18, width = 9); grid::grid.draw(x); dev.off()
+
+
+# unweighted -----------------
+mypalette <- dichrompalette_br_cy[c(1,5,7)]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_80", "EH80"),], aes(x=mn_dw_0_80uw, y=var_dw_0_80uw, color = Treatment, fill = Treatment)) +   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
+  geom_rug()
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+
+
+mypalette <- dichrompalette_br_cy[1:3]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_40", "EH40"),], aes(x=mn_dw_0_40uw, y=var_dw_0_40uw, color = Treatment, fill = Treatment)) +   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 40% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 40% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
+  geom_rug()
+p3 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p4 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
+
+
+mypalette <- dichrompalette_br_cy[c(3,6,7)]
+p <- ggplot(mydata[mydata$Treatment %in% c("EH40", "EH40_80", "EH80"),], aes(x=mn_dw_40_80uw, y=var_dw_40_80uw, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: 40% Stress, 80% Stress")+
+  ylab("Variance Fitness: 40% Stress, 80% Stress")+
+  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
+  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
+  geom_rug()
+p5 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p6 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
+  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
+  geom_text(aes(x=0.2,y=0.007), color = "gray75", label = "1:16")
+
+x <- grid.arrange(p2, p1, p4, p3, p6, p5, widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_MN_VS_VAR_TARTREATSuw.pdf"),height = 18, width = 9); grid::grid.draw(x); dev.off()
+
+# create a summary table by treatment ----------------------
+# weighted -------------------
+x <- c(); u <- c()
+y <- c(); v <- c()
+z <- c(); w <- c()
+for (i in c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) {
+  mytemp <- mean(mydata$mn_dw_0_80[mydata$Treatment == i], na.rm = T)
+  x <- c(x, mytemp)
+  mytemp <- var(mydata$mn_dw_0_80[mydata$Treatment == i], na.rm = T)
+  u <- c(u, mytemp)
+  
+  mytemp <- mean(mydata$mn_dw_0_40[mydata$Treatment == i], na.rm = T)
+  y <- c(y, mytemp)
+  mytemp <- var(mydata$mn_dw_0_40[mydata$Treatment == i], na.rm = T)
+  v <- c(v, mytemp)
+  
+  mytemp <- mean(mydata$mn_dw_40_80[mydata$Treatment == i], na.rm = T)
+  z <- c(z, mytemp)
+  mytemp <- var(mydata$mn_dw_40_80[mydata$Treatment == i], na.rm = T)
+  w <- c(w, mytemp)
+}
+
+xuyvzw <- cbind(as.matrix(x), as.matrix(u), as.matrix(y), as.matrix(v), as.matrix(z), as.matrix(w))
+colnames(xuyvzw) <- c("mn 0,80", "var 0,80", "mn 0,40", "var 0,40", "mn 40,80", "var 40,80")
+rownames(xuyvzw) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+# xuyvzw
+write.csv(xuyvzw, file = "000_SALT_MN_VS_VAR_TARTREATSw_TABLE.csv")
+
+# unweighted -----------------
+x <- c(); u <- c()
+y <- c(); v <- c()
+z <- c(); w <- c()
+for (i in c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) {
+  mytemp <- mean(mydata$mn_dw_0_80uw[mydata$Treatment == i], na.rm = T)
+  x <- c(x, mytemp)
+  mytemp <- var(mydata$mn_dw_0_80uw[mydata$Treatment == i], na.rm = T)
+  u <- c(u, mytemp)
+  
+  mytemp <- mean(mydata$mn_dw_0_40uw[mydata$Treatment == i], na.rm = T)
+  y <- c(y, mytemp)
+  mytemp <- var(mydata$mn_dw_0_40uw[mydata$Treatment == i], na.rm = T)
+  v <- c(v, mytemp)
+  
+  mytemp <- mean(mydata$mn_dw_40_80uw[mydata$Treatment == i], na.rm = T)
+  z <- c(z, mytemp)
+  mytemp <- var(mydata$mn_dw_40_80uw[mydata$Treatment == i], na.rm = T)
+  w <- c(w, mytemp)
+}
+
+xuyvzwuw <- cbind(as.matrix(x), as.matrix(u), as.matrix(y), as.matrix(v), as.matrix(z), as.matrix(w))
+colnames(xuyvzwuw) <- c("mn 0,80", "var 0,80", "mn 0,40", "var 0,40", "mn 40,80", "var 40,80")
+rownames(xuyvzwuw) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+# xuyvzwuw
+write.csv(xuyvzwuw, file = "000_SALT_MN_VS_VAR_TARTREATSuw_TABLE.csv")
+```
+
+
+# Vector Fitness
+```{r}
+# for SALT  ---------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1)
+
+# all treats together in 0 and 80 ------------------------------------------------------------------
+my$Fitness_in_CM <- my$mn_dw_0
+my$Fitness_in_High_Stress <- my$mn_dw_80
+mypalette <- dichrompalette_br_cy
+p <- ggplot(my, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color=Treatment, fill = Treatment)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_segment(mapping = aes(x=0, y=0, xend=my$Fitness_in_CM, yend=my$Fitness_in_High_Stress, color = Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in CM (No Stress)")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  geom_rug()
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + theme(axis.text.x = element_text(size = 6, angle = 45, vjust = 0.5)) + ylab("")
+p2 <- p + theme(legend.position = "none")
+
+x <- grid.arrange(p2, p1,
+             widths = c(1,2))
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_VectorFitness_00_80_ALLTREAT.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
+
+
+# target treats in target envs ------------------------------------------------------------------
+my$Fitness_in_CM <- my$mn_dw_0
+my$Fitness_in_High_Stress <- my$mn_dw_80
+mypalette <- dichrompalette_br_cy[c(1,5,7)]
+p <- ggplot(my[my$Treatment %in% c("EH0", "EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color=Treatment, fill = Treatment)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_segment(mapping = aes(x=0, y=0, xend=my[my$Treatment %in% c("EH0", "EH0_80", "EH80"),]$Fitness_in_CM, 
+                             yend=my[my$Treatment %in% c("EH0", "EH0_80", "EH80"),]$Fitness_in_High_Stress, color = Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in CM (No Stress)")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  xlim( min(c(my$mn_dw_0, my$mn_dw_40), na.rm = T), max(c(my$mn_dw_0, my$mn_dw_40), na.rm = T))+
+  ylim( min(c(my$mn_dw_40, my$mn_dw_80), na.rm = T), max(c(my$mn_dw_40, my$mn_dw_80), na.rm = T))+
+  geom_rug()
+p
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none")
+
+my$Fitness_in_CM <- my$mn_dw_0
+my$Fitness_in_Low_Stress <- my$mn_dw_40
+mypalette <- dichrompalette_br_cy[c(1,2,3)]
+p <- ggplot(my[my$Treatment %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color=Treatment, fill = Treatment)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_segment(mapping = aes(x=0, y=0, xend=my[my$Treatment %in% c("EH0", "EH0_40", "EH40"),]$Fitness_in_CM, 
+                             yend=my[my$Treatment %in% c("EH0", "EH0_40", "EH40"),]$Fitness_in_Low_Stress, color = Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in CM (No Stress)")+
+  ylab("Fitness in 40% Stress")+
+  coord_equal()+
+  xlim( min(c(my$mn_dw_0, my$mn_dw_40), na.rm = T), max(c(my$mn_dw_0, my$mn_dw_40), na.rm = T))+
+  ylim( min(c(my$mn_dw_40, my$mn_dw_80), na.rm = T), max(c(my$mn_dw_40, my$mn_dw_80), na.rm = T))+
+  geom_rug()
+p3 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p4 <- p + theme(legend.position = "none")
+
+my$Fitness_in_Low_Stress <- my$mn_dw_40
+my$Fitness_in_High_Stress <- my$mn_dw_80
+mypalette <- dichrompalette_br_cy[c(3,6,7)]
+p <- ggplot(my[my$Treatment %in% c("EH40", "EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color=Treatment, fill = Treatment)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_segment(mapping = aes(x=0, y=0, xend=my[my$Treatment %in% c("EH40", "EH40_80", "EH80"),]$Fitness_in_Low_Stress, 
+                             yend=my[my$Treatment %in% c("EH40", "EH40_80", "EH80"),]$Fitness_in_High_Stress, color = Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in 40% Stress")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  xlim( min(c(my$mn_dw_0, my$mn_dw_40), na.rm = T), max(c(my$mn_dw_0, my$mn_dw_40), na.rm = T))+
+  ylim( min(c(my$mn_dw_40, my$mn_dw_80), na.rm = T), max(c(my$mn_dw_40, my$mn_dw_80), na.rm = T))+
+  geom_rug()
+p5 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
+p6 <- p + theme(legend.position = "none")
+
+x <- grid.arrange(p2, p1, p4, p3, p6, p5, widths = c(1,2))
+grid::grid.draw(x)
+
+pdf(file = paste("000_SALT_VectorFitness_TARTREATs.pdf"),height = 18, width = 9); grid::grid.draw(x); dev.off()
+```
+
+
+
+
+
+
+
+# Kassen Plot
+```{r}
+# for SALT  ---------------------------------------------------------------------
+#  0, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH0", "EH0_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
+
+# create a dataset for the 0, 80 specialist fit line
+myc <- my[my$Treatment %in% c("EH0", "EH80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my$remove <- F; my[my$id %in% myc$id,]$remove <- T
+# viz
+plot(my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_CM)
+points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_CM, col = "red")
+
+# remove multivariate outliers for the flux line too (need to do this as a separate step)
+myc <- my[my$Treatment %in% c("EH0_80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my[my$id %in% myc$id,]$remove <- T
+myp <- my
+my <- my[my$remove ==F,]
+
+# Calculate unweighted and weighted centroids dataframes --------
+centroids <- aggregate(cbind(my$Fitness_in_CM, my$Fitness_in_High_Stress)~my$Treatment,my,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_High_Stress")
+centroids_uw <- centroids
+
+centroids$Fitness_in_CM[1] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0"],my$mn_re_dw_0[my$Treatment == "EH0"] )
+centroids$Fitness_in_CM[2] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0_80"],my$mn_re_dw_0[my$Treatment == "EH0_80"] )
+centroids$Fitness_in_CM[3] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH80"],my$mn_re_dw_0[my$Treatment == "EH80"] )
+centroids$Fitness_in_High_Stress[1] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH0"],my$mn_re_dw_80[my$Treatment == "EH0"] )
+centroids$Fitness_in_High_Stress[2] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH0_80"],my$mn_re_dw_80[my$Treatment == "EH0_80"] )
+centroids$Fitness_in_High_Stress[3] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH80"],my$mn_re_dw_80[my$Treatment == "EH80"] )
+
+# calculate kernels -----------------
+mydata<-my[,c("Treatment", "Fitness_in_CM", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
+mycols <- mypalette
+myThreshold <- 95
+myalpha <- 0.5
+mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_low <- data.frame(mykernel_low)
+
+mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH0_80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_flux <- data.frame(mykernel_flux)
+
+mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_high <- data.frame(mykernel_high)
+
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
+  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  theme_bw()+
+  xlab("Fitness in CM (0% Stress)")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
+  geom_rug(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)
+p1
+
+# create and plot hist of resids for flux treat ---
+# unweigthed
+point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
+point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$y <- myp$Fitness_in_CM*myslope + myintercept
+
+# weigthed
+point1 <- c(centroids[1,2], centroids[1,3])
+point2 <- c(centroids[3,2], centroids[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$yy <- myp$Fitness_in_CM*myslope + myintercept
+
+# create plots for weighted and unweighted resids -----
+# unweighted
+p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# weighted
+p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Line)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+lay <- rbind(c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(2,2,NA,3,3,NA))
+x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_0_80.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
+
+
+#  0, 40 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_Low_Stress) & my$Treatment %in% c("EH0", "EH0_40", "EH40"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_40","EH40")) # reorder the treat factor
+
+# create a dataset for the 0, 80 specialist fit line
+myc <- my[my$Treatment %in% c("EH0", "EH40"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my$remove <- F; my[my$id %in% myc$id,]$remove <- T
+# viz
+plot(my[my$treat %in% c("EH0", "EH40"),]$Fitness_in_Low_Stress ~ my[my$treat %in% c("EH0", "EH40"),]$Fitness_in_CM)
+points(myc$Fitness_in_Low_Stress ~ myc$Fitness_in_CM, col = "red")
+
+# remove multivariate outliers for the flux line too (need to do this as a separate step)
+myc <- my[my$Treatment %in% c("EH0_40"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my[my$id %in% myc$id,]$remove <- T
+myp <- my
+my <- my[my$remove ==F,]
+
+# Calculate unweighted and weighted centroids dataframes --------
+centroids <- aggregate(cbind(my$Fitness_in_CM, my$Fitness_in_Low_Stress)~my$Treatment,my,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_Low_Stress")
+centroids_uw <- centroids
+
+centroids$Fitness_in_CM[1] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0"],my$mn_re_dw_0[my$Treatment == "EH0"] )
+centroids$Fitness_in_CM[2] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0_40"],my$mn_re_dw_0[my$Treatment == "EH0_40"] )
+centroids$Fitness_in_CM[3] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH40"],my$mn_re_dw_0[my$Treatment == "EH40"] )
+centroids$Fitness_in_Low_Stress[1] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH0"],my$mn_re_dw_40[my$Treatment == "EH0"] )
+centroids$Fitness_in_Low_Stress[2] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH0_40"],my$mn_re_dw_40[my$Treatment == "EH0_40"] )
+centroids$Fitness_in_Low_Stress[3] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40"],my$mn_re_dw_40[my$Treatment == "EH40"] )
+
+# calculate kernels -----------------
+mydata<-my[,c("Treatment", "Fitness_in_CM", "Fitness_in_Low_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
+mycols <- mypalette
+myThreshold <- 95
+myalpha <- 0.5
+mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
+mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_low <- data.frame(mykernel_low)
+
+mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH0_40"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
+mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_flux <- data.frame(mykernel_flux)
+
+mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH40"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
+mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_high <- data.frame(mykernel_high)
+
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
+  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), color = "gray50", cex = 5)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  theme_bw()+
+  xlab("Fitness in CM (0% Stress)")+
+  ylab("Fitness in 40% Stress")+
+  coord_equal()+
+  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
+  geom_rug(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)
+p1
+
+# create and plot hist of resids for flux treat ---
+# unweigthed
+point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
+point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$y <- myp$Fitness_in_CM*myslope + myintercept
+
+# weigthed
+point1 <- c(centroids[1,2], centroids[1,3])
+point2 <- c(centroids[3,2], centroids[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$yy <- myp$Fitness_in_CM*myslope + myintercept
+
+# create plots for weighted and unweighted resids -----
+# unweighted
+p2 <- ggplot(myp[myp$Treatment == "EH0_40",], aes(x=Fitness_in_Low_Stress - y))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# weighted
+p3 <- ggplot(myp[myp$Treatment == "EH0_40",], aes(x=Fitness_in_Low_Stress - yy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Line)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+lay <- rbind(c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(2,2,NA,3,3,NA))
+x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_0_40.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
+
+
+
+
+#  40, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_Low_Stress) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH40", "EH40_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH40","EH40_80","EH80")) # reorder the treat factor
+
+# create a dataset for the 0, 80 specialist fit line
+myc <- my[my$Treatment %in% c("EH40", "EH80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my$remove <- F; my[my$id %in% myc$id,]$remove <- T
+# viz
+plot(my[my$treat %in% c("EH40", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH40", "EH80"),]$Fitness_in_Low_Stress)
+points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_Low_Stress, col = "red")
+
+# remove multivariate outliers for the flux line too (need to do this as a separate step)
+myc <- my[my$Treatment %in% c("EH40_80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my[my$id %in% myc$id,]$remove <- T
+myp <- my
+my <- my[my$remove ==F,]
+
+# Calculate unweighted and weighted centroids dataframes --------
+centroids <- aggregate(cbind(my$Fitness_in_Low_Stress, my$Fitness_in_High_Stress)~my$Treatment,my,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_Low_Stress", "Fitness_in_High_Stress")
+centroids_uw <- centroids
+
+centroids$Fitness_in_Low_Stress[1] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40"],my$mn_re_dw_40[my$Treatment == "EH40"] )
+centroids$Fitness_in_Low_Stress[2] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40_80"],my$mn_re_dw_40[my$Treatment == "EH40_80"] )
+centroids$Fitness_in_Low_Stress[3] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH80"],my$mn_re_dw_40[my$Treatment == "EH80"] )
+centroids$Fitness_in_High_Stress[1] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH40"],my$mn_re_dw_80[my$Treatment == "EH40"] )
+centroids$Fitness_in_High_Stress[2] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH40_80"],my$mn_re_dw_80[my$Treatment == "EH40_80"] )
+centroids$Fitness_in_High_Stress[3] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH80"],my$mn_re_dw_80[my$Treatment == "EH80"] )
+
+# calculate kernels -----------------
+mydata<-my[,c("Treatment", "Fitness_in_Low_Stress", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
+mycols <- mypalette
+myThreshold <- 95
+myalpha <- 0.5
+mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH40"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
+mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_low <- data.frame(mykernel_low)
+
+mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH40_80"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
+mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_flux <- data.frame(mykernel_flux)
+
+mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH80"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
+mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mykernel_high <- data.frame(mykernel_high)
+
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment))+
+  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  theme_bw()+
+  xlab("Fitness in 40% Stress)")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
+  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
+  geom_rug(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)
+p1
+
+# create and plot hist of resids for flux treat ---
+# unweigthed
+point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
+point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$y <- myp$Fitness_in_Low_Stress*myslope + myintercept
+
+# weigthed
+point1 <- c(centroids[1,2], centroids[1,3])
+point2 <- c(centroids[3,2], centroids[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$yy <- myp$Fitness_in_Low_Stress*myslope + myintercept
+
+# create plots for weighted and unweighted resids -----
+# unweighted
+p2 <- ggplot(myp[myp$Treatment == "EH40_80",], aes(x=Fitness_in_High_Stress - y))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# weighted
+p3 <- ggplot(myp[myp$Treatment == "EH40_80",], aes(x=Fitness_in_High_Stress - yy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Line)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+lay <- rbind(c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(2,2,NA,3,3,NA))
+x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_40_80.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
+
+```
+
+
+
+# Kassen Plot
+```{r}
+# for SALT  ---------------------------------------------------------------------
+#  0, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH0", "EH0_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
+
+myp <- my
+myp$cutoff <- NA
+myp$md <- NA
+for (i in c("EH0", "EH0_80","EH80")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha <- 0.10
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+}
+
+# viz
+plot(myp$Fitness_in_High_Stress ~ myp$Fitness_in_CM)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_CM, col = "red")
+
+# Calculate unweighted and weighted centroids dataframes --------
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_CM, mypc$Fitness_in_High_Stress)~mypc$Treatment,mypc,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_High_Stress")
+centroids_uw <- centroids
+
+centroids$Fitness_in_CM[1] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH0"],mypc$mn_re_dw_0[mypc$Treatment == "EH0"] )
+centroids$Fitness_in_CM[2] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH0_80"],mypc$mn_re_dw_0[mypc$Treatment == "EH0_80"] )
+centroids$Fitness_in_CM[3] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH80"],mypc$mn_re_dw_0[mypc$Treatment == "EH80"] )
+centroids$Fitness_in_High_Stress[1] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH0"],mypc$mn_re_dw_80[mypc$Treatment == "EH0"] )
+centroids$Fitness_in_High_Stress[2] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH0_80"],mypc$mn_re_dw_80[mypc$Treatment == "EH0_80"] )
+centroids$Fitness_in_High_Stress[3] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH80"],mypc$mn_re_dw_80[mypc$Treatment == "EH80"] )
+
+# calculate kernels -----------------
+mypcdata<-myp[,c("Treatment", "Fitness_in_CM", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
+
+
+mypckernel_low <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mypckernel_low <- with(mypckernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mypckernel_low <- data.frame(mypckernel_low)
+
+mypckernel_flux <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH0_80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mypckernel_flux <- with(mypckernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mypckernel_flux <- data.frame(mypckernel_flux)
+
+mypckernel_high <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
+mypckernel_high <- with(mypckernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
+mypckernel_high <- data.frame(mypckernel_high)
+
+# run the model ---------------------
+# unweighted
+
+mypclf <- mypc[mypc$Treatment %in% c("EH0", "EH80"),]
+mymod_uw <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM + I(mypclf$Fitness_in_CM^2))
+mypclf$predlm_uw <- predict(mymod_uw)
+summary(mymod_uw)
+
+mymod_w <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM + I(mypclf$Fitness_in_CM^2), weights = rowMeans(cbind(mypclf$mn_re_dw_0, mypclf$mn_dw_80), na.rm = T))
+mypclf$predlm_w <- predict(mymod_w)
+summary(mymod_w)
+
+mymod_uwl <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM)
+mypclf$predlm_uwl <- predict(mymod_uwl)
+summary(mymod_uwl)
+
+mymod_wl <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM, weights = rowMeans(cbind(mypclf$mn_re_dw_0, mypclf$mn_dw_80), na.rm = T))
+mypclf$predlm_wl <- predict(mymod_wl)
+summary(mymod_wl)
+
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
+  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+   geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
+  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+   geom_path(data = mypckernel_low, x=mypckernel_low$x, y=mypckernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
+  geom_path(data = mypckernel_flux, x=mypckernel_flux$x, y=mypckernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
+  geom_path(data = mypckernel_high, x=mypckernel_high$x, y=mypckernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_uw), color = "Blue")+
+  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_w), color = "Red")+
+  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_uwl), color = "black")+
+  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_wl), color = "darkgray")+
+
+  theme_bw()+
+  xlab("Fitness in CM (0% Stress)")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+
+  geom_rug(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)
+p1
+
+# create and plot hist of resids for flux treat ---
+# unweigthed
+point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
+point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$y <- myp$Fitness_in_CM*myslope + myintercept
+
+# weigthed
+point1 <- c(centroids[1,2], centroids[1,3])
+point2 <- c(centroids[3,2], centroids[3,3])
+myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
+myintercept <- point2[2] - (myslope*point2[1])
+myp$yy <- myp$Fitness_in_CM*myslope + myintercept
+
+myp$yyy <- mymod_uwl$coefficients[1] + myp$Fitness_in_CM*mymod_uwl$coefficients[2]
+myp$yyyy <- mymod_wl$coefficients[1] + myp$Fitness_in_CM*mymod_wl$coefficients[2]
+
+
+# create plots for weighted and unweighted resids -----
+# unweighted
+p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# weighted
+p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Line)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+# unweighted linear
+p4 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yyy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Linear Model)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p4
+
+# unweighted linear
+p5 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yyyy))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Linear Model)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p5
+
+lay <- rbind(c(1,1,1,1,1,1,1,1),
+             c(1,1,1,1,1,1,1,1),
+             c(1,1,1,1,1,1,1,1),
+             c(1,1,1,1,1,1,1,1),
+             c(2,2,3,3,4,4,5,5))
+x <- grid.arrange(p1, p2, p3, p4,p5, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_0_80.pdf"),height = 11, width = 11); grid::grid.draw(x); dev.off()
+
+```
+
+
+
+
+
+# Kassen Plot
+```{r}
+# for SALT  ---------------------------------------------------------------------
+#  0, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH0", "EH0_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
+
+# create a dataset for the 0, 80 specialist fit line
+myc <- my[my$Treatment %in% c("EH0", "EH80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my$remove <- F; my[my$id %in% myc$id,]$remove <- T
+# viz
+plot(my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_CM)
+points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_CM, col = "red")
+
+# remove multivariate outliers for the flux line too (need to do this as a separate step)
+myc2 <- my[my$Treatment %in% c("EH0_80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc2$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc2 <- myc2[myc2$md > cutoff,]
+myc2$id
+my[my$id %in% myc2$id,]$remove <- T
+myp <- my
+my <- my[my$remove ==F,]
+
+# run the model ---------------------
+# unweighted
+mymod_uw <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM + I(my$Fitness_in_CM^2))
+my$predlm_uw <- NA
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm_uw <- predict(mymod_uw)
+
+# weighted
+mymod <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM + I(my$Fitness_in_CM^2), weights = rowMeans(cbind(my$mn_re_dw_0, my$mn_re_dw_80)))
+my$predlm <- NA
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm <- predict(mymod)
+
+
+
+# visualize
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot(myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment, weight = mn_re_dw_80)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_point(size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  scale_color_manual(values = mypalette)+
+  geom_line(data = my, aes(y=predlm_uw), color = "black")+
+  geom_line(data = my, aes(y=predlm), color = "gray50")+
+  theme_bw()+
+  coord_equal()+
+  geom_rug()
+p1
+
+
+myp$y_uw <- NA
+myp$y_uw <- myp$Fitness_in_CM*mymod_uw$coefficients["my$Fitness_in_CM"] + myp$Fitness_in_CM^2*mymod_uw$coefficients["I(my$Fitness_in_CM^2)"] + mymod_uw$coefficients["(Intercept)"]
+
+myp$y <- NA
+myp$y <- myp$Fitness_in_CM*mymod$coefficients["my$Fitness_in_CM"] + myp$Fitness_in_CM^2*mymod$coefficients["I(my$Fitness_in_CM^2)"] + mymod$coefficients["(Intercept)"]
+
+
+# create plots for weighted and unweighted resids -----
+# unweighted
+p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y_uw))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# weighted
+p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Weighted Residuals \n (Gray Line)")+
+  xlab("Fitness Residuals")+
+  ylab("")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+lay <- rbind(c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(2,2,NA,3,3,NA))
+x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_0_80_poly2_weights_explore.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
+```
+
+
+
+
+# Kassen Plot
+```{r}
+# for SALT  ---------------------------------------------------------------------
+#  0, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH0", "EH0_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
+
+# create a dataset for the 0, 80 specialist fit line
+myc <- my[my$Treatment %in% c("EH0", "EH80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc <- myc[myc$md > cutoff,]
+myc$id
+my$remove <- F; my[my$id %in% myc$id,]$remove <- T
+# viz
+plot(my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_CM)
+points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_CM, col = "red")
+
+# remove multivariate outliers for the flux line too (need to do this as a separate step)
+myc2 <- my[my$Treatment %in% c("EH0_80"),]
+# find outliers by Mahalanobis distance ----------
+md <- mahalanobis(x = myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+myc2$md <- md
+alpha <- 0.05
+cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc2[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+myc2 <- myc2[myc2$md > cutoff,]
+myc2$id
+my[my$id %in% myc2$id,]$remove <- T
+myp <- my
+my <- my[my$remove ==F,]
+
+# run the model ---------------------
+# unweighted
+mymod_uw <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM)
+mymod_uw2 <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM + I(my$Fitness_in_CM^2))
+mymod_uw3 <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM + I(my$Fitness_in_CM^2) + I(my$Fitness_in_CM^3))
+mymod_uw4 <- glm(my$Fitness_in_High_Stress ~ my$Fitness_in_CM + I(my$Fitness_in_CM^2) + I(my$Fitness_in_CM^3) + I(my$Fitness_in_CM^4))
+myAIC <- AIC(mymod_uw, mymod_uw2, mymod_uw3, mymod_uw4)
+
+my$predlm_uw <- NA
+my$predlm_uw2 <- NA
+my$predlm_uw3 <- NA
+my$predlm_uw4 <- NA
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm_uw <- predict(mymod_uw)
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm_uw2 <- predict(mymod_uw2)
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm_uw3 <- predict(mymod_uw3)
+my[my$Treatment %in% c("EH0","EH0_80", "EH80"),]$predlm_uw4 <- predict(mymod_uw4)
+
+# visualize
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p1 <- ggplot(myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment, weight = mn_re_dw_80)) +
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_point(size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  scale_color_manual(values = mypalette)+
+  geom_line(data =my, aes(y=predlm_uw), color = "black")+
+  geom_line(data =my, aes(y=predlm_uw2), color = "darkgray")+
+  geom_line(data =my, aes(y=predlm_uw3), color = "darkgreen")+
+  geom_line(data =my, aes(y=predlm_uw4), color = "darkorange")+
+  theme_bw()+
+  coord_equal()+
+  geom_rug()
+p1
+
+
+myp$y_uw <- NA
+myp$y_uw2 <- NA
+myp$y_uw3 <- NA
+myp$y_uw4 <- NA
+
+myp$y_uw <- myp$Fitness_in_CM*mymod_uw$coefficients["my$Fitness_in_CM"] + mymod_uw$coefficients["(Intercept)"]
+
+myp$y_uw2 <- myp$Fitness_in_CM*mymod_uw2$coefficients["my$Fitness_in_CM"] + myp$Fitness_in_CM^2*mymod_uw2$coefficients["I(my$Fitness_in_CM^2)"] + mymod_uw$coefficients["(Intercept)"]
+
+myp$y_uw3 <- myp$Fitness_in_CM*mymod_uw3$coefficients["my$Fitness_in_CM"] + myp$Fitness_in_CM^2*mymod_uw3$coefficients["I(my$Fitness_in_CM^2)"] + myp$Fitness_in_CM^3*mymod_uw3$coefficients["I(my$Fitness_in_CM^3)"]+ mymod_uw$coefficients["(Intercept)"]
+
+myp$y_uw4 <- myp$Fitness_in_CM*mymod_uw4$coefficients["my$Fitness_in_CM"] + myp$Fitness_in_CM^2*mymod_uw4$coefficients["I(my$Fitness_in_CM^2)"] + myp$Fitness_in_CM^3*mymod_uw4$coefficients["I(my$Fitness_in_CM^3)"] + myp$Fitness_in_CM^4*mymod_uw4$coefficients["I(my$Fitness_in_CM^4)"]+ mymod_uw$coefficients["(Intercept)"]
+
+# create plots for  resids -----
+# linear
+p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y_uw))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (n = Black Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p2
+
+# n2
+p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y_uw2))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (n+n^2 = Gray Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p3
+
+# n3
+p4 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y_uw3))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (n+n^2+n^3 = Green Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p4
+
+# n4
+p5 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y_uw4))+
+  geom_histogram(fill = "#B266FF", color = "white")+
+  geom_vline(xintercept = 0, lty = "dashed")+
+  ggtitle("Unweighted Residuals \n (n+n^2+n^3+n^4 = Green Line)")+
+  xlab("Fitness Residuals")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+p5
+
+
+lay <- rbind(c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(1,1,1,1,1,1),
+             c(2,2,NA,3,3,NA),
+             c(4,4,NA,5,5,NA))
+x <- grid.arrange(p1, p2, p3, p4, p5, layout_matrix = lay)
+grid::grid.draw(x)
+pdf(file = paste("000_SALT_KASSEN_0_80_multipoly_explore.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
+```
 
 
 
@@ -2129,11 +3926,12 @@ for(i in 1:nrow(my)){
 }
 my$medprop <- apply(cbind(my$mnprop0i, my$mnprop0f, my$mnprop500i, my$prop_f_500),
                   1, median, na.rm = T)
+my2 <- my
 
 
 
 # create the frame, omitting most cols not necessary for these upcoming plots and tests.
-
+my <- my2
 my <- my[,c(1:7, 83:88, 112, 123, 126:148)] # reatain only interst columns
 my1 <- my[my$mpar == 1,] # r1
 my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2") # r2
@@ -2146,15 +3944,13 @@ mn_dw <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "dw", "dw_2", "d
 my$mn_dw <- mn_dw; my$mn_dw[is.nan(my$mn_dw)] <- NA # fix nans
 my$omit <- F; my$omit[is.na(my$mn_dw)] <- T # update omit field
 mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "re_dw", "re_dw_2", "re_dw_3", "re_dw_4")]), na.rm =T)) # calculate reads for mn_dw
-mn_re_dw[is.nan(mn_re_dw)] <- NA
 my$mn_re_dw <- mn_re_dw # assign
-my$se_dw <- apply(cbind(my$dw, my$dw_2, my$dw_3, my$dw_4), 1, sjstats::se) # calculate SE deltafit among replicates
+my$mn_re_dw[is.nan(my$mn_re_dw)] <- NA
+my$se_dw <- apply(my[,c("dw", "dw_2", "dw_3", "dw_4")], 1, sjstats::se)
 mydwc_se <- my # name frame
 
-mymod <- lm(I(scale(mydwc_se$se_dw)) ~ +I(scale(mydwc_se$mn_dw)) +I(scale(mydwc_se$medcount)) +I(scale(mydwc_se$medprop)) + mydwc_se$treat, weights = mydwc_se$mn_re_dw)
-car::vif(mymod) # VIF looks okay.
-summary(mymod)
-anova(mymod)
+
+mymod <- lm(I(scale(mydwc_se$se_dw)) ~ I(scale(mydwc_se$mn_dw)) + I(scale(mydwc_se$medcount)) +  I(scale(mydwc_se$medprop)) + mydwc_se$treat, weights = mydwc_se$mn_re_dw); summary(mymod); anova(mymod)
 
 
 rm(my, i)
@@ -2166,11 +3962,8 @@ rm(my, i)
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
-
-mymod1 <- dredge(mymod, fixed = c("my$treat")) # weight of 0.907 on full model, with next highest weight being 0.068, only retain full model (model averaging will fail here! with a delta AIC <=4). 
 
 mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
@@ -2183,42 +3976,42 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
@@ -2336,85 +4129,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -2530,85 +4298,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -2724,85 +4467,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -2961,11 +4679,8 @@ rm(my)
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "CM" & my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
-
-mymod1 <- dredge(mymod, fixed = c("my$treat")) # weight of 0.989 on full model, with next highest weight being 0.006, only retain full model (model averaging will fail here! with a delta <=4). 
 
 mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
@@ -2978,42 +4693,42 @@ for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","m
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
   myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
@@ -3132,85 +4847,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -3326,85 +5016,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -3520,85 +5185,60 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 my <- my2[!is.na(my2$dw),] 
 my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
 my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID) + 1, weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-car::vif(mymod) # VIF looks okay, proceed to model reduction
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
 AIC(mymod)
 
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-# model averaging using delata AIC <= 4
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-summary(avgmod.delta4)
-importance(avgmod.delta4)
-confint(avgmod.delta4)
-
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mysumm <- summary(mymod)$coefficients
 myres <- matrix(nrow = 7, ncol=7)
 rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
 colnames(myres) <- rownames(myres)
 myres_p <- myres; myres_est <- myres
 for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
 }
 
 my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
   myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
   myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
 }
-
 my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + I(scale(my$fit0)) + I(scale(my$medcount)) + I(scale(my$medprop)) + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail");# summary(mymod)
-mymod1 <- dredge(mymod, fixed = c("my$treat")) 
-avgmod.delta4 <- model.avg(object = mymod1, subset = delta <= 4)
-mysumm <- summary(avgmod.delta4)$coefmat.full
+mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
 for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
   myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|z|)"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
 }
 ```
 <br/><br/>
@@ -4933,20 +6573,23 @@ write.csv(mymat3, file = "table4_SALT_at_00s80s_inc_divext.csv")
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my$Environment <- "neither"
 my$Environment[my$in0 <= 0.05 & my$in80 <= 0.05] <- "Both"
-my$Environment[my$in0 <= 0.05 & my$in80 > 0.05] <- "Low Only"
-my$Environment[my$in0 > 0.05 & my$in80 <= 0.05] <- "High Only"
+my$Environment[my$in0 <= 0.05 & my$in80 > 0.05] <- "No Stress Only"
+my$Environment[my$in0 > 0.05 & my$in80 <= 0.05] <- "High Stress Only"
 my$Environment[my$in0 > 0.05 & my$in80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Stress Only", "No Stress Only", "Neither"))
 
 # code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+mypal <- c(rgb(212/255, 175/255, 55/255, 1), rgb(139/255, 0/255, 0/255, 0.85), rgb(235/255, 150/255, 5/255, 0.85), "gray")
 pdf(file = "000_stackedbar_SALT_alltreat_00_80_inc.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+p <- ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
        aes(treat, n, fill=Environment)) +
   geom_bar(stat="identity") +
   ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
+  scale_fill_manual(values = mypal, drop = F)+
   theme_classic()+
   geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+p
+rm(p)
 ```
 
 ```{R}
@@ -5014,20 +6657,23 @@ write.csv(mymat3, file = "table4_SALT_at_00s80s_dec_divext.csv")
 my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
 my$Environment <- "neither"
 my$Environment[my$dec0 <= 0.05 & my$dec80 <= 0.05] <- "Both"
-my$Environment[my$dec0 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
-my$Environment[my$dec0 > 0.05 & my$dec80 <= 0.05] <- "High Only"
+my$Environment[my$dec0 <= 0.05 & my$dec80 > 0.05] <- "No Stress Only"
+my$Environment[my$dec0 > 0.05 & my$dec80 <= 0.05] <- "High Stress Only"
 my$Environment[my$dec0 > 0.05 & my$dec80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
+my$Environment <-  factor(my$Environment, levels = c("Both", "High Stress Only", "No Stress Only", "Neither"))
 
 # code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
+mypal <- c(rgb(127/255, 255/255, 212/255, 1), rgb(2/255, 16/255, 146/255, 0.65), rgb(112/255, 130/255, 56/255, 0.85), "gray")
 pdf(file = "000_stackedbar_SALT_alltreat_00_80_dec.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
+p <- ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
        aes(treat, n, fill=Environment)) +
   geom_bar(stat="identity") +
   ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
+  scale_fill_manual(values = mypal, drop = F)+
   theme_classic()+
   geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
+p
+rm(p)
 ```
 <br/><br/>
 
