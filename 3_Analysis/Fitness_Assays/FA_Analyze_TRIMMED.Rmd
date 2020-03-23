@@ -1240,6 +1240,38 @@ mn_re_dw <- apply(my, 1, function(x) mean(as.numeric(x[c( "re_dw", "re_dw_2", "r
 my$mn_re_dw <- mn_re_dw # assign
 mydwc <- my # name frame
 
+
+# new new new -----------------------------------------------------------------v
+# create the frame, omitting most cols not necessary for these upcoming plots and tests.
+my <- myd
+my <- my[,c(1:7, 83:88, 111, 122, 126)] # reatain only interst columns
+my1 <- my[my$mpar == 1,] # r1
+my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2") # r2
+my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3") # r3
+my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4") # r4
+my <- cbind(my1, my2$re_fit_e_2, my2$fit500_2, my3$re_fit_e_3, my3$fit500_3, my4$re_fit_e_4, my4$fit500_4) # zip
+colnames(my)[c((ncol(my)-5)):ncol(my)] <- c("re_fit500_2", "fit500_2", "re_fit500_3", "fit500_3", "re_fit500_4", "fit500_4") # name fix
+mn_fit500 <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "fit500", "fit500_2", "fit500_3", "fit500_4")]), 
+                                                  as.numeric(x[c( "re_fit_e","re_fit500_2","re_fit500_3","re_fit500_4")]), na.rm = T)) # calculate wtd.mean dw across reps
+my$mn_fit500 <- mn_fit500; my$mn_fit500[is.nan(my$mn_fit500)] <- NA # fix nans
+my$omit <- F; my$omit[is.na(my$mn_fit500)] <- T # update omit field
+mn_re_fit500 <- apply(my, 1, function(x) mean(as.numeric(x[c("re_fit_e","re_fit500_2","re_fit500_3","re_fit500_4")]), na.rm =T)) # calculate reads for mn_dw
+my$mn_re_fit500 <- mn_re_fit500 # assign
+myfit500c <- my # name frame
+
+# While we are at it lets make a wide version as well, this will be needed later.
+my <- myfit500c
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]
+my80 <- my[my$mpasp == 0.8,]
+my120 <- my[my$mpasp == 1.2,]
+sum(my0$bcpID != my40$bcpID)
+my <- cbind(my0, my40$mn_fit500, my40$mn_re_fit500, my80$mn_fit500, my80$mn_re_fit500, my120$mn_fit500, my120$mn_re_fit500)
+colnames(my)[c(23:30)] <- c("mn_fit500_0", "mn_re_fit500_0","mn_fit500_40", "mn_re_fit500_40", "mn_fit500_80", "mn_re_fit500_80", "mn_fit500_120", "mn_re_fit500_120")
+myfit500cw <- my
+
+# -----------------------------------------------------------------------------^
+
 # While we are at it lets make a wide version as well, this will be needed later.
 my <- mydwc
 my0 <- my[my$mpasp == 0.0,]
@@ -2126,7 +2158,7 @@ mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata
 
 # flux lines
 myg <- c("EH0_40", "EH20_60", "EH0_80", "EH40_80")
-mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg])mytemp # -0.12
+mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg]);mytemp # -0.12
 mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg], weight = mydata$mn_re_dw_0_80[mydata$treat %in% myg]);mytempw # -0.124
 ```
 
@@ -2195,19 +2227,19 @@ pdf(file = paste("000_A_TOSHARE_SALT_Fitness_Cor_Heatmaps_w.pdf"),height = 8.5, 
 
 MN VS VAR FITNESS (2 ENVIRONMENT) -- ARITHMETIC &&&&& GEOMETRIC (NOT CURRENTLY WORKING!!!)
 ```{r}
-mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+
+mydata <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]
 mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-
-mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + abs(min(mydata$mn_dw_0, na.rm = T)); mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + abs(min(mydata$mn_dw_80, na.rm = T));
-mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0_p1, mydata$mn_dw_80_p1), na.rm = F)
-mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
-                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+mydata$mn_fit500_0_80uw <- rowMeans(cbind(mydata$mn_fit500_0, mydata$mn_fit500_80), na.rm = F)
+mydata$mn_fit500_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F))
 
 
-mydata$mn_dw_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]))) # I checked this math, its good.
-mydata$mn_re_dw_0_geomean <- scale(mydata$mn_re_dw_0, center = F); mydata$mn_re_dw_80_geomean <- scale(mydata$mn_re_dw_80, center = F);
-mydata$mn_dw_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
-                                                  w=as.numeric(x[c( "mn_re_dw_0_geomean", "mn_re_dw_80_geomean")]), na.rm = F))
+mydata$mn_fit500_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F)) # I checked this math, its good.
+mydata$mn_re_fit500_0_geomean <- scale(mydata$mn_re_fit500_0, center = F); mydata$mn_re_fit500_80_geomean <- scale(mydata$mn_re_fit500_80, center = F);
+mydata$mn_fit500_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+                                                  w=as.numeric(x[c( "mn_re_fit500_0_geomean", "mn_re_fit500_80_geomean")]), na.rm = F))
+
 
 
 weighted.var <- function (x, w, na.rm = FALSE) 
@@ -2233,17 +2265,17 @@ weighted.var <- function (x, w, na.rm = FALSE)
   return(sum(w * (x - weighted.mean(x, w))^2)/(sum(w) - 1))
 }
 
-mydata$var_dw_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), na.rm = F))
-mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
-                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+mydata$var_fit500_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F))
+mydata$var_fit500_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), 
+                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F)) # calculate wtd.var dw across reps
 
 
 # viz -- all 0_80-----------------------
-# weighted -------------------
+# unweighted
 mypalette <- dichrompalette_br_cy
-mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = T); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = T)
-p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 4.790458/myrange, intercept = 0, linetype = "dashed", color = "gray75")+
+mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
   geom_point(size = 2.5, alpha = 0.75) + 
   scale_color_manual(values = mypalette)+
   theme_bw()+
@@ -2257,10 +2289,100 @@ p2 <- p + theme(legend.position = "none") +
 x <- grid.arrange(p2, p1, widths = c(1,2))
 grid::grid.draw(x)
 
+
+# experimental -----v
+# mypalette <- dichrompalette_br_cy
+# mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
+# mydat <- mydata[!is.na(mydata$var_fit500_0_80s) & !is.na(mydata$mn_fit500_0_80s),]
+# fit<-lm(var_fit500_0_80s ~ mn_fit500_0_80s, data =mydat)
+# mydat$predicted <- predict(fit)
+# mydat$residuals <- residuals(fit)
+# ggplot(mydat, aes(x = mn_fit500_0_80s, y = var_fit500_0_80s)) +
+#   geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +
+#   geom_segment(aes(xend = mn_fit500_0_80s, yend = predicted), alpha = .2) +
+# 
+#   # > Color adjustments made here...
+#   geom_point(aes(color = Treatment)) +  # Color mapped here
+#   scale_color_manual(values = mypalette)+
+#   guides(color = FALSE) +
+# 
+#   # <
+#   theme_bw()
+# tapply(mydat$residuals, mydat$Treatment, mean)
+# 
+# 
+# 
+# mypalette <- dichrompalette_br_cy
+# 
+# mydata$x <-  scale(mydata$mn_fit500_0_80uw, center = T)
+# mydata$y <-  scale(mydata$var_fit500_0_80uw, center = T)
+# mydat <- mydata[!is.na(mydata$x) & !is.na(mydata$y),]
+# myslope <- 1
+# myintercept <- mean(mydat$x)
+# mydat$predicted1to1 <- mydat$x*myslope + myintercept
+# mydat$residuals <- mydat$y - mydat$predicted1to1
+# ggplot(mydat, aes(x = x, y = y)) +
+#   geom_segment(aes(xend = x, yend = predicted1to1), alpha = .2) +
+#   geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
+# 
+#   # > Color adjustments made here...
+#   geom_point(aes(color = Treatment)) +  # Color mapped here
+#   scale_color_manual(values = mypalette)+
+#   guides(color = FALSE) +
+# 
+#   # <
+#   theme_bw()
+# 
+# tapply(mydat$residuals, mydat$Treatment, mean)
+# ---------^
+
+
+
 mypalette <- dichrompalette_br_cy
-mydata$mn_dw_0_80gs <- scale(mydata$mn_dw_0_80g, center = F); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = F)
-p <- ggplot(mydata, aes(x=mn_dw_0_80gs, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 4.790458/myrange, intercept = 0, linetype = "dashed", color = "gray75")+
+mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80uwg, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80gs, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+
+
+
+
+
+
+# weighted
+mypalette <- dichrompalette_br_cy
+mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+
+
+mypalette <- dichrompalette_br_cy
+mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80g, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80gs, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
   geom_point(size = 2.5, alpha = 0.75) + 
   scale_color_manual(values = mypalette)+
   theme_bw()+
@@ -2279,25 +2401,42 @@ grid::grid.draw(x)
 MN FITNESS (2 ENVIRONMENT) -- ARITHMETIC &&&&& GEOMETRIC (NOT CURRENTLY WORKING!!!)
 ```{r}
 
-mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+mydata <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]
 mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+mydata$mn_fit500_0_80uw <- rowMeans(cbind(mydata$mn_fit500_0, mydata$mn_fit500_80), na.rm = F)
+mydata$mn_fit500_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F))
 
-mydata$mn_dw_0_p1 <- mydata$mn_dw_0 + abs(min(mydata$mn_dw_0, na.rm = T)); mydata$mn_dw_80_p1 <- mydata$mn_dw_80 + abs(min(mydata$mn_dw_80, na.rm = T));
 
-mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0_p1, mydata$mn_dw_80_p1), na.rm = F)
-mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
-                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
-
-mydata$mn_dw_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]))) # I checked this math, its good.
-mydata$mn_re_dw_0_geomean <- scale(mydata$mn_re_dw_0, center = F); mydata$mn_re_dw_80_geomean <- scale(mydata$mn_re_dw_80, center = F);
-mydata$mn_dw_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_dw_0_p1", "mn_dw_80_p1")]),
-                                                  w=as.numeric(x[c( "mn_re_dw_0_geomean", "mn_re_dw_80_geomean")]), na.rm = F))
+mydata$mn_fit500_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F)) # I checked this math, its good.
+mydata$mn_re_fit500_0_geomean <- scale(mydata$mn_re_fit500_0, center = F); mydata$mn_re_fit500_80_geomean <- scale(mydata$mn_re_fit500_80, center = F);
+mydata$mn_fit500_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+                                                  w=as.numeric(x[c( "mn_re_fit500_0_geomean", "mn_re_fit500_80_geomean")]), na.rm = F))
 
 # viz -- all 0_80-----------------------
 # weighted -------------------
 mypalette <- dichrompalette_br_cy
-mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = T); mydata$mn_dw_0_80gs <- scale(mydata$mn_dw_0_80g, center = T)
-p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=mn_dw_0_80gs, color = Treatment, fill = Treatment)) + 
+mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80, center = T); mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80g, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=mn_fit500_0_80gs, color = Treatment, fill = Treatment)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_point(size = 2.5, alpha = 0.75) + 
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Mean Fitness ARI: CM (No Stress), 80% Stress")+
+  ylab("Mean Fitness GEO: CM (No Stress), 80% Stress")+
+  geom_rug()
+p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p2 <- p + theme(legend.position = "none") + 
+  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+x <- grid.arrange(p2, p1, widths = c(1,2))
+grid::grid.draw(x)
+
+
+# unweighted -------------------
+mypalette <- dichrompalette_br_cy
+mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80uwg, center = T)
+p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=mn_fit500_0_80gs, color = Treatment, fill = Treatment)) + 
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
   geom_point(size = 2.5, alpha = 0.75) + 
   scale_color_manual(values = mypalette)+
@@ -2312,11 +2451,15 @@ p2 <- p + theme(legend.position = "none") +
 x <- grid.arrange(p2, p1, widths = c(1,2))
 grid::grid.draw(x)
 
+moddata <- mydata[!is.na(mydata$mn_fit500_0_80uwg) & !is.na(mydata$mn_fit500_0_80uw),]
+mymod <- glm(moddata$mn_fit500_0_80uwg ~ moddata$mn_fit500_0_80uw)
+moddata$resid <- residuals(mymod)
+tapply(moddata$resid, moddata$Treatment, mean)
 
-
+# weighted
 mypalette <- dichrompalette_br_cy
 myx <- mydata$Treatment
-myy <- mydata$mn_dw_0_80s
+myy <- mydata$mn_fit500_0_80
 myc <- mydata$Treatment
 mytitle <- ""
 myxlab <- "Treatment"
@@ -2329,7 +2472,6 @@ myptsize <- 0.1
 myrugalpha <- 0.7
 mywtmeanptcol <- "black"
 
-
 p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
@@ -2337,7 +2479,7 @@ p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
   geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
   scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
@@ -2351,7 +2493,7 @@ p
 
 
 
-myy <- mydata$mn_dw_0_80gs
+myy <- mydata$mn_fit500_0_80g
 myylab <- "Geometric Mean Fitness in 00, 80"
 
 p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
@@ -2361,7 +2503,7 @@ p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
   geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
   scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
   coord_flip() +
   theme_classic()+
   theme(legend.position="none") +
@@ -2374,6 +2516,72 @@ p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
 p
 
 
+
+
+
+# unweighted
+mypalette <- dichrompalette_br_cy
+myx <- mydata$Treatment
+myy <- mydata$mn_fit500_0_80uw
+myc <- mydata$Treatment
+mytitle <- ""
+myxlab <- "Treatment"
+myylab <- "Arithmetic Mean Fitness in 00, 80"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 1
+mymeanptsize <- 1
+myptsize <- 0.1
+myrugalpha <- 0.7
+mywtmeanptcol <- "black"
+
+p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+p
+
+
+
+myy <- mydata$mn_fit500_0_80uwg
+myylab <- "Geometric Mean Fitness in 00, 80"
+
+p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+p
+
+x <- glm(mydata$mn_fit500_0_80uw ~ mydata$mn_fit500_0_80uwg)
+plot(sort(residuals(x)));abline(h=0, lty = 1, lwd = 2, col = "red")
+hist(residuals(x), breaks = 100);abline(v=0, lty = 1, lwd = 2, col = "red")
+summary(residuals(x))
 ```
 
 
@@ -2787,10 +2995,7 @@ pdf(file = paste("000_SALT_VectorFitness_TARTREATs.pdf"),height = 18, width = 9)
 
 
 
-
-
-
-KASSEN PLOTS -- TARGET GROUPS (TEMPLATE CODE -- SCRAPE FROM HERE AND USE BELOW WHEN DETAILS ARE FIGURED OUT!!!!)
+KASSEN PLOT -- CURRENT VERSION -- SHARED WITH JF!
 ```{r}
 # for SALT  ---------------------------------------------------------------------
 #  0, 80 ------------------------------------------------------------------------
@@ -2803,283 +3008,61 @@ my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
 my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH0", "EH0_80", "EH80"),] # remove NA entries
 my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
 
-# create a dataset for the 0, 80 specialist fit line
-myc <- my[my$Treatment %in% c("EH0", "EH80"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my$remove <- F; my[my$id %in% myc$id,]$remove <- T
-# viz
-plot(my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH0", "EH80"),]$Fitness_in_CM)
-points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_CM, col = "red")
-
-# remove multivariate outliers for the flux line too (need to do this as a separate step)
-myc <- my[my$Treatment %in% c("EH0_80"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my[my$id %in% myc$id,]$remove <- T
 myp <- my
-my <- my[my$remove ==F,]
+myp$cutoff <- NA; myp$cutoff_elip <- NA
+myp$md <- NA
+for (i in c("EH0", "EH0_80","EH80")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha_elip <- 0.25
+  alpha <- 0.05
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
+}
+
+# viz
+plot(myp$Fitness_in_High_Stress ~ myp$Fitness_in_CM)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_CM, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_CM, col = "blue")
 
 # Calculate unweighted and weighted centroids dataframes --------
-centroids <- aggregate(cbind(my$Fitness_in_CM, my$Fitness_in_High_Stress)~my$Treatment,my,mean)
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_CM, mypc$Fitness_in_High_Stress)~mypc$Treatment,mypc,mean)
 colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_High_Stress")
 centroids_uw <- centroids
-
-centroids$Fitness_in_CM[1] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0"],my$mn_re_dw_0[my$Treatment == "EH0"] )
-centroids$Fitness_in_CM[2] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0_80"],my$mn_re_dw_0[my$Treatment == "EH0_80"] )
-centroids$Fitness_in_CM[3] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH80"],my$mn_re_dw_0[my$Treatment == "EH80"] )
-centroids$Fitness_in_High_Stress[1] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH0"],my$mn_re_dw_80[my$Treatment == "EH0"] )
-centroids$Fitness_in_High_Stress[2] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH0_80"],my$mn_re_dw_80[my$Treatment == "EH0_80"] )
-centroids$Fitness_in_High_Stress[3] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH80"],my$mn_re_dw_80[my$Treatment == "EH80"] )
-
-# calculate kernels -----------------
-mydata<-my[,c("Treatment", "Fitness_in_CM", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
-mycols <- mypalette
-myThreshold <- 95
-myalpha <- 0.5
-mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_low <- data.frame(mykernel_low)
-
-mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH0_80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_flux <- data.frame(mykernel_flux)
-
-mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_high <- data.frame(mykernel_high)
-
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
 
 # plot scatter with centroids and lines ------
 mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
 p1 <- ggplot()+
   geom_vline(xintercept=0, color = "darkgray")+
   geom_hline(yintercept = 0, color = "darkgray")+
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
-  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
   xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
   ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
-  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
-  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
-  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
-  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
   geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
-  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
   xlab("Fitness in CM (0% Stress)")+
   ylab("Fitness in 80% Stress")+
   coord_equal()+
-  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
   geom_rug(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
-  scale_color_manual(values = mypalette)
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p1
-
-# create and plot hist of resids for flux treat ---
-# unweigthed
-point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
-point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$y <- myp$Fitness_in_CM*myslope + myintercept
-
-# weigthed
-point1 <- c(centroids[1,2], centroids[1,3])
-point2 <- c(centroids[3,2], centroids[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$yy <- myp$Fitness_in_CM*myslope + myintercept
-
-# create plots for weighted and unweighted resids -----
-# unweighted
-p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Unweighted Residuals \n (Black Line)")+
-  xlab("Fitness Residuals")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p2
-
-# weighted
-p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Weighted Residuals \n (Gray Line)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p3
-
-lay <- rbind(c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(2,2,NA,3,3,NA))
-x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_KASSEN_0_80.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
-
-
-#  0, 40 ------------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-my$id <- paste0(my$epo, my$bc1) # assign bcids
-myf <- my # save a frame for limits
-my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
-my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in stress
-my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_Low_Stress) & my$Treatment %in% c("EH0", "EH0_40", "EH40"),] # remove NA entries
-my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_40","EH40")) # reorder the treat factor
-
-# create a dataset for the 0, 80 specialist fit line
-myc <- my[my$Treatment %in% c("EH0", "EH40"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my$remove <- F; my[my$id %in% myc$id,]$remove <- T
-# viz
-plot(my[my$treat %in% c("EH0", "EH40"),]$Fitness_in_Low_Stress ~ my[my$treat %in% c("EH0", "EH40"),]$Fitness_in_CM)
-points(myc$Fitness_in_Low_Stress ~ myc$Fitness_in_CM, col = "red")
-
-# remove multivariate outliers for the flux line too (need to do this as a separate step)
-myc <- my[my$Treatment %in% c("EH0_40"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my[my$id %in% myc$id,]$remove <- T
-myp <- my
-my <- my[my$remove ==F,]
-
-# Calculate unweighted and weighted centroids dataframes --------
-centroids <- aggregate(cbind(my$Fitness_in_CM, my$Fitness_in_Low_Stress)~my$Treatment,my,mean)
-colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_Low_Stress")
-centroids_uw <- centroids
-
-centroids$Fitness_in_CM[1] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0"],my$mn_re_dw_0[my$Treatment == "EH0"] )
-centroids$Fitness_in_CM[2] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH0_40"],my$mn_re_dw_0[my$Treatment == "EH0_40"] )
-centroids$Fitness_in_CM[3] <- weighted.mean(my$Fitness_in_CM[my$Treatment == "EH40"],my$mn_re_dw_0[my$Treatment == "EH40"] )
-centroids$Fitness_in_Low_Stress[1] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH0"],my$mn_re_dw_40[my$Treatment == "EH0"] )
-centroids$Fitness_in_Low_Stress[2] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH0_40"],my$mn_re_dw_40[my$Treatment == "EH0_40"] )
-centroids$Fitness_in_Low_Stress[3] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40"],my$mn_re_dw_40[my$Treatment == "EH40"] )
-
-# calculate kernels -----------------
-mydata<-my[,c("Treatment", "Fitness_in_CM", "Fitness_in_Low_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
-mycols <- mypalette
-myThreshold <- 95
-myalpha <- 0.5
-mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
-mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_low <- data.frame(mykernel_low)
-
-mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH0_40"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
-mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_flux <- data.frame(mykernel_flux)
-
-mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH40"),c('Fitness_in_CM', 'Fitness_in_Low_Stress')])
-mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_high <- data.frame(mykernel_high)
-
-
-# plot scatter with centroids and lines ------
-mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
-p1 <- ggplot()+
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
-  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
-  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
-  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
-  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
-  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
-  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), color = "gray50", cex = 5)+
-  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
-  geom_point(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
-  geom_point(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
-  theme_bw()+
-  xlab("Fitness in CM (0% Stress)")+
-  ylab("Fitness in 40% Stress")+
-  coord_equal()+
-  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
-  geom_rug(data = myp[myp$treat %in% c("EH0","EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
-  scale_color_manual(values = mypalette)
-p1
-
-# create and plot hist of resids for flux treat ---
-# unweigthed
-point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
-point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$y <- myp$Fitness_in_CM*myslope + myintercept
-
-# weigthed
-point1 <- c(centroids[1,2], centroids[1,3])
-point2 <- c(centroids[3,2], centroids[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$yy <- myp$Fitness_in_CM*myslope + myintercept
-
-# create plots for weighted and unweighted resids -----
-# unweighted
-p2 <- ggplot(myp[myp$Treatment == "EH0_40",], aes(x=Fitness_in_Low_Stress - y))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Unweighted Residuals \n (Black Line)")+
-  xlab("Fitness Residuals")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p2
-
-# weighted
-p3 <- ggplot(myp[myp$Treatment == "EH0_40",], aes(x=Fitness_in_Low_Stress - yy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Weighted Residuals \n (Gray Line)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p3
-
-lay <- rbind(c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(2,2,NA,3,3,NA))
-x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_KASSEN_0_40.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
-
+pdf(file = paste("000_SALT_KASSEN_0_80.pdf"),height = 8, width = 5); grid::grid.draw(p1); dev.off()
 
 
 
@@ -3093,146 +3076,134 @@ my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
 my <- my[!is.na(my$Fitness_in_Low_Stress) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH40", "EH40_80", "EH80"),] # remove NA entries
 my$Treatment <- factor(my$Treatment, levels = c("EH40","EH40_80","EH80")) # reorder the treat factor
 
-# create a dataset for the 0, 80 specialist fit line
-myc <- my[my$Treatment %in% c("EH40", "EH80"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my$remove <- F; my[my$id %in% myc$id,]$remove <- T
-# viz
-plot(my[my$treat %in% c("EH40", "EH80"),]$Fitness_in_High_Stress ~ my[my$treat %in% c("EH40", "EH80"),]$Fitness_in_Low_Stress)
-points(myc$Fitness_in_High_Stress ~ myc$Fitness_in_Low_Stress, col = "red")
-
-# remove multivariate outliers for the flux line too (need to do this as a separate step)
-myc <- my[my$Treatment %in% c("EH40_80"),]
-# find outliers by Mahalanobis distance ----------
-md <- mahalanobis(x = myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
-                  center = colMeans(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
-                  cov = cov(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
-myc$md <- md
-alpha <- 0.05
-cutoff <- (qchisq(p = 1 - alpha, df = ncol(myc[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
-myc <- myc[myc$md > cutoff,]
-myc$id
-my[my$id %in% myc$id,]$remove <- T
 myp <- my
-my <- my[my$remove ==F,]
+myp$cutoff <- NA; myp$cutoff_elip <- NA
+myp$md <- NA
+for (i in c("EH40", "EH40_80","EH80")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha_elip <- 0.25
+  alpha <- 0.05
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
+}
+
+# viz
+plot(myp$Fitness_in_High_Stress ~ myp$Fitness_in_Low_Stress)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_Low_Stress, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_Low_Stress, col = "blue")
 
 # Calculate unweighted and weighted centroids dataframes --------
-centroids <- aggregate(cbind(my$Fitness_in_Low_Stress, my$Fitness_in_High_Stress)~my$Treatment,my,mean)
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_Low_Stress, mypc$Fitness_in_High_Stress)~mypc$Treatment,mypc,mean)
 colnames(centroids) <-  c("Treatment","Fitness_in_Low_Stress", "Fitness_in_High_Stress")
 centroids_uw <- centroids
-
-centroids$Fitness_in_Low_Stress[1] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40"],my$mn_re_dw_40[my$Treatment == "EH40"] )
-centroids$Fitness_in_Low_Stress[2] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH40_80"],my$mn_re_dw_40[my$Treatment == "EH40_80"] )
-centroids$Fitness_in_Low_Stress[3] <- weighted.mean(my$Fitness_in_Low_Stress[my$Treatment == "EH80"],my$mn_re_dw_40[my$Treatment == "EH80"] )
-centroids$Fitness_in_High_Stress[1] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH40"],my$mn_re_dw_80[my$Treatment == "EH40"] )
-centroids$Fitness_in_High_Stress[2] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH40_80"],my$mn_re_dw_80[my$Treatment == "EH40_80"] )
-centroids$Fitness_in_High_Stress[3] <- weighted.mean(my$Fitness_in_High_Stress[my$Treatment == "EH80"],my$mn_re_dw_80[my$Treatment == "EH80"] )
-
-# calculate kernels -----------------
-mydata<-my[,c("Treatment", "Fitness_in_Low_Stress", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
-mycols <- mypalette
-myThreshold <- 95
-myalpha <- 0.5
-mykernel_low <- ks::kde(mydata[which(mydata$Treatment=="EH40"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
-mykernel_low <- with(mykernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_low <- data.frame(mykernel_low)
-
-mykernel_flux <- ks::kde(mydata[which(mydata$Treatment=="EH40_80"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
-mykernel_flux <- with(mykernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_flux <- data.frame(mykernel_flux)
-
-mykernel_high <- ks::kde(mydata[which(mydata$Treatment=="EH80"),c('Fitness_in_Low_Stress', 'Fitness_in_High_Stress')])
-mykernel_high <- with(mykernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mykernel_high <- data.frame(mykernel_high)
-
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
 
 # plot scatter with centroids and lines ------
 mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
-p1 <- ggplot()+
+p2 <- ggplot()+
   geom_vline(xintercept=0, color = "darkgray")+
   geom_hline(yintercept = 0, color = "darkgray")+
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
-  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
   xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
   ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
-  geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment))+
-  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
-  geom_point(data=centroids_uw, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
-  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
   geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
-  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
-  xlab("Fitness in 40% Stress)")+
+  xlab("Fitness in 40% Stress")+
   ylab("Fitness in 80% Stress")+
   coord_equal()+
-  geom_path(data = mykernel_low, x=mykernel_low$x, y=mykernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_flux, x=mykernel_flux$x, y=mykernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
-  geom_path(data = mykernel_high, x=mykernel_high$x, y=mykernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
   geom_rug(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment))+
-  scale_color_manual(values = mypalette)
-p1
-
-# create and plot hist of resids for flux treat ---
-# unweigthed
-point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
-point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$y <- myp$Fitness_in_Low_Stress*myslope + myintercept
-
-# weigthed
-point1 <- c(centroids[1,2], centroids[1,3])
-point2 <- c(centroids[3,2], centroids[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$yy <- myp$Fitness_in_Low_Stress*myslope + myintercept
-
-# create plots for weighted and unweighted resids -----
-# unweighted
-p2 <- ggplot(myp[myp$Treatment == "EH40_80",], aes(x=Fitness_in_High_Stress - y))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Unweighted Residuals \n (Black Line)")+
-  xlab("Fitness Residuals")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p2
+pdf(file = paste("000_SALT_KASSEN_40_80.pdf"),height = 8, width = 5); grid::grid.draw(p2); dev.off()
 
-# weighted
-p3 <- ggplot(myp[myp$Treatment == "EH40_80",], aes(x=Fitness_in_High_Stress - yy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Weighted Residuals \n (Gray Line)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
+
+
+#  0, 40 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_Low_Stress) & my$Treatment %in% c("EH0", "EH0_40", "EH40"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0", "EH0_40", "EH40")) # reorder the treat factor
+
+myp <- my
+myp$cutoff <- NA; myp$cutoff_elip <- NA
+myp$md <- NA
+for (i in c("EH0", "EH0_40", "EH40")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha_elip <- 0.25
+  alpha <- 0.05
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
+}
+
+# viz
+plot(myp$Fitness_in_Low_Stress ~ myp$Fitness_in_CM)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_Low_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_CM, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_Low_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_CM, col = "blue")
+
+# Calculate unweighted and weighted centroids dataframes --------
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_CM, mypc$Fitness_in_Low_Stress)~mypc$Treatment,mypc,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_Low_Stress")
+centroids_uw <- centroids
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p3 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
+  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+  xlab("Fitness in CM (0% Stress)")+
+  ylab("Fitness in 40% Stress")+
+  coord_equal()+
+  geom_rug(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p3
-
-lay <- rbind(c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(1,1,1,1,1,1),
-             c(2,2,NA,3,3,NA))
-x <- grid.arrange(p1, p2, p3, layout_matrix = lay)
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_KASSEN_40_80.pdf"),height = 11, width = 6); grid::grid.draw(x); dev.off()
-
-```
+pdf(file = paste("000_SALT_KASSEN_0_40.pdf"),height = 8, width = 5); grid::grid.draw(p3); dev.off()
 
 
 
-KASSEN PLOT -- WORKING BLOCK
-```{r}
-# for SALT  ---------------------------------------------------------------------
+
+
 #  0, 80 ------------------------------------------------------------------------
 my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
@@ -3244,7 +3215,7 @@ my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_High_Stress) & my$Treat
 my$Treatment <- factor(my$Treatment, levels = c("EH0","EH0_80","EH80")) # reorder the treat factor
 
 myp <- my
-myp$cutoff <- NA
+myp$cutoff <- NA; myp$cutoff_elip <- NA
 myp$md <- NA
 for (i in c("EH0", "EH0_80","EH80")) {
   myt <- myp[myp$Treatment == i,]
@@ -3252,64 +3223,28 @@ for (i in c("EH0", "EH0_80","EH80")) {
                   center = colMeans(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]), 
                   cov = cov(myt[, c("Fitness_in_CM", "Fitness_in_High_Stress")]))
   myp[myp$Treatment == i,]$md <- md
-  alpha <- 0.10
+  alpha_elip <- 0.25
+  alpha <- 0.05
   cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_High_Stress")])))
+
   myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
 }
 
 # viz
 plot(myp$Fitness_in_High_Stress ~ myp$Fitness_in_CM)
 points(myp[myp$md >= myp$cutoff,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_CM, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_CM, col = "blue")
 
 # Calculate unweighted and weighted centroids dataframes --------
 mypc <- myp[myp$md < myp$cutoff,]
 centroids <- aggregate(cbind(mypc$Fitness_in_CM, mypc$Fitness_in_High_Stress)~mypc$Treatment,mypc,mean)
 colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_High_Stress")
 centroids_uw <- centroids
-
-centroids$Fitness_in_CM[1] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH0"],mypc$mn_re_dw_0[mypc$Treatment == "EH0"] )
-centroids$Fitness_in_CM[2] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH0_80"],mypc$mn_re_dw_0[mypc$Treatment == "EH0_80"] )
-centroids$Fitness_in_CM[3] <- weighted.mean(mypc$Fitness_in_CM[mypc$Treatment == "EH80"],mypc$mn_re_dw_0[mypc$Treatment == "EH80"] )
-centroids$Fitness_in_High_Stress[1] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH0"],mypc$mn_re_dw_80[mypc$Treatment == "EH0"] )
-centroids$Fitness_in_High_Stress[2] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH0_80"],mypc$mn_re_dw_80[mypc$Treatment == "EH0_80"] )
-centroids$Fitness_in_High_Stress[3] <- weighted.mean(mypc$Fitness_in_High_Stress[mypc$Treatment == "EH80"],mypc$mn_re_dw_80[mypc$Treatment == "EH80"] )
-
-# calculate kernels -----------------
-mypcdata<-myp[,c("Treatment", "Fitness_in_CM", "Fitness_in_High_Stress")] # dataframe with PC1, PC2 (x and y axes) and continents (cont1)
-
-
-mypckernel_low <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH0"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mypckernel_low <- with(mypckernel_low, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mypckernel_low <- data.frame(mypckernel_low)
-
-mypckernel_flux <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH0_80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mypckernel_flux <- with(mypckernel_flux, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mypckernel_flux <- data.frame(mypckernel_flux)
-
-mypckernel_high <- ks::kde(mypcdata[which(mypcdata$Treatment=="EH80"),c('Fitness_in_CM', 'Fitness_in_High_Stress')])
-mypckernel_high <- with(mypckernel_high, contourLines(x=eval.points[[1]], y = eval.points[[2]],z=estimate,levels=cont["25%"])[[1]])
-mypckernel_high <- data.frame(mypckernel_high)
-
-# run the model ---------------------
-# unweighted
-
-mypclf <- mypc[mypc$Treatment %in% c("EH0", "EH80"),]
-mymod_uw <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM + I(mypclf$Fitness_in_CM^2))
-mypclf$predlm_uw <- predict(mymod_uw)
-summary(mymod_uw)
-
-mymod_w <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM + I(mypclf$Fitness_in_CM^2), weights = rowMeans(cbind(mypclf$mn_re_dw_0, mypclf$mn_dw_80), na.rm = T))
-mypclf$predlm_w <- predict(mymod_w)
-summary(mymod_w)
-
-mymod_uwl <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM)
-mypclf$predlm_uwl <- predict(mymod_uwl)
-summary(mymod_uwl)
-
-mymod_wl <- glm(mypclf$Fitness_in_High_Stress ~ mypclf$Fitness_in_CM, weights = rowMeans(cbind(mypclf$mn_re_dw_0, mypclf$mn_dw_80), na.rm = T))
-mypclf$predlm_wl <- predict(mymod_wl)
-summary(mymod_wl)
-
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
 
 # plot scatter with centroids and lines ------
 mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
@@ -3318,104 +3253,164 @@ p1 <- ggplot()+
   geom_hline(yintercept = 0, color = "darkgray")+
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
   geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
-  xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
-  ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
-   geom_point(data=centroids, color = "black", cex = 5, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
-  geom_segment(mapping = aes(x=centroids[1,2], y=centroids[1,3], xend=centroids[3,2], yend=centroids[3,3]), linetype="solid", size=2, inherit.aes=F)+
-  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "gray50", cex = 5)+
-  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype="solid", size=2, inherit.aes=F, color ="gray50")+
-   geom_path(data = mypckernel_low, x=mypckernel_low$x, y=mypckernel_low$y, color = mypalette[1],inherit.aes = F, show.legend = F)+
-  geom_path(data = mypckernel_flux, x=mypckernel_flux$x, y=mypckernel_flux$y, color = mypalette[2],inherit.aes = F, show.legend = F)+
-  geom_path(data = mypckernel_high, x=mypckernel_high$x, y=mypckernel_high$y, color = mypalette[3],inherit.aes = F, show.legend = F)+
+  # xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  # ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
   geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
-  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.5, show.legend = F)+
-  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_uw), color = "Blue")+
-  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_w), color = "Red")+
-  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_uwl), color = "black")+
-  geom_line(aes(x = mypclf$Fitness_in_CM, y=mypclf$predlm_wl), color = "darkgray")+
-
+  geom_point(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
   xlab("Fitness in CM (0% Stress)")+
   ylab("Fitness in 80% Stress")+
   coord_equal()+
-
   geom_rug(data = myp[myp$treat %in% c("EH0","EH0_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment))+
-  scale_color_manual(values = mypalette)
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p1
-
-# create and plot hist of resids for flux treat ---
-# unweigthed
-point1 <- c(centroids_uw[1,2], centroids_uw[1,3])
-point2 <- c(centroids_uw[3,2], centroids_uw[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$y <- myp$Fitness_in_CM*myslope + myintercept
-
-# weigthed
-point1 <- c(centroids[1,2], centroids[1,3])
-point2 <- c(centroids[3,2], centroids[3,3])
-myslope <- (point2[2] - point1[2]) / (point2[1] - point1[1])
-myintercept <- point2[2] - (myslope*point2[1])
-myp$yy <- myp$Fitness_in_CM*myslope + myintercept
-
-myp$yyy <- mymod_uwl$coefficients[1] + myp$Fitness_in_CM*mymod_uwl$coefficients[2]
-myp$yyyy <- mymod_wl$coefficients[1] + myp$Fitness_in_CM*mymod_wl$coefficients[2]
+pdf(file = paste("000_SALT_KASSEN_0_80_us.pdf"),height = 8, width = 5); grid::grid.draw(p1); dev.off()
 
 
-# create plots for weighted and unweighted resids -----
-# unweighted
-p2 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - y))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Unweighted Residuals \n (Black Line)")+
-  xlab("Fitness Residuals")+
+
+#  40, 80 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in complete media
+my$Fitness_in_High_Stress <- my$mn_dw_80 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_Low_Stress) & !is.na(my$Fitness_in_High_Stress) & my$Treatment %in% c("EH40", "EH40_80", "EH80"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH40","EH40_80","EH80")) # reorder the treat factor
+
+myp <- my
+myp$cutoff <- NA; myp$cutoff_elip <- NA
+myp$md <- NA
+for (i in c("EH40", "EH40_80","EH80")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha_elip <- 0.25
+  alpha <- 0.05
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_Low_Stress", "Fitness_in_High_Stress")])))
+
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
+}
+
+# viz
+plot(myp$Fitness_in_High_Stress ~ myp$Fitness_in_Low_Stress)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_Low_Stress, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_High_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_Low_Stress, col = "blue")
+
+# Calculate unweighted and weighted centroids dataframes --------
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_Low_Stress, mypc$Fitness_in_High_Stress)~mypc$Treatment,mypc,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_Low_Stress", "Fitness_in_High_Stress")
+centroids_uw <- centroids
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p2 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
+  # xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  # ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+  xlab("Fitness in 40% Stress")+
+  ylab("Fitness in 80% Stress")+
+  coord_equal()+
+  geom_rug(data = myp[myp$treat %in% c("EH40","EH40_80", "EH80"),], aes(x=Fitness_in_Low_Stress, y=Fitness_in_High_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p2
+pdf(file = paste("000_SALT_KASSEN_40_80_us.pdf"),height = 8, width = 5); grid::grid.draw(p2); dev.off()
 
-# weighted
-p3 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Weighted Residuals \n (Gray Line)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
+
+
+#  0, 40 ------------------------------------------------------------------------
+my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
+my$id <- paste0(my$epo, my$bc1) # assign bcids
+myf <- my # save a frame for limits
+my$Fitness_in_CM <- my$mn_dw_0 # store fitness in complete media
+my$Fitness_in_Low_Stress <- my$mn_dw_40 # store fitness in stress
+my <- my[!is.na(my$Fitness_in_CM) & !is.na(my$Fitness_in_Low_Stress) & my$Treatment %in% c("EH0", "EH0_40", "EH40"),] # remove NA entries
+my$Treatment <- factor(my$Treatment, levels = c("EH0", "EH0_40", "EH40")) # reorder the treat factor
+
+myp <- my
+myp$cutoff <- NA; myp$cutoff_elip <- NA
+myp$md <- NA
+for (i in c("EH0", "EH0_40", "EH40")) {
+  myt <- myp[myp$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")], 
+                  center = colMeans(myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]), 
+                  cov = cov(myt[, c("Fitness_in_CM", "Fitness_in_Low_Stress")]))
+  myp[myp$Treatment == i,]$md <- md
+  alpha_elip <- 0.25
+  alpha <- 0.05
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+  cutoff_elip <- (qchisq(p = 1 - alpha_elip, df = ncol(myp[myp$Treatment == i,][, c("Fitness_in_CM", "Fitness_in_Low_Stress")])))
+
+  myp[myp$Treatment == i,]$cutoff <- cutoff
+  myp[myp$Treatment == i,]$cutoff_elip <- cutoff_elip
+
+}
+
+# viz
+plot(myp$Fitness_in_Low_Stress ~ myp$Fitness_in_CM)
+points(myp[myp$md >= myp$cutoff,]$Fitness_in_Low_Stress ~ myp[myp$md >= myp$cutoff,]$Fitness_in_CM, col = "red")
+points(myp[myp$md >= myp$cutoff_elip,]$Fitness_in_Low_Stress ~ myp[myp$md >= myp$cutoff_elip,]$Fitness_in_CM, col = "blue")
+
+# Calculate unweighted and weighted centroids dataframes --------
+mypc <- myp[myp$md < myp$cutoff,]
+centroids <- aggregate(cbind(mypc$Fitness_in_CM, mypc$Fitness_in_Low_Stress)~mypc$Treatment,mypc,mean)
+colnames(centroids) <-  c("Treatment","Fitness_in_CM", "Fitness_in_Low_Stress")
+centroids_uw <- centroids
+# get dataframe for elipses ------
+mypc_elip <- myp[myp$md < myp$cutoff_elip,]
+
+# plot scatter with centroids and lines ------
+mypalette <- c("#66FFFF", "#B266FF", "#FF6666")
+p3 <- ggplot()+
+  geom_vline(xintercept=0, color = "darkgray")+
+  geom_hline(yintercept = 0, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.25, color ="darkgray", alpha = 0.9)+  
+  geom_abline(intercept = 0, slope = -1, linetype = "dashed", size = 0.25, color ="darkgray")+
+  # xlim( min(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T), max(c(myf$mn_dw_0, myf$mn_dw_40), na.rm = T))+
+  # ylim( min(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T), max(c(myf$mn_dw_40, myf$mn_dw_80), na.rm = T))+
+  stat_ellipse(data = mypc_elip[mypc_elip$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, fill = Treatment, color = Treatment), alpha = 0.15, geom = "polygon", linetype = 2, show.legend = F)+
+  geom_point(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment), size = 2.5, alpha = 0.5, show.legend = T) +
+  geom_point(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), shape = 1, colour = "black", size = 2.5, alpha = 0.7, show.legend = F)+
+  geom_segment(mapping = aes(x=centroids_uw[1,2], y=centroids_uw[1,3], xend=centroids_uw[3,2], yend=centroids_uw[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=centroids_uw, aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress), color = "black", cex = 5, shape = 21, fill = "black")+
   theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+  xlab("Fitness in CM (0% Stress)")+
+  ylab("Fitness in 40% Stress")+
+  coord_equal()+
+  geom_rug(data = myp[myp$treat %in% c("EH0", "EH0_40", "EH40"),], aes(x=Fitness_in_CM, y=Fitness_in_Low_Stress, color = Treatment))+
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
 p3
+pdf(file = paste("000_SALT_KASSEN_0_40_us.pdf"),height = 8, width = 5); grid::grid.draw(p3); dev.off()
 
-# unweighted linear
-p4 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yyy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Unweighted Residuals \n (Black Linear Model)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p4
 
-# unweighted linear
-p5 <- ggplot(myp[myp$Treatment == "EH0_80",], aes(x=Fitness_in_High_Stress - yyyy))+
-  geom_histogram(fill = "#B266FF", color = "white")+
-  geom_vline(xintercept = 0, lty = "dashed")+
-  ggtitle("Weighted Residuals \n (Gray Linear Model)")+
-  xlab("Fitness Residuals")+
-  ylab("")+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
-p5
-
-lay <- rbind(c(1,1,1,1,1,1,1,1),
-             c(1,1,1,1,1,1,1,1),
-             c(1,1,1,1,1,1,1,1),
-             c(1,1,1,1,1,1,1,1),
-             c(2,2,3,3,4,4,5,5))
-x <- grid.arrange(p1, p2, p3, p4,p5, layout_matrix = lay)
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_KASSEN_0_80.pdf"),height = 11, width = 11); grid::grid.draw(x); dev.off()
 
 ```
+
+
 
 
 
