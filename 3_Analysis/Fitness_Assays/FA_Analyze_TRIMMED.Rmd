@@ -39,8 +39,7 @@ require(grid)
 require(gridExtra)
 require(remotes)
 require(devtools)
-devtools::install_github("rogiersbart/RTOOLZ")
-require(rtoolz)
+devtools::install_github("rogiersbart/RTOOLZ"); require(rtoolz)
 options(scipen = 999) # turn off scientific notation
 ```
 <br/><br/>
@@ -1450,319 +1449,6 @@ rm(dendata, my, my0, my120, my40, my80, p, p1, q, q1, x, i)
 ```
 
 
-# visualize fitness in two environments (00 and 80)
-```{r}
-# for SALT  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-
-my$id <- paste0(my$epo, my$bc1)
-x <- my$mn_dw_0
-my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
-my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_80^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_SALT_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-
-
-# for COPR  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$id <- paste0(my$epo, my$bc1)
-
-my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
-my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_80^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_COPR_BCDifferences_00_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-rm(dendata, my, p, p1, q, q1, x)
-```
-
-# visualize fitness in two environments (00 and 80) NO DENSITY
-```{r}
-# for SALT  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$Treatment <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-
-my$id <- paste0(my$epo, my$bc1)
-x <- my$mn_dw_0
-my$Fitness_in_CM <- scale(my$mn_dw_0, center = F)
-my$Fitness_in_High_Stress <- scale(my$mn_dw_80, center = F)
-
-mypalette <- dichrompalette_br_cy
-p <- ggplot(my, aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color=Treatment, fill = Treatment)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-p1 <- p + facet_wrap(~Treatment, nrow = 2)
-p2 <- p + theme(legend.position = "none")
-
-
-x <- grid.arrange(p2, p1,
-             widths = c(1,2))
-grid::grid.draw(x)
-# 
-
-
-pdf(file = paste("000_SALT_BCDifferences_00_80_clean.pdf"),height = 6, width = 18); grid::grid.draw(x); dev.off()
-
-
-rm(dendata, my, p, p1, q, q1, x)
-```
-
-
-# visualize fitness in two environments (00 and 40)
-```{r}
-# for SALT  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$id <- paste0(my$epo, my$bc1)
-x <- my$mn_dw_0
-my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
-my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_40, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_40^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_40 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_40 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_40 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_SALT_BCDifferences_00_40.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-
-
-# for COPR  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$id <- paste0(my$epo, my$bc1)
-
-my$mn_dw_0 <- scale(my$mn_dw_0, center = F)
-my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_0, y=mn_dw_40, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_0^2 + my$mn_dw_40^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_0 > 0  & dendata$mn_dw_40 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_0 < 0 & dendata$mn_dw_40 > 0) | (dendata$mn_dw_0 > 0 & dendata$mn_dw_40 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_COPR_BCDifferences_00_40.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-rm(dendata, my, p, p1, q, q1, x)
-```
-
-# visualize fitness in two environments (40 and 80)
-```{r}
-# for SALT  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$id <- paste0(my$epo, my$bc1)
-x <- my$mn_dw_40
-my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
-my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_40, y=mn_dw_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_40^2 + my$mn_dw_80^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_40 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_40 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_40 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_SALT_BCDifferences_40_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-
-
-# for COPR  ---------------------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my$id <- paste0(my$epo, my$bc1)
-
-my$mn_dw_40 <- scale(my$mn_dw_40, center = F)
-my$mn_dw_80 <- scale(my$mn_dw_80, center = F)
-
-p <- ggplot(my, aes(x=mn_dw_40, y=mn_dw_80, color=treat, fill = treat)) +
-  geom_vline(xintercept=0, color = "darkgray")+
-  geom_hline(yintercept = 0, color = "darkgray")+
-  geom_segment(mapping = aes(x=-2, y=-2, xend=2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_segment(mapping = aes(x=2, y=-2, xend=-2, yend=2), linetype="dashed", size=0.5, inherit.aes=F, alpha = 0.25)+
-  geom_point(size = 2.5, alpha = 0.5) + 
-  geom_point(shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
-  coord_equal()+
-  geom_rug()
-  # geom_density_2d(aes(colour = treat, alpha = ..piece..))
-
-my$disto <- sqrt(my$mn_dw_40^2 + my$mn_dw_80^2) 
-
-dendata <- my
-dendata$group <- NA
-dendata$group[which(dendata$mn_dw_40 > 0  & dendata$mn_dw_80 > 0)] <- "Same Sign"
-dendata$group[which((dendata$mn_dw_40 < 0 & dendata$mn_dw_80 > 0) | (dendata$mn_dw_40 > 0 & dendata$mn_dw_80 < 0))] <- "Opposite Sign"
-
-
-q <- ggplot(dendata, aes(x= disto,color= treat, linetype = group)) +
-  geom_density(alpha = 0.1, trim = F)
-
-
-p1 <- p + facet_wrap(~treat, nrow = 1)
-q1 <- q + facet_wrap(~treat, nrow = 1)
-p1 <- ggplotGrob(p1)
-q1 <- ggplotGrob(q1)
-# 
-x <-rbind(p1, q1, size = "first")
-x$widths <- grid::unit.pmax(p1$widths, q1$widths)
-grid::grid.newpage()
-grid::grid.draw(x)
-
-pdf(file = paste("000_COPR_BCDifferences_40_80.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
-rm(dendata, my, p, p1, q, q1, x)
-```
-
-
-
 
 # Look at within well VS between well fitness differences!
 ```{r}
@@ -1922,40 +1608,6 @@ for (env in envs) {
   
 }
 rm(my, myt, p, CoprOutByTreat, CoprOutCvF, CoprOutIgTreat, env, envs, myheight, mytrim, mywdn, mywidth, SaltOutByTreat, SaltOutCvF, SaltOutIgTreat, tdn_mn)
-```
-
-
-
-
-
-
-# look at extinction pre-fit assay -- patterns are a little weaker here than if the post fit assay data are used. 
-NOTE: THIS BLOCK TO BE REMOVED.
-```{r}
-# # create the frame, omitting most cols not necessary for these upcoming plots and tests.
-# my <- myd[myd$mpar == 1 & myd$epo %in% c("SALT_A", "SALT_B") & myd$mpasp == 0.0,]
-# my <- my[,c("treat", "bc1cts_i_e")]
-# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-# summary(my$treat[my$bc1cts_i_e <= 15])
-# # summary(my$treat[my$bc1cts_i_e <= 100])
-# # summary(my$treat[my$bc1cts_i_e <= 250])
-# # summary(my$treat[my$bc1cts_i_e <= 5000000000])
-# 
-# 
-# 
-# my <- myd[myd$mpar == 1 & myd$epo %in% c("COPR_A", "COPR_B") & myd$mpasp == 0.0,]
-# my$omit <- FALSE
-# my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-# my <- my[my$omit == FALSE,]
-# my <- my[,c("treat", "bc1cts_i_e")]
-# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-# summary(my$treat[my$bc1cts_i_e <= 15])
-# # summary(my$treat[my$bc1cts_i_e <= 100])
-# # summary(my$treat[my$bc1cts_i_e <= 250])
-# # summary(my$treat[my$bc1cts_i_e <= 500])
-# 
-# # ------------------
-# rm(my)
 ```
 
 
@@ -2162,15 +1814,15 @@ mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata
 mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg], weight = mydata$mn_re_dw_0_80[mydata$treat %in% myg]);mytempw # -0.124
 ```
 
-MN VS VAR FITNESS (2 ENVIRONMENT) -- BASIC
+MN VS VAR FITNESS (2 ENVIRONMENT) -- FITNESS CHANGE (DW) -- ARITHMETIC ONLY! --
 ```{r}
 
 mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
 
 mydata$mn_dw_0_80uw <- rowMeans(cbind(mydata$mn_dw_0, mydata$mn_dw_80), na.rm = F)
-mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
-                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+# mydata$mn_dw_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+#                                                   w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
 
 
 # modified from modi package
@@ -2198,8 +1850,8 @@ weighted.var <- function (x, w, na.rm = FALSE)
 }
 
 mydata$var_dw_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), na.rm = F))
-mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
-                                                  w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
+# mydata$var_dw_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_0", "mn_dw_80")]), 
+#                                                   w=as.numeric(x[c( "mn_re_dw_0", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
 
 
 # viz -- all 0_80-----------------------
@@ -2212,7 +1864,7 @@ p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill =
   scale_color_manual(values = mypalette)+
   theme_bw()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  xlab("(ARITHMETIC) Mean Fitness: CM (No Stress), 80% Stress")+
   ylab("Variance Fitness: CM (No Stress), 80% Stress")+
   geom_rug()
 p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
@@ -2220,26 +1872,37 @@ p2 <- p + theme(legend.position = "none") +
   geom_text(aes(x=3,y=3.5), color = "gray75", label = "1:1")
 x <- grid.arrange(p2, p1, widths = c(1,2))
 grid::grid.draw(x)
-pdf(file = paste("000_A_TOSHARE_SALT_Fitness_Cor_Heatmaps_w.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
+pdf(file = paste("0000_Arith_mean_vs_var.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
 
 
 ```
 
-MN VS VAR FITNESS (2 ENVIRONMENT) -- ARITHMETIC &&&&& GEOMETRIC (NOT CURRENTLY WORKING!!!)
+MN VS VAR FITNESS (2 ENVIRONMENT) -- FITNESS CHANGE (DW) -- ARITHMETIC & GEOMETRIC --
 ```{r}
 
 mydata <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]
 mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
 mydata$mn_fit500_0_80uw <- rowMeans(cbind(mydata$mn_fit500_0, mydata$mn_fit500_80), na.rm = F)
-mydata$mn_fit500_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
-                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F))
+# mydata$mn_fit500_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+#                                                   w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F))
 
 
-mydata$mn_fit500_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F)) # I checked this math, its good.
-mydata$mn_re_fit500_0_geomean <- scale(mydata$mn_re_fit500_0, center = F); mydata$mn_re_fit500_80_geomean <- scale(mydata$mn_re_fit500_80, center = F);
-mydata$mn_fit500_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
-                                                  w=as.numeric(x[c( "mn_re_fit500_0_geomean", "mn_re_fit500_80_geomean")]), na.rm = F))
+#mydata$mn_fit500_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F)) # This function doesnt properly handle NAs..........I wrote a fix
+mydata$mn_fit500_0_80uwg <- NA
+for (i in 1:nrow(mydata)) {
+  if(!is.na(mydata$mn_fit500_0)[i] & !is.na(mydata$mn_fit500_80)[i]){
+      mydata$mn_fit500_0_80uwg[i] <- psych::geometric.mean(c(mydata$mn_fit500_0[i], mydata$mn_fit500_80[i]))
+  } else {
+       mydata$mn_fit500_0_80uwg[i] <- NA
+  }
+  
+}
+# cbind(mydata$mn_fit500_0_80uw, mydata$mn_fit500_0_80uwg ) # check that NA's are being handled properly. 
 
+
+# mydata$mn_re_fit500_0_geomean <- scale(mydata$mn_re_fit500_0, center = F); mydata$mn_re_fit500_80_geomean <- scale(mydata$mn_re_fit500_80, center = F);
+# mydata$mn_fit500_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
+#                                                   w=as.numeric(x[c( "mn_re_fit500_0_geomean", "mn_re_fit500_80_geomean")]), na.rm = F))
 
 
 weighted.var <- function (x, w, na.rm = FALSE) 
@@ -2266,12 +1929,11 @@ weighted.var <- function (x, w, na.rm = FALSE)
 }
 
 mydata$var_fit500_0_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F))
-mydata$var_fit500_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), 
-                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F)) # calculate wtd.var dw across reps
+# mydata$var_fit500_0_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), 
+#                                                   w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F)) # calculate wtd.var dw across reps
 
 
 # viz -- all 0_80-----------------------
-# unweighted
 mypalette <- dichrompalette_br_cy
 mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
 p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
@@ -2280,7 +1942,7 @@ p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=var_fit500_0_80s, color = Treatment
   scale_color_manual(values = mypalette)+
   theme_bw()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  xlab("(ARITHMETIC) Mean Fitness: CM (No Stress), 80% Stress")+
   ylab("Variance Fitness: CM (No Stress), 80% Stress")+
   geom_rug()
 p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
@@ -2290,233 +1952,56 @@ x <- grid.arrange(p2, p1, widths = c(1,2))
 grid::grid.draw(x)
 
 
-# experimental -----v
-# mypalette <- dichrompalette_br_cy
-# mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
-# mydat <- mydata[!is.na(mydata$var_fit500_0_80s) & !is.na(mydata$mn_fit500_0_80s),]
-# fit<-lm(var_fit500_0_80s ~ mn_fit500_0_80s, data =mydat)
-# mydat$predicted <- predict(fit)
-# mydat$residuals <- residuals(fit)
-# ggplot(mydat, aes(x = mn_fit500_0_80s, y = var_fit500_0_80s)) +
-#   geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +
-#   geom_segment(aes(xend = mn_fit500_0_80s, yend = predicted), alpha = .2) +
-# 
-#   # > Color adjustments made here...
-#   geom_point(aes(color = Treatment)) +  # Color mapped here
-#   scale_color_manual(values = mypalette)+
-#   guides(color = FALSE) +
-# 
-#   # <
-#   theme_bw()
-# tapply(mydat$residuals, mydat$Treatment, mean)
-# 
-# 
-# 
-# mypalette <- dichrompalette_br_cy
-# 
-# mydata$x <-  scale(mydata$mn_fit500_0_80uw, center = T)
-# mydata$y <-  scale(mydata$var_fit500_0_80uw, center = T)
-# mydat <- mydata[!is.na(mydata$x) & !is.na(mydata$y),]
-# myslope <- 1
-# myintercept <- mean(mydat$x)
-# mydat$predicted1to1 <- mydat$x*myslope + myintercept
-# mydat$residuals <- mydat$y - mydat$predicted1to1
-# ggplot(mydat, aes(x = x, y = y)) +
-#   geom_segment(aes(xend = x, yend = predicted1to1), alpha = .2) +
-#   geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
-# 
-#   # > Color adjustments made here...
-#   geom_point(aes(color = Treatment)) +  # Color mapped here
-#   scale_color_manual(values = mypalette)+
-#   guides(color = FALSE) +
-# 
-#   # <
-#   theme_bw()
-# 
-# tapply(mydat$residuals, mydat$Treatment, mean)
-# ---------^
 
-
-
+mydata2 <- mydata
 mypalette <- dichrompalette_br_cy
-mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80uwg, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80uw, center = T)
-p <- ggplot(mydata, aes(x=mn_fit500_0_80gs, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
+mydata2$mn_fit500_0_80gs <- scale(mydata2$mn_fit500_0_80uwg, center = T); mydata2$var_fit500_0_80s <- scale(mydata2$var_fit500_0_80uw, center = T)
+p <- ggplot(mydata2, aes(x=mn_fit500_0_80gs, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
   geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
   geom_point(size = 2.5, alpha = 0.75) + 
   scale_color_manual(values = mypalette)+
   theme_bw()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
+  xlab("(GEOMETRIC) Mean Fitness: CM (No Stress), 80% Stress")+
   ylab("Variance Fitness: CM (No Stress), 80% Stress")+
   geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
+p3 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
+p4 <- p + theme(legend.position = "none") + 
   geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
+y <- grid.arrange(p4, p3, widths = c(1,2))
+grid::grid.draw(y)
 
-
-
-
-
-
-# weighted
-mypalette <- dichrompalette_br_cy
-mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80, center = T)
-p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
-
-
-mypalette <- dichrompalette_br_cy
-mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80g, center = T); mydata$var_fit500_0_80s <- scale(mydata$var_fit500_0_80, center = T)
-p <- ggplot(mydata, aes(x=mn_fit500_0_80gs, y=var_fit500_0_80s, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope =1, intercept = 0, linetype = "dashed", color = "gray75")+
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
+lay <- as.matrix(rbind(c(1,2,2),c(3,4,4)))
+z <- grid.arrange(p2, p1, p4, p3, layout_matrix = lay)
+pdf(file = paste("0000_Arith_v_geo_mean_var.pdf"),height = 8.5, width = 11); grid::grid.draw(z); dev.off()
+rm(mydata2)
 ```
 
 
 MN FITNESS (2 ENVIRONMENT) -- ARITHMETIC &&&&& GEOMETRIC (NOT CURRENTLY WORKING!!!)
 ```{r}
 
-mydata <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]
-mydata$Treatment <- factor(mydata$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-mydata$mn_fit500_0_80uw <- rowMeans(cbind(mydata$mn_fit500_0, mydata$mn_fit500_80), na.rm = F)
-mydata$mn_fit500_0_80 <- apply(mydata, 1, function(x) weighted.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
-                                                  w=as.numeric(x[c( "mn_re_fit500_0", "mn_re_fit500_80")]), na.rm = F))
-
-
-mydata$mn_fit500_0_80uwg <- apply(mydata, 1, function(x) psych::geometric.mean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]), na.rm = F)) # I checked this math, its good.
-mydata$mn_re_fit500_0_geomean <- scale(mydata$mn_re_fit500_0, center = F); mydata$mn_re_fit500_80_geomean <- scale(mydata$mn_re_fit500_80, center = F);
-mydata$mn_fit500_0_80g <- apply(mydata, 1, function(x) weighted.geomean(x=as.numeric(x[c( "mn_fit500_0", "mn_fit500_80")]),
-                                                  w=as.numeric(x[c( "mn_re_fit500_0_geomean", "mn_re_fit500_80_geomean")]), na.rm = F))
-
 # viz -- all 0_80-----------------------
-# weighted -------------------
-mypalette <- dichrompalette_br_cy
-mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80, center = T); mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80g, center = T)
-p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=mn_fit500_0_80gs, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness ARI: CM (No Stress), 80% Stress")+
-  ylab("Mean Fitness GEO: CM (No Stress), 80% Stress")+
-  geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
-
-
 # unweighted -------------------
 mypalette <- dichrompalette_br_cy
-mydata$mn_fit500_0_80s <- scale(mydata$mn_fit500_0_80uw, center = T); mydata$mn_fit500_0_80gs <- scale(mydata$mn_fit500_0_80uwg, center = T)
-p <- ggplot(mydata, aes(x=mn_fit500_0_80s, y=mn_fit500_0_80gs, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
-  geom_point(size = 2.5, alpha = 0.75) + 
+mymod <- glm(mydata$mn_fit500_0_80uwg ~ mydata$mn_fit500_0_80uw)
+p <- ggplot(mydata) + 
+  # geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75")+
+  geom_smooth(method='lm', aes(x=mydata$mn_fit500_0_80uw, y=mydata$mn_fit500_0_80uwg), formula= y ~ x,  inherit.aes = F,color = "black")+
+  geom_point( aes(x=mn_fit500_0_80uw, y=mn_fit500_0_80uwg, color = Treatment, fill = Treatment), size = 2.5, alpha = 0.5) + 
   scale_color_manual(values = mypalette)+
   theme_bw()+
+  coord_equal()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
+  xlab("ARITHMETIC Mean Fitness: CM, 80% Stress")+
+  ylab("GEOMETRIC Mean Fitness: CM, 80% Stress")+
   geom_rug()
 p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=3,y=3), color = "gray75", label = "1:1")
+p2 <- p + theme(legend.position = "none") +
+  geom_text(aes(x=1,y=1.2), color = "black", label = paste0("y = ",round(mymod$coefficients[2], 3), "x + ", round(mymod$coefficients[1], 3)))
 x <- grid.arrange(p2, p1, widths = c(1,2))
 grid::grid.draw(x)
-
-moddata <- mydata[!is.na(mydata$mn_fit500_0_80uwg) & !is.na(mydata$mn_fit500_0_80uw),]
-mymod <- glm(moddata$mn_fit500_0_80uwg ~ moddata$mn_fit500_0_80uw)
-moddata$resid <- residuals(mymod)
-tapply(moddata$resid, moddata$Treatment, mean)
-
-# weighted
-mypalette <- dichrompalette_br_cy
-myx <- mydata$Treatment
-myy <- mydata$mn_fit500_0_80
-myc <- mydata$Treatment
-mytitle <- ""
-myxlab <- "Treatment"
-myylab <- "Arithmetic Mean Fitness in 00, 80"
-myoutline <-  "grey20"
-myfill <-  "grey90"
-myptalpha <- 1
-mymeanptsize <- 1
-myptsize <- 0.1
-myrugalpha <- 0.7
-mywtmeanptcol <- "black"
-
-p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 1, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-p
-
-
-
-myy <- mydata$mn_fit500_0_80g
-myylab <- "Geometric Mean Fitness in 00, 80"
-
-p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 1, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-p
-
-
-
+pdf(file = paste("0000_Arith_v_geo_mean_glm.pdf"),height = 6, width = 14); grid::grid.draw(x); dev.off()
 
 
 # unweighted
@@ -2535,7 +2020,7 @@ myptsize <- 0.1
 myrugalpha <- 0.7
 mywtmeanptcol <- "black"
 
-p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
+p1 <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
   geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
@@ -2551,16 +2036,17 @@ p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-p
+  theme(axis.text.x = element_text(size = 8, angle = 0))+
+  ylim(0.9, 1.25)
+p1
 
 
+mydata2 <- mydata
+myy2 <- mydata2$mn_fit500_0_80uwg
+myylab <- "Geometric Mean Fitness in CM, 80% Stress"
 
-myy <- mydata$mn_fit500_0_80uwg
-myylab <- "Geometric Mean Fitness in 00, 80"
-
-p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+p2 <- ggplot(mydata2, aes(x=myx, y=myy2, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy2), trim = T) + 
   geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
   geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
   geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) + 
@@ -2575,13 +2061,38 @@ p <- ggplot(mydata, aes(x=myx, y=myy, color = myc)) +
   theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
   theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-p
+  theme(axis.text.x = element_text(size = 8, angle = 0))+
+  ylim(0.9, 1.25)
+p2
 
-x <- glm(mydata$mn_fit500_0_80uw ~ mydata$mn_fit500_0_80uwg)
-plot(sort(residuals(x)));abline(h=0, lty = 1, lwd = 2, col = "red")
-hist(residuals(x), breaks = 100);abline(v=0, lty = 1, lwd = 2, col = "red")
-summary(residuals(x))
+
+mydata3 <- mydata
+myy3 <-  mydata3$mn_fit500_0_80uw - mydata3$mn_fit500_0_80uwg
+myylab <- "Arithmetic minus Geometric Mean Fitness in CM, 80% Stress"
+
+p3 <- ggplot(mydata3, aes(x=myx, y=myy3, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy3), trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
+  geom_rug(sides = "l" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = myptalpha) +
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) +
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+p3
+x <- grid.arrange(p1, p2, p3, layout_matrix = as.matrix(rbind(c(1), c(2), c(3))))
+
+grid::grid.draw(x)
+pdf(file = paste("0000_Arith_v_geo_mean_violins.pdf"),height = 9, width = 6); grid::grid.draw(x); dev.off()
+rm(mydata2, mydata3)
+
 ```
 
 
