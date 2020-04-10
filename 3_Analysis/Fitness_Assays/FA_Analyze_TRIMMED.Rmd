@@ -2787,7 +2787,93 @@ p1 <- ggplot()+
   scale_color_manual(values = mypalette)+
   scale_fill_manual(values = mypalette)
 p1
+getwd()
 pdf(file = paste("000_SALT_KASSEN_0_80_wlines_alltreats.pdf"),height = 8, width = 5); grid::grid.draw(p1); dev.off()
+
+
+
+
+
+
+
+myp$cm1 <- myp$Fitness_in_CM
+myp$st1 <- myp$Fitness_in_High_Stress
+myp$cm1_st1 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress)^(1/2)
+myp$cm2_st1 <- (myp$Fitness_in_CM^2 * myp$Fitness_in_High_Stress)^(1/3)
+myp$cm9_st1 <- (myp$Fitness_in_CM^9 * myp$Fitness_in_High_Stress)^(1/10)
+myp$cm1_st2 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress^2)^(1/3)
+myp$cm1_st9 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress^9)^(1/10)
+mymin <- min(c(myp$cm1, myp$st1, myp$cm1_st1, myp$cm2_st1, myp$cm9_st1, myp$cm1_st2, myp$cm1_st9), na.rm = T)
+mymax <- max(c(myp$cm1, myp$st1, myp$cm1_st1, myp$cm2_st1, myp$cm9_st1, myp$cm1_st2, myp$cm1_st9), na.rm = T)
+mypalette <- dichrompalette_br_cy
+
+# fitness in CM
+p1 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("CM") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p1
+
+# fitness in STRESS
+p2 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("80% Stress") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p2
+grid.arrange(p1, p2, ncol = 1)
+# fitness in CM:STRESS
+p3 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 1xSTRESS") + ylim(c(mymin, mymax))
+# p3
+
+# fitness in 2CM:STRESS
+p4 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm2_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm2_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("2xCM : 1xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p4
+
+# fitness in 9CM:STRESS
+p5 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm9_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm9_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("9xCM : 1xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p5
+
+
+# fitness in CM:2STRESS
+p7 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st2))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st2, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 2xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p7
+
+# fitness in 1CM:9STRESS
+p8 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st9))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st9, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 9xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p8
+
+
+x <- grid.arrange(p1, p2, p3,p4,p5,p7,p8,
+                  layout_matrix = rbind(c(1,1,1,NA,2,2,2),
+                                        c(1,1,1,NA,2,2,2),
+                                        c(1,1,1,NA,2,2,2),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(5,5,5,NA,8,8,8),
+                                        c(5,5,5,NA,8,8,8),
+                                        c(5,5,5,NA,8,8,8)),
+                  top = grid::textGrob("\n Yeast Fitness in CM and 80% STRESS (NaCl) \n", gp =grid::gpar(fontsize = 14, fontface = "bold")))
+pdf(file = paste("000_SALT_GEOMFIT_VIOLINS_00_80.pdf"),height = 11, width = 8.5); grid::grid.draw(x); dev.off()
+
 ```
 
 
@@ -2870,7 +2956,7 @@ p1 <- ggplot()+
   geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "dotted")+
   geom_line(data = geomfit[geomfit$geomfitfit == 1.075,], aes(x = geomfitx, y = geomfity), lty  = "dotted")+
   geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "dotted")+
-  annotate("text", x = c(0.985, 0.985, 0.985, 1.03, 1.08), y = c(1, 1.05, 1.1, 1.1, 1.1), label = c("w = 1", "w = 1.025", "w = 1.05", "w = 1.075", "w = 1.1"))+
+  annotate("text", x = c(0.95, 0.95, 0.985, 1.03, 1.08), y = c(1.04, 1.08, 1.1, 1.1, 1.1), label = c("w = 1", "w = 1.025", "w = 1.05", "w = 1.075", "w = 1.1"))+
 
   stat_ellipse(data = mypc_elip[mypc_elip$treat %in%  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, fill = Treatment, color = Treatment), alpha = 0.1, geom = "polygon", linetype = 2, show.legend = F)+
   geom_point(data = myp[myp$treat %in%  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"),], aes(x=Fitness_in_CM, y=Fitness_in_High_Stress, color = Treatment), size = 2.5, alpha = 0.35, show.legend = T) +
@@ -2888,6 +2974,256 @@ p1 <- ggplot()+
   scale_fill_manual(values = mypalette)
 p1
 pdf(file = paste("000_SALT_KASSEN_0_40_wlines_alltreats.pdf"),height = 5, width = 8); grid::grid.draw(p1); dev.off()
+
+
+
+
+
+
+myp$cm1 <- myp$Fitness_in_CM
+myp$st1 <- myp$Fitness_in_High_Stress
+myp$cm1_st1 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress)^(1/2)
+myp$cm2_st1 <- (myp$Fitness_in_CM^2 * myp$Fitness_in_High_Stress)^(1/3)
+myp$cm9_st1 <- (myp$Fitness_in_CM^9 * myp$Fitness_in_High_Stress)^(1/10)
+myp$cm99_st1 <- (myp$Fitness_in_CM^99 * myp$Fitness_in_High_Stress)^(1/100)
+
+myp$cm1_st2 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress^2)^(1/3)
+myp$cm1_st9 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress^9)^(1/10)
+myp$cm1_st99 <- (myp$Fitness_in_CM * myp$Fitness_in_High_Stress^99)^(1/100)
+
+mymin <- min(c(myp$cm1, myp$st1, myp$cm1_st1, myp$cm2_st1, myp$cm9_st1, myp$cm1_st2, myp$cm1_st9), na.rm = T)
+mymax <- max(c(myp$cm1, myp$st1, myp$cm1_st1, myp$cm2_st1, myp$cm9_st1, myp$cm1_st2, myp$cm1_st9), na.rm = T)
+mypalette <- dichrompalette_br_cy
+
+# fitness in CM
+p1 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("CM") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p1
+
+# fitness in STRESS
+p2 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("40% Stress") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p2
+grid.arrange(p1, p2, ncol = 1)
+# fitness in CM:STRESS
+p3 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 1xSTRESS") + ylim(c(mymin, mymax))
+# p3
+
+# fitness in 2CM:STRESS
+p4 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm2_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm2_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("2xCM : 1xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p4
+
+# fitness in 9CM:STRESS
+p5 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm9_st1))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm9_st1, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("9xCM : 1xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p5
+
+
+# fitness in CM:2STRESS
+p7 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st2))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st2, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 2xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p7
+
+# fitness in 1CM:9STRESS
+p8 <- ggplot()+
+  geom_violin(data = myp, aes(x=Treatment, y = cm1_st9))+
+  geom_jitter(data = myp, aes(x = Treatment, y = cm1_st9, color = Treatment), width = 0.1, height = 0)+
+  coord_flip() + theme_minimal() + scale_color_manual(values = mypalette) + ylab("Fitness") + ggtitle("1xCM : 9xSTRESS") + ylim(c(mymin, mymax)) + theme(legend.position = "none")
+# p8
+
+
+x <- grid.arrange(p1, p2, p3,p4,p5,p7,p8,
+                  layout_matrix = rbind(c(1,1,1,NA,2,2,2),
+                                        c(1,1,1,NA,2,2,2),
+                                        c(1,1,1,NA,2,2,2),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(NA,NA,3,3,3,NA,NA),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(4,4,4,NA,7,7,7),
+                                        c(5,5,5,NA,8,8,8),
+                                        c(5,5,5,NA,8,8,8),
+                                        c(5,5,5,NA,8,8,8)),
+                  top = grid::textGrob("\n Yeast Fitness in CM and 40% STRESS (NaCl) \n", gp =grid::gpar(fontsize = 14, fontface = "bold")))
+pdf(file = paste("000_SALT_GEOMFIT_VIOLINS_00_40.pdf"),height = 11, width = 8.5); grid::grid.draw(x); dev.off()
+
+# which(myp$Treatment == "EH0" & myp$cm1 == min(myp$cm1[myp$Treatment == "EH0"]))
+# a <- myp[which(myp$Treatment == "EH0" & myp$cm1 == min(myp$cm1[myp$Treatment == "EH0"])),]
+# (a$Fitness_in_CM * a$Fitness_in_High_Stress)^(1/2)
+# (a$Fitness_in_CM^2 * a$Fitness_in_High_Stress)^(1/3)
+# (a$Fitness_in_CM^9 * a$Fitness_in_High_Stress)^(1/10)
+
+
+
+# stats
+myp$maxfit <- apply(myp[,c("cm1", "st1")], 1, max, na.rm = T)
+myp$minfit <- apply(myp[,c("cm1", "st1")], 1, min, na.rm = T)
+myp$varfit <- apply(myp[,c("cm1", "st1")], 1, var, na.rm = T)
+myp$meanfit <- apply(myp[,c("cm1", "st1")], 1, mean, na.rm = T)
+myp$gain <- apply(myp[,c("cm1", "st1")], 1, sum, na.rm = T); myp$gain <- myp$gain - 2
+myp$distance <- abs(myp$cm1 - 1) + abs(myp$st1 - 1)
+myp$difference <- myp$maxfit - myp$minfit
+myp$arithoverestimation <- myp$meanfit - myp$cm1_st1
+
+
+summary(lm(cm1_st1 ~ gain, data = myp))
+summary(lm(cm1_st1 ~ distance, data = myp))
+
+
+ggplot()+
+  geom_point(aes(y=arithoverestimation, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(I(meanfit - cm1_st1) ~ st1, data = myp))
+
+ggplot()+
+  geom_point(aes(y=minfit, x=maxfit, color = Treatment), data = myp)+
+  geom_vline(xintercept = 1) + geom_hline(yintercept = 1)+
+  scale_color_manual(values = mypalette); summary(lm(minfit ~ maxfit, data = myp))
+
+ggplot()+
+  geom_point(aes(y=gain, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(I(meanfit - cm1_st1) ~ st1, data = myp))
+
+ggplot()+
+  geom_point(aes(y=distance, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(I(meanfit - cm1_st1) ~ st1, data = myp))
+
+ggplot()+
+  geom_point(aes(y=gain, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(gain ~ distance, data = myp))
+
+ggplot()+
+  geom_point(aes(y=gain, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(gain ~ distance, data = myp))
+
+
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=difference, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm2_st1, x=difference, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm2_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm9_st1, x=difference, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm9_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1, x=difference, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1 ~ st1, data = myp))
+
+
+
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=gain, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm2_st1, x=gain, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm2_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm9_st1, x=gain, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm9_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1, x=gain, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1 ~ st1, data = myp))
+
+
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm2_st1, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm2_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm9_st1, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm9_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1, x=distance, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1 ~ st1, data = myp))
+
+
+
+
+
+
+
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm2_st1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm2_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm9_st1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm9_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1 ~ st1, data = myp))
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1_st2, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st2 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1_st9, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st9 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=st1, x=maxfit, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(st1 ~ cm1, data = myp))
+
+
+
+
+
+
+
+
+
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=st1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm2_st1, x=st1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm2_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm9_st1, x=st1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm9_st1 ~ st1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1, x=st1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1 ~ st1, data = myp))
+
+ggplot()+
+  geom_point(aes(y=cm1_st1, x=cm1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st1 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1_st2, x=cm1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st2 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=cm1_st9, x=cm1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(cm1_st9 ~ cm1, data = myp))
+ggplot()+
+  geom_point(aes(y=st1, x=cm1, color = Treatment), data = myp)+
+  scale_color_manual(values = mypalette); summary(lm(st1 ~ cm1, data = myp))
+
 ```
 
 Kassen Plot -- geometric???? all treats 40, 80
