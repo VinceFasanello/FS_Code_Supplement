@@ -12,7 +12,7 @@ Prepare the workspace: clean, set options, load packages, load and final formatt
 ```{r, warning = FALSE, message=FALSE}
 rm(list = ls()) # clear workspace
 knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE) # set global knitr options.
-# load required packages
+# load required packages --- go through these and remove unused ones!
 require(ggplot2); # used for plotting
 require(pwr); # used for power analysis
 require(lme4); # used for mixed effects models
@@ -31,7 +31,6 @@ require(gtable)
 require(cowplot)
 require(MuMIn)
 require(simr)
-require(gtable)
 require(scales)
 require(viridis)
 require(reshape2)
@@ -129,17 +128,12 @@ weighted.var <- function (x, w, na.rm = FALSE)
 Set color palette options to be used throughout
 ```{r}
 # Color palettes with implementation information beneath:-----------------------
-trichromramp_g_bl_rd <- c("#006600", "#9999ff", "#6666ff", "#000066","#ff9999", "#ff6666", "#990000")
-# used in:
-#     1. all plots that compare by env in a single panel
-
+trichromramp_g_bl_rd <- c("#006600","#ff9999", "#ff6666", "#990000", "#9999ff", "#6666ff", "#000066")
 dichrompalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
-# used in:
-#     1. All plots that compare by treat.
-
 dark2 <- RColorBrewer::brewer.pal(7, "Dark2") # not used currently. good swap for dichrompalette_br_cy and dichrompalette_re_bl when not trying to show ranks
-dichrompalette_re_bl <- RColorBrewer::brewer.pal(n = 11, name = "RdYlBu")[c(11,10,8,6,4,3,2)] # not used currently. good swap for dichrompalette_br_cy, dark2
-heat_YlOrRd <-  RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")[c(3:9)] # not currently used
+
+initfitpalette <- trichromramp_g_bl_rd
+seventreatspalette <- dichrompalette_br_cy
 ```
 <br/><br/>
 
@@ -153,8 +147,8 @@ myd$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1ct
 <br/><br/>
 
 
-
-Determine data ommission criteria and implement.
+Determine data ommission criteria and implemen*
+      * move this block to prev script when time permits.
 ```{r, warning = FALSE, message=FALSE}
 my <- myd
 # view the most sensitive measure -- those barcodes that are actually omit at generation 500 (not present at start of the fit  assay)
@@ -170,16 +164,16 @@ my <- myd
 # sum(my$bc1cts_f_a <= 15) # "" generation 0 fitness assay final counts "" [ANS: 8 / 7104 (0.001126126)]
 
 my$omit <- FALSE # initially set to false (was T for all < 2 counts originally)
-my$omit[my$bc1cts_i_e <= 15 | my$bc1cts_f_e <= 15 | my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- T # see prev block comments, just assignment here. 
-
-my$fit0[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA # NA fit data for the 8 entries that are missing complete data
-my$re_fit_a[my$bc1cts_i_a <= 15 | my$bc1cts_f_a <= 15] <- NA
+ncounts <- 15
+my$omit[my$bc1cts_i_e <= ncounts | my$bc1cts_f_e <= ncounts | my$bc1cts_i_a <= ncounts | my$bc1cts_f_a <= ncounts] <- T # see prev block comments, just assignment here. 
+my$fit0[my$bc1cts_i_a <= ncounts | my$bc1cts_f_a <= ncounts] <- NA # NA fit data for the 8 entries that are missing complete data
+my$re_fit_a[my$bc1cts_i_a <= ncounts | my$bc1cts_f_a <= ncounts] <- NA
 my$fit500[my$omit == T] <- NA # na fit500 data for omits
 my$dw[my$omit == T] <- NA # na dw data for omits
 my$re_dw[my$omit == T] <- NA
 my$re_fit_e[my$omit == T] <- NA
-
 myd <- my
+rm(ncounts)
 ```
 <br/><br/>
 
@@ -208,115 +202,61 @@ Visualize Initial (ancestral) fitness in seven environments
 
 my <- myd
 # Visualize -------------------------------------------------------------------
-myx <- my$fit0
-myr <- my$re_fit_a / mean(my$re_fit_a, na.rm = T)
-myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2", "SALT0.4", "SALT0.8", "SALT1.2"))
-#myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2","COPR0.4", "COPR0.8", "COPR1.2" ))
+myx <- my$fit0 - weighted.mean(my$fit0, my$re_fit_a, na.rm = T) # mean fitness of pop (relative to ref) is 1.030397 before correction.
+myr <- my$re_fit_a / mean(my$re_fit_a, na.rm = T) # make biggest weight 1 (ggplot does not auto-do this like the stats models do)
+# myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "COPR0.4", "COPR0.8", "COPR1.2", "SALT0.4", "SALT0.8", "SALT1.2")) # plot cm, then copr, then salt data.
+myc <- paste0(my$mpamt, my$mpasp); myc <- factor(myc, levels = c("CM0", "SALT0.4", "SALT0.8", "SALT1.2","COPR0.4", "COPR0.8", "COPR1.2" )) # reverse plot order (salt, then copper)
+my$myc <- myc
 mybinwidth <- 0.0025
 mytitle <- NULL
 myylab <- "Count"
-myxlab <- "Ancestral Fitness (in Seven Environments)"
-myhighlight <- "black"
+myxlab <- "Deviation from Mean Ancestral Fitness (Colored by Environment)"
+mylegendlab <- "Fitness Assay Environment"
 myfillapha <- 0.8
-mypalette <- trichromramp_g_bl_rd
+mypalette <- initfitpalette
 mytextsize <- 8
 myheight <- 7 
 mywidth <- 7
+mymeanline <-  1 - weighted.mean(my$fit0, my$re_fit_a, na.rm = T)
 
-p <- ggplot(my, aes(x=myx,color = myc, fill = myc, weight = myr)) + 
+p <- ggplot(my, aes(x = myx,color = myc, fill = myc, weight = myr)) + 
   geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = 0.05)+
-  geom_vline(xintercept = 1.0, linetype = "dashed", color = myhighlight) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
+  geom_rug(alpha = 0.05) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  scale_color_manual(values = mypalette, guide = FALSE) + 
+  scale_fill_manual(values = mypalette) +
   theme_classic() +
-  theme(legend.position= c(0.8,0.6)) +
-  labs(fill = "Fitness Assay Environment") +
-  ggtitle(mytitle)+ ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))+
-  scale_x_continuous(breaks = seq(.75,1.25,by=0.05),
-                     labels = c("0.75", "0.8", "0.85", "0.9", "0.95", "1.0","1.05", "1.1","1.15","1.2", "1.25"),
-                     limits = c(.75, 1.25))+
-  scale_y_continuous(breaks = seq(0, 1000, by = 100), limits = c(0, 700))
+  theme(legend.position = c(0.8,0.6)) +
+  labs(fill = mylegendlab) +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab) +
+  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt"))) +
+  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt"))) +
+  theme(axis.text.y = element_text(size = mytextsize, angle = 0)) +
+  theme(axis.text.x = element_text(size = mytextsize, angle = 0)) +
+  theme(legend.title = element_text(size = mytextsize, face = "bold")) +
+  theme(legend.text = element_text(size = mytextsize))
+  # scale_x_continuous(breaks = seq(.75,1.25,by=0.05), # adjust x axis limit and labels if desired.
+  #                    labels = c("0.75", "0.8", "0.85", "0.9", "0.95", "1.0","1.05", "1.1","1.15","1.2", "1.25"),
+  #                    limits = c(.75, 1.25))+
+  # scale_y_continuous(breaks = seq(0, 1000, by = 100), limits = c(0, 700)) # adjust y axis limits & breaks if desired.
 p
 
 # figure output ---------------------------------------------------------------
 pdf(file = "000_ancfit_cbyenv.pdf", width = mywidth, height = myheight); p; dev.off() # one column wide, equal height
 
-
 # -----------------------------------------------------------------------------
-rm(my, p, mybinwidth, myc, myfillapha, myheight, myhighlight, mypalette, myr, mytextsize,
+rm(my, p, mybinwidth, myc, myfillapha, myheight, mypalette, myr, mytextsize, mymeanline,
    mytitle, mywidth, myx, myxlab, myylab)
 ```
 <br/><br/>
 
-
-
-Test for an effect of treatment on initial fitness (shouldnt be one, treatments have not yet been applied!)
+RUN A MODEL HERE THAT LOOKS AT FITNESS DIFFERENCES AMONG ANCESTORS (USE SAME SCHEME AS METHODS PAPER!!!)
 ```{r}
-# BLOCK NOTES ------------------------------------------------------------------
-# - all treatment differences within models are nonsignifiant; else COPR120 which has significant differnces among treatments
-# - treatment nonsignificant in all models
-# 
-# - PROBLEMS:
-#   - Large eigenvalue warning in all models -- ask CB
-# ------------------------------------------------------------------------------
-
-# prep an appropriate dataframe for these tests --------------------------------
-#     - The appropriate data frame contains one entry (row) for each fit0 replicate in each environment 
-my <- myd[myd$epo %in% c("COPR_A", "SALT_A") & myd$mpar == 1,]
-myt1 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r1a", "fit0r1")]; colnames(myt1) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
-myt2 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r2a", "fit0r2")]; colnames(myt2) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
-myt3 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r3a", "fit0r3")]; colnames(myt3) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
-myt4 <- my[,c("epo", "mpasp", "bc1", "treat", "re_fit_r4a", "fit0r4")]; colnames(myt4) <- c("epo", "mpasp", "bc1","treat", "re_fit_a", "fit0")
-myt <- rbind(myt1, myt2, myt3, myt4)
-myt$treat <- factor(myt$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # Relevel the treatments appropriately. 
 
 
-# in CM ------------------------------------------------------------------------
-my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.0,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in SALT40 ------------------------------------------------------------------------
-my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.4,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in SALT80 ------------------------------------------------------------------------
-my <- myt[myt$epo == "SALT_A" & myt$mpasp == 0.8,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in SALT120 ------------------------------------------------------------------------
-my <- myt[myt$epo == "SALT_A" & myt$mpasp == 1.2,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in COPR40 ------------------------------------------------------------------------
-my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.4,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in COPR80 ------------------------------------------------------------------------
-my <- myt[myt$epo == "COPR_A" & myt$mpasp == 0.8,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# in COPR120 ------------------------------------------------------------------------
-my <- myt[myt$epo == "COPR_A" & myt$mpasp == 1.2,]
-mymod <- lmer(my$fit0 ~ my$treat + (1|my$bc1), weights = my$re_fit_a, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)))
-anova(mymod)
-
-# ----------------------------
-rm(my, mymod, myt, myt1, myt2, myt3, myt4, weights)
 ```
 <br/><br/>
+
 
 
 
