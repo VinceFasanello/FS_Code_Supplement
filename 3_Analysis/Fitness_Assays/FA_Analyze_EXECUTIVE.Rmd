@@ -259,817 +259,13 @@ RUN A MODEL HERE THAT LOOKS AT FITNESS DIFFERENCES AMONG ANCESTORS (USE SAME SCH
 
 
 
-
-Plot: SALT (row 1), COPR (row 2), ancestral, evolved, and change in fitness; color by environment
-```{r}
-my <- myd
-
-# set universal vars -----------------------------------------------------------
-mybinwidth <- 0.01
-myylab <- "Count"
-myxlab <- "fitness"
-myhighlight <- "black"
-myfillapha <- 0.85
-myrugalpha <- 0.2
-mypalette_r1 <- trichromramp_g_bl_rd[c(1,5,6,7)]
-mypalette_r2 <- trichromramp_g_bl_rd[c(1,2,3,4)]
-mytextsize <- 8
-myheight <- 8
-mywidth <- 8.5
-myxlim1 <- c(.6, 1.6); myymax1 <- 800
-myxlim2 <- myxlim1; myymax2 <- 300
-myxlim3 <- c(-.5, .5); myymax3 <- myymax2
-myxlim4 <- c(.6, 1.8); myymax4 <- 1250
-myxlim5 <- myxlim4; myymax5 <- 400
-myxlim6 <- c(-.3, .9); myymax6 <- myymax5
-
-
-
-# Row 1: SALT lines ------------------------------------------------------------
-# fit0 -----------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = paste0(mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim1) +
-  ylim(c(NA,myymax1)) +
-  scale_color_manual(values =mypalette_r1, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r1) +
-  theme_classic() +
-  theme(legend.position= c(0.8,0.5)) +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-legend <- get_legend(p)
-p <- p + theme(legend.position="none")
-psanc <- p
-
-# fit500 ---------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim2) +
-  ylim(c(NA,myymax2)) +
-  scale_color_manual(values =mypalette_r1, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r1) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-psevo <- p
-
-# dw -------------------------------------------------------
-p <- ggplot(my[my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim3) +
-  ylim(c(NA,myymax3)) +
-  scale_color_manual(values =mypalette_r1, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r1) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-psdel <- p
-
-
-
-# Row 2: COPR lines ------------------------------------------------------------
-# fit0 -----------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_fit_a / mean(re_fit_a, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim4) +
-  ylim(c(NA,myymax4)) +
-  scale_color_manual(values =mypalette_r2, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r2) +
-  theme_classic() +
-  theme(legend.position= c(0.8,0.5)) +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-legend2 <- get_legend(p)
-p <- p + theme(legend.position="none")
-pcanc <- p
-
-# fit500 ---------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = paste0(mpamt, mpasp),fill = paste0(mpasp), weight = re_fit_e / mean(re_fit_e, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim5) +
-  ylim(c(NA,myymax5)) +
-  scale_color_manual(values =mypalette_r2, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r2) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-pcevo <- p
-
-# dw -------------------------------------------------------
-p <- ggplot(my[my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = paste0(mpamt, mpasp), fill = paste0(mpasp), weight = re_dw / mean(re_dw, na.rm = T))) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim6) +
-  ylim(c(NA,myymax6)) +
-  scale_color_manual(values =mypalette_r2, guide = FALSE) +
-  scale_fill_manual(values =mypalette_r2) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Assay Environment") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-pcdel <- p
-
-
-
-# Plot using grid and output ---------------------------------------------------
-pdf(file = "000_fit_cbyenv_full.pdf", width = mywidth, height = myheight)
-grid.arrange( grid::textGrob("SALT", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("COPR", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              psanc, psevo, psdel,
-              pcanc, pcevo, pcdel,
-              legend, 
-              grid::textGrob("", gp =grid::gpar(fontsize = 8)),
-              grid::textGrob("Generation-0", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-              grid::textGrob("Generation-500", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-              grid::textGrob("Delta", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-              legend2,
-  layout_matrix = rbind(c(10, 10,11,11,10, 10,12,12,10,  10,13,13,10,  10, 10),
-                        c(1,  3,3,3,3,     4,4,4,4,      5,5,5,5,      9, 10),
-                        c(1,  3,3,3,3,     4,4,4,4,      5,5,5,5,      10, 10),
-                        c(2,  6,6,6,6,     7,7,7,7,      8,8,8,8,      14, 10),
-                        c(2,  6,6,6,6,     7,7,7,7,      8,8,8,8,      10, 10)),
-  top = grid::textGrob("\n Yeast Fitness in SALT and COPR", gp =grid::gpar(fontsize = 14, fontface = "bold")))
-dev.off() # one column wide, equal height
-
-# -----------------------------------------------------------------------------
-rm(my, p, mybinwidth, myfillapha, myheight, myhighlight, mytextsize, mywidth, myxlab, myylab,
-   legend, pcanc, pcdel, pcevo, psanc, psdel, psevo, mypalette_r1, mypalette_r2, myrugalpha,
-   myxlim1, myxlim2, myxlim3, myxlim4, myxlim5, myxlim6, myymax1, myymax2, myymax3, myymax4,
-   myymax5, myymax6, legend2)
-```
-<br/><br/>
-
-
-
-Plot: SALT ancestral, evolved, and change in fitness in CM,salt40, salt80, salt120; color by treatment
-```{R}
-my <- myd
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-
-# set universal vars -----------------------------------------------------------
-mybinwidth <- 0.01
-myylab <- "Count"
-myxlab <- "fitness"
-myhighlight <- "black"
-myfillapha <- 0.95
-myrugalpha <- 0.2
-mypalette <- dichrompalette_br_cy
-mytextsize <- 8
-myheight <- 11
-mywidth <- 8.5
-myxlim_c1_c2 <- c(0.6, 1.6)
-myxlim_c3 <- c(-0.5, 0.5)
-myymax11 <- 400
-myymax12_13 <- 100
-myymax21 <- 350
-myymax22_23 <- 80
-myymax31 <- 250
-myymax32_33 <- 40
-myymax41 <- 250
-myymax42_43 <- 50
-
-# salt anc -----------------------------
-# salt anc in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax11)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= c(0.7,0.7), legend.key.size = unit(.20, "cm")) +
-  labs(fill = "Treatment") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-legend <- get_legend(p)
-p <- p + theme(legend.position="none")
-p_salt_anc_0 <- p
-
-# salt anc in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax21)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_anc_40 <- p
-
-# salt anc in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax31)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_anc_80 <- p
-
-# salt anc in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax41)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_anc_120 <- p
-
-# salt evo -----------------------------
-# salt evo in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax12_13)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_evo_0 <- p
-
-# salt evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax22_23)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_evo_40 <- p
-
-# salt evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax32_33)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_evo_80 <- p
-
-# salt evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax42_43)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_evo_120 <- p
-
-# salt delta -----------------------------
-# salt delta in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax12_13)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_del_0 <- p
-
-# salt evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax22_23)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_del_40 <- p
-
-# salt evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax32_33)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_del_80 <- p
-
-# salt evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax42_43)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_salt_del_120 <- p
-
-# Plot using grid and output ---------------------------------------------------
-pdf(file = "000_SALT_fit_byenv_cbytreat_full.pdf", width = mywidth, height = myheight)
-grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Salt 40", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Salt 80", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Salt 120", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              p_salt_anc_0,p_salt_anc_40,p_salt_anc_80,p_salt_anc_120,
-              p_salt_evo_0,p_salt_evo_40,p_salt_evo_80,p_salt_evo_120,
-              p_salt_del_0,p_salt_del_40,p_salt_del_80,p_salt_del_120,
-             legend, 
-             grid::textGrob("", gp =grid::gpar(fontsize = 8)),
-             grid::textGrob("Generation-0", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-             grid::textGrob("Generation-500", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-             grid::textGrob("Delta", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-  layout_matrix = rbind(c(18, 18,19,19,18, 18,20,20,18,  18,21,21,18,  18, 18),
-                        c(1,  5,5,5,5,     9,9,9,9,      13,13,13,13,  17, 18),
-                        c(1,  5,5,5,5,     9,9,9,9,      13,13,13,13,  18, 18),
-                        c(2,  6,6,6,6,     10,10,10,10,  14,14,14,14,  18, 18),
-                        c(2,  6,6,6,6,     10,10,10,10,  14,14,14,14,  18, 18),
-                        c(3,  7,7,7,7,     11,11,11,11,  15,15,15,15,  18, 18),
-                        c(3,  7,7,7,7,     11,11,11,11,  15,15,15,15,  18, 18),
-                        c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18),
-                        c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18)),
-  top = grid::textGrob("\n Yeast Fitness (SALT) in Complete Media and Salt Stress Environments", gp =grid::gpar(fontsize = 14, fontface = "bold")))
-dev.off() # one column wide, equal height
-
-# ----------------------------
-rm(legend, my, p, p_salt_anc_0,  p_salt_anc_40,  p_salt_anc_80,  p_salt_anc_120,
-    p_salt_evo_0,  p_salt_evo_40,  p_salt_evo_80,  p_salt_evo_120,
-    p_salt_del_0,  p_salt_del_40,  p_salt_del_80,  p_salt_del_120, mybinwidth,
-   myfillapha, myheight, myhighlight, mypalette, myrugalpha, mytextsize, mywidth,
-   myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
-   myymax31, myymax32_33, myymax41, myymax42_43, legend2)
-```
-<br/><br/>
-
-
-
-Plot: COPR ancestral, evolved, and change in fitness in CM, copr40, copr80, copr120; color by treatment
-```{R}
-my <- myd
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # reorder the treat factor
-
-# set universal vars -----------------------------------------------------------
-mybinwidth <- 0.01
-myylab <- "Count"
-myxlab <- "fitness"
-myhighlight <- "black"
-myfillapha <- 0.95
-myrugalpha <- 0.2
-mypalette <- dichrompalette_br_cy
-mytextsize <- 8
-myheight <- 11
-mywidth <- 8.5
-myxlim_c1_c2 <- c(0.6, 1.8)
-myxlim_c3 <- c(-0.5, 0.9)
-myymax11 <- 400
-myymax12_13 <- 60
-myymax21 <- 400
-myymax22_23 <- 60
-myymax31 <- 400
-myymax32_33 <- 20
-myymax41 <- 120
-myymax42_43 <- 15
-
-# copr anc -----------------------------
-# copr anc in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax11)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= c(0.7,0.7), legend.key.size = unit(.20, "cm")) +
-  labs(fill = "Treatment") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-legend <- get_legend(p)
-p <- p + theme(legend.position="none")
-p_copr_anc_0 <- p
-
-# copr anc in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax21)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_anc_40 <- p
-
-# copr anc in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax31)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_anc_80 <- p
-
-# copr anc in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit0, color = treat, fill = treat), weight = re_fit_a / mean(re_fit_a, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax41)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab(myylab)+ xlab(myxlab)+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_anc_120 <- p
-
-# copr evo -----------------------------
-# copr evo in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax12_13)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_evo_0 <- p
-
-# copr evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax22_23)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_evo_40 <- p
-
-# copr evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax32_33)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_evo_80 <- p
-
-# copr evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=fit500, color = treat, fill = treat), weight = re_fit_e / mean(re_fit_e, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c1_c2) +
-  ylim(c(NA,myymax42_43)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_evo_120 <- p
-
-# copr delta -----------------------------
-# copr delta in 0
-p <- ggplot(my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax12_13)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_del_0 <- p
-
-# copr evo in 40
-p <- ggplot(my[my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax22_23)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_del_40 <- p
-
-# copr evo in 80
-p <- ggplot(my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax32_33)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_del_80 <- p
-
-# copr evo in 120
-p <- ggplot(my[my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),], aes(x=dw, color = treat, fill = treat), weight = re_dw / mean(re_dw, na.rm = T)) +
-  geom_histogram(alpha = myfillapha, position = "stack", binwidth = mybinwidth, lwd = 0, lty = 0) +
-  geom_rug(alpha = myrugalpha)+
-  xlim(myxlim_c3) +
-  ylim(c(NA,myymax42_43)) +
-  scale_color_manual(values =mypalette, guide = FALSE) + 
-  scale_fill_manual(values =mypalette) +
-  theme_classic() +
-  theme(legend.position= "none") +
-  labs(fill = "Significance") +
-  ylab("")+ xlab("")+
-  theme(axis.title.y = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = mytextsize, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = mytextsize, angle = 0))+
-  theme(axis.text.x = element_text(size = mytextsize, angle = 0))+
-  theme(legend.title = element_text(size = mytextsize, face = "bold"))+
-  theme(legend.text = element_text(size = mytextsize))
-p_copr_del_120 <- p
-
-# Plot using grid and output ---------------------------------------------------
-pdf(file = "000_COPR_fit_byenv_cbytreat_full.pdf", width = mywidth, height = myheight)
-grid.arrange( grid::textGrob("CM, No Stress", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Copr 40", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Copr 80", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              grid::textGrob("CM + Copr 120", gp =grid::gpar(fontsize = 8, fontface = "bold"), rot = 90),
-              p_copr_anc_0,p_copr_anc_40,p_copr_anc_80,p_copr_anc_120,
-              p_copr_evo_0,p_copr_evo_40,p_copr_evo_80,p_copr_evo_120,
-              p_copr_del_0,p_copr_del_40,p_copr_del_80,p_copr_del_120,
-             legend, 
-             grid::textGrob("", gp =grid::gpar(fontsize = 8)),
-             grid::textGrob("Generation-0", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-             grid::textGrob("Generation-500", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-             grid::textGrob("Delta", gp =grid::gpar(fontsize = 12, fontface = "bold")),
-  layout_matrix = rbind(c(18, 18,19,19,18, 18,20,20,18,  18,21,21,18,  18, 18),
-                        c(1,  5,5,5,5,     9,9,9,9,      13,13,13,13,  17, 18),
-                        c(1,  5,5,5,5,     9,9,9,9,      13,13,13,13,  18, 18),
-                        c(2,  6,6,6,6,     10,10,10,10,  14,14,14,14,  18, 18),
-                        c(2,  6,6,6,6,     10,10,10,10,  14,14,14,14,  18, 18),
-                        c(3,  7,7,7,7,     11,11,11,11,  15,15,15,15,  18, 18),
-                        c(3,  7,7,7,7,     11,11,11,11,  15,15,15,15,  18, 18),
-                        c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18),
-                        c(4,  8,8,8,8,     12,12,12,12,  16,16,16,16,  18, 18)),
-  top = grid::textGrob("\n Yeast Fitness (COPR) in Complete Media and Copr Stress Environments", gp =grid::gpar(fontsize = 14, fontface = "bold")))
-dev.off() # one column wide, equal height
-
-# ----------------------------
-rm(legend, my, p, p_copr_anc_0,  p_copr_anc_40,  p_copr_anc_80,  p_copr_anc_120,
-    p_copr_evo_0,  p_copr_evo_40,  p_copr_evo_80,  p_copr_evo_120,
-    p_copr_del_0,  p_copr_del_40,  p_copr_del_80,  p_copr_del_120, mybinwidth,
-   myfillapha, myheight, myhighlight, mypalette, myrugalpha, mytextsize, mywidth,
-   myxlab, myxlim_c1_c2, myxlim_c3, myylab, myymax11, myymax12_13, myymax21, myymax22_23,
-   myymax31, myymax32_33, myymax41, myymax42_43)
-```
-<br/><br/>
-
-
-
 ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION ACROSS 7 TREATMENTS IN 4 ENVIRONMENTS AND 2 CHEMICAL STRESSORS* 
 Create an appropriate data frame with 1 entry per bcpID (rather than 1 entry per rep*bcpID)
         * move to previous script when time allows.
 ```{r}
 # create the frame, omitting most cols not necessary for these upcoming plots and tests.
 my <- myd
-my <- my[,c(1:7, 83:88, 112, 123, 126)] # reatain only interst columns
+my <- my[,c(1:7, 83:88, 112, 123, 126)] # reatain only interst columns #RELACE WITH COLUMN NAMES FOR SAFETY!!!!!
 my1 <- my[my$mpar == 1,] # r1
 my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2") # r2
 my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3") # r3
@@ -1131,36 +327,8 @@ my <- cbind(my0, my40$mn_dw, my40$mn_re_dw, my80$mn_dw, my80$mn_re_dw, my120$mn_
 colnames(my)[c(23:30)] <- c("mn_dw_0", "mn_re_dw_0","mn_dw_40", "mn_re_dw_40", "mn_dw_80", "mn_re_dw_80", "mn_dw_120", "mn_re_dw_120")
 mydwcw <- my
 
-# also need to make a 1-well per row version of the mydwc dataframe
-my <- mydwc
-myg <- NA
-my$colid <- paste0(my$epo, my$mpasp, my$well)
-for (i in unique(my$colid)) {
-  myt <- my[my$colid == i,]
-  myt1 <- myt[1, c("epo","mpamt","mpasp","bc1","bc2","treat","min","max","colid","mn_dw","mn_re_dw")]
-  myt2 <- myt[2, c("epo","mpamt","mpasp","bc1","bc2","treat","min","max","colid","mn_dw","mn_re_dw")]
-  colnames(myt2) <- paste0(colnames(myt2), "_bc2")
-  myt <- cbind(myt1, myt2[,c("mn_dw_bc2", "mn_re_dw_bc2")])
-  myg <- rbind(myg, myt)
-}
-
-myg$ps <- NA
-myg$ps[is.na(myg$mn_dw) & is.na(myg$mn_dw_bc2)] <- "XX"
-myg$ps[myg$mn_dw > 0 & is.na(myg$mn_dw_bc2)] <- "IX"
-myg$ps[is.na(myg$mn_dw) & myg$mn_dw_bc2 > 0] <- "IX"
-myg$ps[myg$mn_dw < 0 & is.na(myg$mn_dw_bc2)] <- "DX"
-myg$ps[is.na(myg$mn_dw) & myg$mn_dw_bc2 < 0] <- "DX"
-myg$ps[myg$mn_dw > 0 & myg$mn_dw_bc2 > 0] <- "II"
-myg$ps[myg$mn_dw > 0 & myg$mn_dw_bc2 < 0] <- "ID"
-myg$ps[myg$mn_dw < 0 & myg$mn_dw_bc2 > 0] <- "ID"
-myg$ps[myg$mn_dw < 0 & myg$mn_dw_bc2 < 0] <- "DD"
-myg$ps <- factor(myg$ps, levels = c("II", "ID", "DD", "IX", "DX", "XX"))
-
-welldata <- myg[2:nrow(myg),]
-welldata <- welldata[welldata$bc1 != "d1C5" & welldata$bc1 != "d1C9",]
-
 # ------------------
-rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120, myg, myt1, myt, myt2, i)
+rm(my, my1, my2, my3, my4, mn_dw, mn_re_dw, my0, my40, my80, my120)
 ```
 <br/><br/>
 
@@ -1341,7 +509,7 @@ rm(mymod, mypower, p, pow, pp, ppp, x, i, myeffectsize, myheight, mypowersize, m
 ```
 
 
-FITNESS CORRELATION TEST
+FITNESS CORRELATION BETWEEN ENVIRONMENTS TEST
 ```{r}
 mydata <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
 mydata$mn_re_dw_0_80 <- rowMeans(cbind(mydata$mn_re_dw_0, mydata$mn_re_dw_80), na.rm = T)
@@ -1366,6 +534,8 @@ mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata
 myg <- c("EH0_40", "EH20_60", "EH0_80", "EH40_80")
 mytemp <- cor.test(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg]);mytemp # -0.12
 mytempw <- wtd.cor(mydata$mn_dw_0[mydata$treat %in% myg], mydata$mn_dw_80[mydata$treat %in% myg], weight = mydata$mn_re_dw_0_80[mydata$treat %in% myg]);mytempw # -0.124
+
+rm(myg, mytemp, mytempw)
 ```
 
 MN VS VAR FITNESS (2 ENVIRONMENT) -- FITNESS CHANGE (DW) -- ARITHMETIC ONLY! --
@@ -1604,7 +774,7 @@ rm(mydata2, mydata3)
 ```
 
 
-MN VS VAR FITNESS (2 ENVIRONMENT) -- TARGET GROUPS (TEMPLATE CODE -- SCRAPE FROM HERE AND USE ABOVE WHEN DETAILS ARE FIGURED OUT!!!!)
+MN VS VAR FITNESS (2 ENVIRONMENT) tables. -- REPLACE WITH UNWEIGHTED GEOMEAN ONLY!
 ```{r}
 
 
@@ -1637,188 +807,6 @@ mydata$var_dw_40_80uw <- apply(mydata, 1, function(x) var(x=as.numeric(x[c( "mn_
 mydata$var_dw_40_80 <- apply(mydata, 1, function(x) weighted.var(x=as.numeric(x[c( "mn_dw_40", "mn_dw_80")]), 
                                                   w=as.numeric(x[c( "mn_re_dw_40", "mn_re_dw_80")]), na.rm = F)) # calculate wtd.var dw across reps
 
-
-# viz -- all 0_80-----------------------
-# weighted -------------------
-mypalette <- dichrompalette_br_cy
-mydata$mn_dw_0_80s <- scale(mydata$mn_dw_0_80, center = F); mydata$var_dw_0_80s <- scale(mydata$var_dw_0_80, center = F)
-p <- ggplot(mydata, aes(x=mn_dw_0_80s, y=var_dw_0_80s, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_MN_VS_VAR_00_80_ALLTREATw.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
-
-# unweighted -----------------
-mypalette <- dichrompalette_br_cy
-p <- ggplot(mydata, aes(x=mn_dw_0_80uw, y=var_dw_0_80uw, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  geom_rug()
-p1 <- p + facet_wrap(~treat, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-x <- grid.arrange(p2, p1, widths = c(1,2))
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_MN_VS_VAR_00_80_ALLTREATuw.pdf"),height = 8.5, width = 11); grid::grid.draw(x); dev.off()
-
-
-
-# viz -- target ----------------------------------
-# weighted -------------------
-mypalette <- dichrompalette_br_cy[c(1,5,7)]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_80", "EH80"),], aes(x=mn_dw_0_80, y=var_dw_0_80, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
-  geom_rug()
-p1 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-
-
-mypalette <- dichrompalette_br_cy[1:3]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_40", "EH40"),], aes(x=mn_dw_0_40, y=var_dw_0_40, color = Treatment, fill = Treatment)) +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 40% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 40% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
-  geom_rug()
-p3 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p4 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-
-
-mypalette <- dichrompalette_br_cy[c(3,6,7)]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH40", "EH40_80", "EH80"),], aes(x=mn_dw_40_80, y=var_dw_40_80, color = Treatment, fill = Treatment)) +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: 40% Stress, 80% Stress")+
-  ylab("Variance Fitness: 40% Stress, 80% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T), max(c(mydata$mn_dw_0_80, mydata$mn_dw_0_40, mydata$mn_dw_40_80), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T), max(c(mydata$var_dw_0_80, mydata$var_dw_0_40, mydata$var_dw_40_80), na.rm = T))+
-  geom_rug()
-p5 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p6 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.2,y=0.007), color = "gray75", label = "1:16")
-
-x <- grid.arrange(p2, p1, p4, p3, p6, p5, widths = c(1,2))
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_MN_VS_VAR_TARTREATSw.pdf"),height = 18, width = 9); grid::grid.draw(x); dev.off()
-
-
-# unweighted -----------------
-mypalette <- dichrompalette_br_cy[c(1,5,7)]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_80", "EH80"),], aes(x=mn_dw_0_80uw, y=var_dw_0_80uw, color = Treatment, fill = Treatment)) +   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 80% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 80% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
-  geom_rug()
-p1 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p2 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-
-
-mypalette <- dichrompalette_br_cy[1:3]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH0", "EH0_40", "EH40"),], aes(x=mn_dw_0_40uw, y=var_dw_0_40uw, color = Treatment, fill = Treatment)) +   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: CM (No Stress), 40% Stress")+
-  ylab("Variance Fitness: CM (No Stress), 40% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
-  geom_rug()
-p3 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p4 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.175,y=0.007), color = "gray75", label = "1:16")
-
-
-mypalette <- dichrompalette_br_cy[c(3,6,7)]
-p <- ggplot(mydata[mydata$Treatment %in% c("EH40", "EH40_80", "EH80"),], aes(x=mn_dw_40_80uw, y=var_dw_40_80uw, color = Treatment, fill = Treatment)) + 
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 0.25, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_abline(slope = 1/16, intercept = 0, linetype = "dashed", color = "gray75") +
-  geom_point(size = 2.5, alpha = 0.75) + 
-  scale_color_manual(values = mypalette)+
-  theme_bw()+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Mean Fitness: 40% Stress, 80% Stress")+
-  ylab("Variance Fitness: 40% Stress, 80% Stress")+
-  xlim( min(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T), max(c(mydata$mn_dw_0_80uw, mydata$mn_dw_0_40uw, mydata$mn_dw_40_80uw), na.rm = T))+
-  ylim( min(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T), max(c(mydata$var_dw_0_80uw, mydata$var_dw_0_40uw, mydata$var_dw_40_80uw), na.rm = T))+
-  geom_rug()
-p5 <- p + facet_wrap(~Treatment, nrow = 2) + ylab("")
-p6 <- p + theme(legend.position = "none") + 
-  geom_text(aes(x=0.1,y=0.07), color = "gray75", label = "1:1") +
-  geom_text(aes(x=0.175,y=0.0375), color = "gray75", label = "1:4") +
-  geom_text(aes(x=0.2,y=0.007), color = "gray75", label = "1:16")
-
-x <- grid.arrange(p2, p1, p4, p3, p6, p5, widths = c(1,2))
-grid::grid.draw(x)
-pdf(file = paste("000_SALT_MN_VS_VAR_TARTREATSuw.pdf"),height = 18, width = 9); grid::grid.draw(x); dev.off()
 
 # create a summary table by treatment ----------------------
 # weighted -------------------
@@ -2854,175 +1842,6 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 
 
 
-# SALT evolved in CM+40% NaCl -- STATISTICAL TEST
-```{r}
-my <- my2[!is.na(my2$dw),] 
-my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-AIC(mymod)
-
-mysumm <- summary(mymod)$coefficients
-myres <- matrix(nrow = 7, ncol=7)
-rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
-colnames(myres) <- rownames(myres)
-myres_p <- myres; myres_est <- myres
-for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
-}
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
-  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
-  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-```
-<br/><br/>
-
-# SALT evolved in CM+40% NaCl -- VIZ (Violin w/ heatmap)
-```{r}
-# data -------------------------------------------------------------------------
-my <- mydwc[!is.na(mydwc$mn_dw),]
-my <- my[my$mpamt == "SALT" & my$mpasp == 0.4 & my$epo %in% c("SALT_A", "SALT_B"),]
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-myx <- my$treat
-myy <- my$mn_dw
-myr <- my$mn_re_dw
-myc <- my$treat
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
-
-p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
-                     limits = c(mylowlim, myhighlim),
-                     labels = scales::number_format(accuracy = 0.01))+
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-
-myp <- 0.05
-myres_est[myres_p >= myp] <- NA
-m <- round(myres_est, 2)
-colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
-rownames(m) <- colnames(m)
-# m <- get_lower_tri(m) # uncomment for just lower triangle
-melt_m <- reshape::melt(m)
-melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-m2 <- m; m2[1:length(m2)] <- 0
-# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
-melt_m2 <- reshape::melt(m2)
-melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
- theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6, colour = "white"),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
-pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
-pppp
-
-# figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinSALT40.pdf", width = mywidth, height = myheight); pppp; dev.off()
-
-rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
-   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
-```
-<br/><br/>
-
-
-
 # SALT evolved in CM+80% NaCl -- STATISTICAL TEST
 ```{r}
 my <- my2[!is.na(my2$dw),] 
@@ -3189,179 +2008,6 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
    p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
 ```
 <br/><br/>
-
-
-
-# SALT evolved in CM+120% NaCl -- STATISTICAL TEST
-```{r}
-my <- my2[!is.na(my2$dw),] 
-my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-AIC(mymod)
-
-mysumm <- summary(mymod)$coefficients
-myres <- matrix(nrow = 7, ncol=7)
-rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
-colnames(myres) <- rownames(myres)
-myres_p <- myres; myres_est <- myres
-for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
-}
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
-  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
-  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-```
-<br/><br/>
-
-# SALT evolved in CM+120% NaCl -- VIZ (Violin w/ heatmap)
-```{r}
-# data -------------------------------------------------------------------------
-my <- mydwc[!is.na(mydwc$mn_dw),]
-my <- my[my$mpamt == "SALT" & my$mpasp == 1.2 & my$epo %in% c("SALT_A", "SALT_B"),]
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-myx <- my$treat
-myy <- my$mn_dw
-myr <- my$mn_re_dw
-myc <- my$treat
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
-
-p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
-                     limits = c(mylowlim, myhighlim),
-                     labels = scales::number_format(accuracy = 0.01))+
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-
-myp <- 0.05
-myres_est[myres_p >= myp] <- NA
-m <- round(myres_est, 2)
-colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
-rownames(m) <- colnames(m)
-#m <- get_lower_tri(m) # uncomment for just lower triangle
-melt_m <- reshape::melt(m)
-melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-m2 <- m; m2[1:length(m2)] <- 0
-#m2 <- get_lower_tri(m2) # uncomment for just lower triangle
-melt_m2 <- reshape::melt(m2)
-melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
- theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6, colour = "white"),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
-pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.25, ymax = 0.5)
-pppp
-
-# figure output ---------------------------------------------------------------
-pdf(file = "000_SALTinSALT120.pdf", width = mywidth, height = myheight); pppp; dev.off()
-
-
-rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
-   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
-rm(mylowlim, myhighlim, mytitle, myylab, myxlab, myoutline, myfill, myptalpha, myrugalpha, mypalette, mytextsize,
-   myheight, mywidth, mymeanptsize, mywtmeanptcol, mywtmeanpttype, myp)
-```
-<br/><br/>
-
 
 
 
@@ -3572,175 +2218,6 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 <br/><br/>
 
 
-# COPR evolved in CM+40% COPR -- STATISTICAL TEST
-```{r}
-my <- my2[!is.na(my2$dw),] 
-my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-AIC(mymod)
-
-mysumm <- summary(mymod)$coefficients
-myres <- matrix(nrow = 7, ncol=7)
-rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
-colnames(myres) <- rownames(myres)
-myres_p <- myres; myres_est <- myres
-for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
-}
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
-  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
-  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-```
-<br/><br/>
-
-
-# COPR evolved in CM+40% COPR -- VIZ (Violin w/ heatmap)
-```{r}
-# data -------------------------------------------------------------------------
-my <- mydwc[!is.na(mydwc$mn_dw),]
-my <- my[my$mpamt == "COPR" & my$mpasp == 0.4 & my$epo %in% c("COPR_A", "COPR_B"),]
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-myx <- my$treat
-myy <- my$mn_dw
-myr <- my$mn_re_dw
-myc <- my$treat
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
-
-p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
-                     limits = c(mylowlim, myhighlim),
-                     labels = scales::number_format(accuracy = 0.01))+
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-
-myp <- 0.05
-myres_est[myres_p >= myp] <- NA
-m <- round(myres_est, 2)
-colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
-rownames(m) <- colnames(m)
-# m <- get_lower_tri(m) # uncomment for just lower triangle
-melt_m <- reshape::melt(m)
-melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-m2 <- m; m2[1:length(m2)] <- 0
-# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
-melt_m2 <- reshape::melt(m2)
-melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
- theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6, colour = "white"),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
-pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
-pppp
-
-# figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCOPR40.pdf", width = mywidth, height = myheight); pppp; dev.off()
-
-rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
-   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
-```
-<br/><br/>
-
-
 # COPR evolved in CM+80% COPR -- STATISTICAL TEST
 ```{r}
 my <- my2[!is.na(my2$dw),] 
@@ -3910,179 +2387,6 @@ rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
 <br/><br/>
 
 
-# COPR evolved in CM+120% COPR -- STATISTICAL TEST
-```{r}
-my <- my2[!is.na(my2$dw),] 
-my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
-my$treat <- relevel(my$treat, ref = "EH0")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-AIC(mymod)
-
-mysumm <- summary(mymod)$coefficients
-myres <- matrix(nrow = 7, ncol=7)
-rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
-colnames(myres) <- rownames(myres)
-myres_p <- myres; myres_est <- myres
-for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
-}
-
-my$treat <- relevel(my$treat, ref = "EH0_40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH20_60")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH0_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
-  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH40_80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
-  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-my$treat <- relevel(my$treat, ref = "EH80")
-mymod <- lmer(my$dw ~ my$treat + (1|my$bcpID), weights = my$re_dw, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
-mysumm <- summary(mymod)$coefficients
-for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
-  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
-  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
-}
-```
-<br/><br/>
-
-
-# COPR evolved in CM+120% COPR -- VIZ (Violin w/ heatmap)
-```{r}
-# data -------------------------------------------------------------------------
-my <- mydwc[!is.na(mydwc$mn_dw),]
-my <- my[my$mpamt == "COPR" & my$mpasp == 1.2 & my$epo %in% c("COPR_A", "COPR_B"),]
-
-# Visualize -------------------------------------------------------------------
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-myx <- my$treat
-myy <- my$mn_dw
-myr <- my$mn_re_dw
-myc <- my$treat
-myptsize <- ((((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))) - min(((myr/max(myr))*10)*((myheight*mywidth)/(3.5*7*3))))+0.5
-
-p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
-  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
-  geom_jitter(width =0.15, height = 0, alpha = myptalpha, size = myptsize) +
-  geom_rug(sides = "b" , position = position_nudge(x=-0.75), alpha = myrugalpha)+
-  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
-  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
-  geom_point(x=7,y = weighted.mean(myy[myx == "EH80"], myr[myx == "EH80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=6,y = weighted.mean(myy[myx == "EH40_80"], myr[myx == "EH40_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=5,y = weighted.mean(myy[myx == "EH0_80"], myr[myx == "EH0_80"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=4,y = weighted.mean(myy[myx == "EH20_60"], myr[myx == "EH20_60"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=3,y = weighted.mean(myy[myx == "EH40"], myr[myx == "EH40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=2,y = weighted.mean(myy[myx == "EH0_40"], myr[myx == "EH0_40"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  geom_point(x=1,y = weighted.mean(myy[myx == "EH0"], myr[myx == "EH0"], na.rm = T), color = mywtmeanptcol, pch = mywtmeanpttype, size = mymeanptsize) +
-  scale_color_manual(values =mypalette) + 
-  geom_hline(yintercept = 0, lty = "dotted") + 
-  coord_flip() +
-  theme_classic()+
-  theme(legend.position="none") +
-  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
-  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
-  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
-                     limits = c(mylowlim, myhighlim),
-                     labels = scales::number_format(accuracy = 0.01))+
-  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
-  theme(axis.text.y = element_text(size = 8, angle = 0))+
-  theme(axis.text.x = element_text(size = 8, angle = 0))
-
-myp <- 0.05
-myres_est[myres_p >= myp] <- NA
-m <- round(myres_est, 2)
-colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
-rownames(m) <- colnames(m)
-#m <- get_lower_tri(m) # uncomment for just lower triangle
-melt_m <- reshape::melt(m)
-melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-m2 <- m; m2[1:length(m2)] <- 0
-#m2 <- get_lower_tri(m2) # uncomment for just lower triangle
-melt_m2 <- reshape::melt(m2)
-melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-
-ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
-  geom_tile(show.legend = F)+
-  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
-  theme_tufte(base_family="Helvetica")+
-  scale_y_discrete(position = "right")+
- theme(axis.ticks = element_blank(),
-        plot.title = element_text(face = "bold"),
-        panel.background = element_rect(colour = NA, fill = "transparent"),
-        plot.background = element_rect(fill = "transparent",colour = NA),
-        axis.title = element_blank(),
-        axis.text = element_text(size = 6, colour = "white"),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
-        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
-                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
-                       name="Estimate", na.value = "transparent")
-
-pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 0.5, xmax = 4, ymin = .6, ymax = 1)
-pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 0.5, xmax = 4, ymin = 0.6, ymax = 1)
-pppp
-
-# figure output ---------------------------------------------------------------
-pdf(file = "000_COPRinCOPR120.pdf", width = mywidth, height = myheight); pppp; dev.off()
-
-
-rm(m, m2, melt_m, melt_m2, my, mymod, mymod1, myres, myres_est, myres_p, mysumm,
-   p, pp, ppp, pppp, i, myptsize, myx, myr, myy, myc, avgmod.delta4)
-rm(mylowlim, myhighlim, mytitle, myylab, myxlab, myoutline, myfill, myptalpha, myrugalpha, mypalette, mytextsize,
-   myheight, mywidth, mymeanptsize, mywtmeanptcol, mywtmeanpttype, myp)
-```
-<br/><br/>
-
-
-
 
 
 
@@ -4091,55 +2395,55 @@ rm(mylowlim, myhighlim, mytitle, myylab, myxlab, myoutline, myfill, myptalpha, m
 It is important to look at these data a few different ways, lets zoom in on the rug plot from the treatment effect violin plots above...
 PLOT(S): SALT dw rank by barcode in 0.0, 0.4, 0.8, 1.2
 ```{r}
-# Set controls for all plots ---------------------------------------------------
-mywidth <- 7
-myheight <- 7
-
-# SALT in CM -------------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
-my <- my[!is.na(my$mn_dw),] # rm NAs
-my <- my[order(my$mn_dw),] # sort so the plot looks good
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity") # plot
-p # view plot
-pdf(file = "000_rank_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
-
-
-
-# SALT in SALT 040 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_SALTinSALT040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-
-
-# SALT in SALT 080 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_SALTinSALT080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-
-
-# SALT in SALT 120 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
+# # Set controls for all plots ---------------------------------------------------
+# mywidth <- 7
+# myheight <- 7
+# 
+# # SALT in CM -------------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
+# my <- my[!is.na(my$mn_dw),] # rm NAs
+# my <- my[order(my$mn_dw),] # sort so the plot looks good
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity") # plot
+# p # view plot
+# pdf(file = "000_rank_SALTinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
+# 
+# 
+# 
+# # SALT in SALT 040 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_SALTinSALT040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# 
+# 
+# # SALT in SALT 080 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_SALTinSALT080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# 
+# 
+# # SALT in SALT 120 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("SALT_A", "SALT_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p; dev.off()
 ```
 <br/><br/>
 
@@ -4147,58 +2451,58 @@ pdf(file = "000_rank_SALTinSALT120.pdf", width = mywidth, height = myheight); p;
 
 PLOT(S): COPR dw rank by barcode in 0.0, 0.4, 0.8, 1.2
 ```{r}
-# Set controls for all plots ---------------------------------------------------
-mywidth <- 7
-myheight <- 7
-
-# COPR in CM -------------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
-my <- my[!is.na(my$mn_dw),] # rm NAs
-my <- my[order(my$mn_dw),] # sort so the plot looks good
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity") # plot
-p # view plot
-pdf(file = "000_rank_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
-
-
-
-# COPR in COPR 040 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_COPRinCOPR040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-
-
-# COPR in COPR 080 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_COPRinCOPR080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-
-
-# COPR in COPR 120 -------------------------------------------------------------
-my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my <- my[!is.na(my$mn_dw),]
-my <- my[order(my$mn_dw),]
-p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
-  geom_bar (stat="identity")
-p
-pdf(file = "000_rank_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# ----------------------------
-rm(myheight, mywidth, my, p)
+# # Set controls for all plots ---------------------------------------------------
+# mywidth <- 7
+# myheight <- 7
+# 
+# # COPR in CM -------------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.0 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),] # subset
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) # fix treat levels
+# my <- my[!is.na(my$mn_dw),] # rm NAs
+# my <- my[order(my$mn_dw),] # sort so the plot looks good
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity") # plot
+# p # view plot
+# pdf(file = "000_rank_COPRinCM.pdf", width = mywidth, height = myheight); p; dev.off() # output plot
+# 
+# 
+# 
+# # COPR in COPR 040 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.4 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_COPRinCOPR040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# 
+# 
+# # COPR in COPR 080 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 0.8 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_COPRinCOPR080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# 
+# 
+# # COPR in COPR 120 -------------------------------------------------------------
+# my <- mydwc[mydwc$epo %in% c("COPR_A", "COPR_B") & mydwc$mpasp == 1.2 & mydwc$treat %in% c("EH0","EH0_40","EH40","EH20_60","EH0_80", "EH40_80", "EH80"),]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# my <- my[!is.na(my$mn_dw),]
+# my <- my[order(my$mn_dw),]
+# p<-ggplot(data=my, aes(x=reorder(bcpID, -mn_dw), y=mn_dw, fill = treat)) +
+#   geom_bar (stat="identity")
+# p
+# pdf(file = "000_rank_COPRinCOPR120.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # ----------------------------
+# rm(myheight, mywidth, my, p)
 ```
 <br/><br/>
 
@@ -4208,69 +2512,69 @@ This is still a lot to take in at one time, maybe looking at some targeted sets 
 SALT data first...
 PLOT(S): pairs plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
-# Set controls for all plots ---------------------------------------------------
-mywidth <- 8
-myheight <- mywidth
-
-# ALL ------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
-pdf(file = "000_pairs_SALT_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# specialist vs. generalists: low stress end ---------------
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
-pdf(file = "000_pairs_SALT_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# specialist vs. generalists: full spectrum ----------------
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
-pdf(file = "000_pairs_SALT_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
-pdf(file = "000_pairs_SALT_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
-pdf(file = "000_pairs_SALT_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
-pdf(file = "000_pairs_SALT_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
-pdf(file = "000_pairs_SALT_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
-pdf(file = "000_pairs_SALT_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
-pdf(file = "000_pairs_SALT_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# rm -------------------------
-rm(myheight, mywidth, my, p)
+# # Set controls for all plots ---------------------------------------------------
+# mywidth <- 8
+# myheight <- mywidth
+# 
+# # ALL ------------------------------------------------------
+# my <- mydwcw[mydwcw$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
+# pdf(file = "000_pairs_SALT_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # specialist vs. generalists: low stress end ---------------
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
+# pdf(file = "000_pairs_SALT_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # specialist vs. generalists: full spectrum ----------------
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
+# pdf(file = "000_pairs_SALT_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
+# pdf(file = "000_pairs_SALT_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
+# pdf(file = "000_pairs_SALT_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
+# pdf(file = "000_pairs_SALT_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
+# pdf(file = "000_pairs_SALT_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
+# pdf(file = "000_pairs_SALT_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+# my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
+# pdf(file = "000_pairs_SALT_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # rm -------------------------
+# rm(myheight, mywidth, my, p)
 ```
 <br/><br/>
 
@@ -4279,237 +2583,72 @@ rm(myheight, mywidth, my, p)
 COPR data next...
 PLOT(S): pairs plots for targetted sets of 3 (and one set with all treats together for context!) 
 ```{R}
-# Set controls for all plots ---------------------------------------------------
-mywidth <- 8
-myheight <- mywidth
-
-# ALL ------------------------------------------------------
-my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
-pdf(file = "000_pairs_COPR_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# specialist vs. generalists: low stress end ---------------
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
-pdf(file = "000_pairs_COPR_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# specialist vs. generalists: full spectrum ----------------
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
-pdf(file = "000_pairs_COPR_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
-pdf(file = "000_pairs_COPR_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
-pdf(file = "000_pairs_COPR_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
-pdf(file = "000_pairs_COPR_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
-pdf(file = "000_pairs_COPR_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
-pdf(file = "000_pairs_COPR_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
-my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
-p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
-pdf(file = "000_pairs_COPR_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
-
-# rm -------------------------
-rm(myheight, mywidth, my, p)
+# # Set controls for all plots ---------------------------------------------------
+# mywidth <- 8
+# myheight <- mywidth
+# 
+# # ALL ------------------------------------------------------
+# my <- mydwcw[mydwcw$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "ALL")
+# pdf(file = "000_pairs_COPR_ALL_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # specialist vs. generalists: low stress end ---------------
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH0_40"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_40")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: low stress end")
+# pdf(file = "000_pairs_COPR_EH0_EH40_EH0-40_in_000_&_040.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # specialist vs. generalists: full spectrum ----------------
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH80", "EH0_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: full spectrum")
+# pdf(file = "000_pairs_COPR_EH0_EH80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH40", "EH80", "EH40_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_40", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialist vs. generalists: high stress end")
+# pdf(file = "000_pairs_COPR_EH40_EH80_EH40-80_in_040_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "specialists with different means compared")
+# pdf(file = "000_pairs_COPR_EH0_EH40_EH80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "generalists with same flux degree, different means compared")
+# pdf(file = "000_pairs_COPR_EH0-40_EH20-60_EH40-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH0_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared minimum with variable degree of flux up")
+# pdf(file = "000_pairs_COPR_EH0_EH0-40_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH80", "EH40_80", "EH0_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared maximum with variable degree of flux down")
+# pdf(file = "000_pairs_COPR_EH80_EH40-80_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# my <- mydwcw[mydwcw$treat %in% c("EH40", "EH20_60", "EH0_80"),]
+# my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# my <- my[,c("treat", "mn_dw_0", "mn_dw_80")]
+# p <- ggpairs(my,aes(color = treat, alpha = 0.7), title = "shared mean with variable degree of flux around mean")
+# pdf(file = "000_pairs_COPR_EH40_EH20_60_EH0-80_in_000_&_080.pdf", width = mywidth, height = myheight); p; dev.off()
+# 
+# # rm -------------------------
+# rm(myheight, mywidth, my, p)
 ```
 <br/><br/>
 
-
-
-It is possible that a 3-dimensional plot (0.0 vs. 0.4 vs. 0.8 env) will reveal even more interpretable structure...*
-      * these blocks are commented because the plots have already been generated, but also because they are not very helpful and will not be used moving forward.
-SALT first...
-PLOT(S): 3d plots for targetted sets of 3 (and one set with all treats together for context!) 
-```{R}
-# library(plotly)
-# Sys.setenv("plotly_username"="vincefasanello")
-# Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
-# 
-# # all treats -----------------------------------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="All Treatments"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_AllTreats_000_040_080");chart_link
-# 
-# # specialists vs. generalists ------------------------------
-# # eh0, eh0_40, eh40 --------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: low stress end"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH40_in_000_040_080");chart_link
-# 
-# # eh40, eh40_80, eh80 ------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: high stress end"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH40-80_EH80_in_000_040_080");chart_link
-# 
-# # eh0, eh0_80, eh80 --------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),]  
-# my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: full spectrum"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-80_EH80_in_000_040_080");chart_link
-# 
-# 
-# # Shared mean, variable flux -------------------------------
-# # eh0_40, eh20_60, eh40_80 -------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared mean with variable degree of flux around mean"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
-# 
-# # Shared min, variable flux -------------------------------
-# # eh0, eh0_40, eh0_80 ------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared minimum with variable degree of flux up"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
-# 
-# # # Shared max, variable flux -------------------------------
-# # eh80, e40_80, eh0_80 -----------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared maximum with variable degree of flux down"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
-# 
-# # variable mean (min, max), shared flux --------------------
-# # eh0, eh40, eh80 ----------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialists with different means compared"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_EH40_EH80_in_000_040_080");chart_link
-# 
-# # eh0_40, eh20_60, eh40_80 -------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("SALT_A", "SALT_B"),] 
-# my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="generalists with same flux degree, different means compared"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_SALT_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
-# 
-# # ----------------------------
-# rm(my, p)
-```
-<br/><br/>
-
-
-
-COPR next...
-PLOT(S): 3d plots for targetted sets of 3 (and one set with all treats together for context!) 
-```{R}
-# library(plotly)
-# Sys.setenv("plotly_username"="vincefasanello")
-# Sys.setenv("plotly_api_key"="oLHyGo5FrZP6CQ96OZM4")
-# 
-# # all treats -----------------------------------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="All Treatments"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_AllTreats_000_040_080");chart_link
-# 
-# # specialists vs. generalists ------------------------------
-# # eh0, eh0_40, eh40 --------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH0_40", "EH40"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: low stress end"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH40_in_000_040_080");chart_link
-# 
-# # eh40, eh40_80, eh80 ------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH40", "EH40_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: high stress end"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH40-80_EH80_in_000_040_080");chart_link
-# 
-# # eh0, eh0_80, eh80 --------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),]  
-# my <- my[my$treat %in% c("EH0", "EH0_80", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialist vs. generalists: full spectrum"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-80_EH80_in_000_040_080");chart_link
-# 
-# 
-# # Shared mean, variable flux -------------------------------
-# # eh0_40, eh20_60, eh40_80 -------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH40", "EH20_60", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared mean with variable degree of flux around mean"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH40_EH20-60_EH0-80_in_000_040_080");chart_link
-# 
-# # Shared min, variable flux -------------------------------
-# # eh0, eh0_40, eh0_80 ------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH0_40", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared minimum with variable degree of flux up"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH0-40_EH0-80_in_000_040_080");chart_link
-# 
-# # # Shared max, variable flux -------------------------------
-# # eh80, e40_80, eh0_80 -----------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH80", "EH40_80", "EH0_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="shared maximum with variable degree of flux down"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH80_EH40-80_EH0-80_in_000_040_080");chart_link
-# 
-# # variable mean (min, max), shared flux --------------------
-# # eh0, eh40, eh80 ----------------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH0", "EH40", "EH80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="specialists with different means compared"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_EH40_EH80_in_000_040_080");chart_link
-# 
-# # eh0_40, eh20_60, eh40_80 -------------
-# my <-  mydwcw[!is.na(mydwcw$mn_dw_0) &!is.na(mydwcw$mn_dw_40) &!is.na(mydwcw$mn_dw_80) & mydwcw$epo %in% c("COPR_A", "COPR_B"),] 
-# my <- my[my$treat %in% c("EH0_40", "EH20_60", "EH40_80"),]
-# p <- plot_ly(my, x = ~mn_dw_0, y = ~mn_dw_40, z = ~mn_dw_80, color = ~treat, colors = dichrompalette_br_cy, type = "scatter3d", mode = "markers") %>%
-#   layout(title ="generalists with same flux degree, different means compared"); p
-# chart_link = api_create(p, filename="000_FS_scatter3d_COPR_EH0_40_EH20_60_EH40_80_in_000_040_080");chart_link
-# 
-# # ----------------------------
-# rm(my, p)
-```
-<br/><br/>
 
 
 
@@ -4953,289 +3092,6 @@ Code blocks below in order: Inc calc & table, Inc fig, Dec calc & table, Dec fig
 
 SALT ---------------------------------------------------------------------------
 Create summary tables:
-Set 1: 0, 0_40, 40
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in0) | is.na(my$in40),]
-my <- my[!is.na(my$in0) & !is.na(my$in40),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_40",]),
-             nrow(mynot[mynot$treat == "EH40",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-             mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
-div_tot <- mySALTtot[c("EH0", "EH0_40", "EH40"),1]
-
-
-# how many increase in both environments
-x <- my[my$in0 <= 0.05 & my$in40 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$in0 <= 0.05 & my$in40 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in40 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$in0 > 0.05 & my$in40 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_40", "EH40")
-rownames(mymat) <- c("in_both", "in_0", "in_40", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table2_SALT_s_g_ls_inc_raw.csv")
-write.csv(mymat2, file = "table2_SALT_s_g_ls_inc_divtot.csv")
-write.csv(mymat3, file = "table2_SALT_s_g_ls_inc_divext.csv")
-```
-
-```{R}
-mywidth <- 7
-myheight <- 7
-
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05] <- "Both"
-my$Environment[my$in0 <= 0.05 & my$in40 > 0.05] <- "Low Only"
-my$Environment[my$in0 > 0.05 & my$in40 <= 0.05] <- "High Only"
-my$Environment[my$in0 > 0.05 & my$in40 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_SALT_lowset_inc.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
-my <- my[!is.na(my$dec0) & !is.na(my$dec40),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_40",]),
-             nrow(mynot[mynot$treat == "EH40",]))
-div_ext <- cbind(mySALTtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             mySALTtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-             mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
-div_tot <- mySALTtot[c("EH0", "EH0_40", "EH40"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$dec0 > 0.05 & my$dec40 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_40", "EH40")
-rownames(mymat) <- c("dec_both", "dec_0", "dec_40", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table2_SALT_s_g_ls_dec_raw.csv")
-write.csv(mymat2, file = "table2_SALT_s_g_ls_dec_divtot.csv")
-write.csv(mymat3, file = "table2_SALT_s_g_ls_dec_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05] <- "Both"
-my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05] <- "Low Only"
-my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05] <- "High Only"
-my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_SALT_lowset_dec.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-<br/><br/>
-
-
-
-Set 2: 40, 40_80, 80
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in40) | is.na(my$in80),]
-my <- my[!is.na(my$in40) & !is.na(my$in80),]
-ext <- c(nrow(mynot[mynot$treat == "EH40",]),
-             nrow(mynot[mynot$treat == "EH40_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-             mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
-             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
-div_tot <- mySALTtot[c("EH40", "EH40_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$in40 <= 0.05 & my$in80 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .40 but not .80 env
-x <- my[my$in40 <= 0.05 & my$in80 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .80 but not .40 env
-x <- my[my$in40 > 0.05 & my$in80 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in neither the .80 nor .40 env
-x <- my[my$in40 > 0.05 & my$in80 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH40", "EH40_80", "EH80")
-rownames(mymat) <- c("in_both", "in_40", "in_80", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table3_SALT_s_g_hs_inc_raw.csv")
-write.csv(mymat2, file = "table3_SALT_s_g_hs_inc_divtot.csv")
-write.csv(mymat3, file = "table3_SALT_s_g_hs_inc_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$in40 <= 0.05 & my$in80 <= 0.05] <- "Both"
-my$Environment[my$in40 <= 0.05 & my$in80 > 0.05] <- "Low Only"
-my$Environment[my$in40 > 0.05 & my$in80 <= 0.05] <- "High Only"
-my$Environment[my$in40 > 0.05 & my$in80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_SALT_highset_inc.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("SALT_A", "SALT_B"),]
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
-my <- my[!is.na(my$dec40) & !is.na(my$dec80),]
-ext <- c(nrow(mynot[mynot$treat == "EH40",]),
-             nrow(mynot[mynot$treat == "EH40_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(mySALTtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-             mySALTtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
-             mySALTtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
-div_tot <- mySALTtot[c("EH40", "EH40_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec40 <= 0.05 & my$dec80 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .40 but not .80 env
-x <- my[my$dec40 <= 0.05 & my$dec80 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .80 but not .40 env
-x <- my[my$dec40 > 0.05 & my$dec80 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in neither the .80 nor .40 env
-x <- my[my$dec40 > 0.05 & my$dec80 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH40", "EH40_80", "EH80")
-rownames(mymat) <- c("dec_both", "dec_40", "dec_80", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table3_SALT_s_g_hs_dec_raw.csv")
-write.csv(mymat2, file = "table3_SALT_s_g_hs_dec_divtot.csv")
-write.csv(mymat3, file = "table3_SALT_s_g_hs_dec_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "Both"
-my$Environment[my$dec40 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
-my$Environment[my$dec40 > 0.05 & my$dec80 <= 0.05] <- "High Only"
-my$Environment[my$dec40 > 0.05 & my$dec80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_SALT_highset_dec.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-<br/><br/>
-
-
 
 ALL -- all treatments in 00 and 80
 ```{R}
@@ -5840,310 +3696,6 @@ ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum
 
 COPR ---------------------------------------------------------------------------
 Create summary tables:
-Set 1: 0, 0_40, 40
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in0) | is.na(my$in40),]
-my <- my[!is.na(my$in0) & !is.na(my$in40),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_40",]),
-             nrow(mynot[mynot$treat == "EH40",]))
-div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-             myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
-div_tot <- myCOPRtot[c("EH0", "EH0_40", "EH40"),1]
-
-
-# how many increase in both environments
-x <- my[my$in0 <= 0.05 & my$in40 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$in0 <= 0.05 & my$in40 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$in0 > 0.05 & my$in40 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$in0 > 0.05 & my$in40 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_40", "EH40")
-rownames(mymat) <- c("in_both", "in_0", "in_40", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table2_COPR_s_g_ls_inc_raw.csv")
-write.csv(mymat2, file = "table2_COPR_s_g_ls_inc_divtot.csv")
-write.csv(mymat3, file = "table2_COPR_s_g_ls_inc_divext.csv")
-```
-
-```{R}
-mywidth <- 7
-myheight <- 7
-
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$in0 <= 0.05 & my$in40 <= 0.05] <- "Both"
-my$Environment[my$in0 <= 0.05 & my$in40 > 0.05] <- "Low Only"
-my$Environment[my$in0 > 0.05 & my$in40 <= 0.05] <- "High Only"
-my$Environment[my$in0 > 0.05 & my$in40 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_COPR_lowset_inc.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH0", "EH0_40", "EH40") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec0) | is.na(my$dec40),]
-my <- my[!is.na(my$dec0) & !is.na(my$dec40),]
-ext <- c(nrow(mynot[mynot$treat == "EH0",]),
-             nrow(mynot[mynot$treat == "EH0_40",]),
-             nrow(mynot[mynot$treat == "EH40",]))
-div_ext <- cbind(myCOPRtot["EH0",1] - nrow(mynot[mynot$treat == "EH0",]),
-             myCOPRtot["EH0_40",1] - nrow(mynot[mynot$treat == "EH0_40",]),
-             myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",])); names(div_ext) <- c("EH0", "EH0_40", "EH40")
-div_tot <- myCOPRtot[c("EH0", "EH0_40", "EH40"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec0 <= 0.05 & my$dec40 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .00 but not .80 env
-x <- my[my$dec0 <= 0.05 & my$dec40 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in the .80 but not .00 env
-x <- my[my$dec0 > 0.05 & my$dec40 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH0", "EH0_40", "EH40")]
-
-# how many increase in neither the .80 nor .00 env
-x <- my[my$dec0 > 0.05 & my$dec40 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH0", "EH0_40", "EH40")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH0", "EH0_40", "EH40")
-rownames(mymat) <- c("dec_both", "dec_0", "dec_40", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table2_COPR_s_g_ls_dec_raw.csv")
-write.csv(mymat2, file = "table2_COPR_s_g_ls_dec_divtot.csv")
-write.csv(mymat3, file = "table2_COPR_s_g_ls_dec_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$dec0 <= 0.05 & my$dec40 <= 0.05] <- "Both"
-my$Environment[my$dec0 <= 0.05 & my$dec40 > 0.05] <- "Low Only"
-my$Environment[my$dec0 > 0.05 & my$dec40 <= 0.05] <- "High Only"
-my$Environment[my$dec0 > 0.05 & my$dec40 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_COPR_lowset_dec.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-<br/><br/>
-
-
-
-Set 2: 40, 40_80, 80
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$in40) | is.na(my$in80),]
-my <- my[!is.na(my$in40) & !is.na(my$in80),]
-ext <- c(nrow(mynot[mynot$treat == "EH40",]),
-             nrow(mynot[mynot$treat == "EH40_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-             myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
-             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
-div_tot <- myCOPRtot[c("EH40", "EH40_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$in40 <= 0.05 & my$in80 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .40 but not .80 env
-x <- my[my$in40 <= 0.05 & my$in80 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .80 but not .40 env
-x <- my[my$in40 > 0.05 & my$in80 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in neither the .80 nor .40 env
-x <- my[my$in40 > 0.05 & my$in80 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH40", "EH40_80", "EH80")
-rownames(mymat) <- c("in_both", "in_40", "in_80", "in_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table3_COPR_s_g_hs_inc_raw.csv")
-write.csv(mymat2, file = "table3_COPR_s_g_hs_inc_divtot.csv")
-write.csv(mymat3, file = "table3_COPR_s_g_hs_inc_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$in40 <= 0.05 & my$in80 <= 0.05] <- "Both"
-my$Environment[my$in40 <= 0.05 & my$in80 > 0.05] <- "Low Only"
-my$Environment[my$in40 > 0.05 & my$in80 <= 0.05] <- "High Only"
-my$Environment[my$in40 > 0.05 & my$in80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_COPR_highset_inc.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-
-```{R}
-my <- mydwcw[mydwcw$treat %in% c("EH40", "EH40_80", "EH80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
-
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-
-my$treat <- drop.levels(my$treat)
-mynot <- my[is.na(my$dec40) | is.na(my$dec80),]
-my <- my[!is.na(my$dec40) & !is.na(my$dec80),]
-ext <- c(nrow(mynot[mynot$treat == "EH40",]),
-             nrow(mynot[mynot$treat == "EH40_80",]),
-             nrow(mynot[mynot$treat == "EH80",]))
-div_ext <- cbind(myCOPRtot["EH40",1] - nrow(mynot[mynot$treat == "EH40",]),
-             myCOPRtot["EH40_80",1] - nrow(mynot[mynot$treat == "EH40_80",]),
-             myCOPRtot["EH80",1] - nrow(mynot[mynot$treat == "EH80",])); names(div_ext) <- c("EH40", "EH40_80", "EH80")
-div_tot <- myCOPRtot[c("EH40", "EH40_80", "EH80"),1]
-
-
-# how many increase in both environments
-x <- my[my$dec40 <= 0.05 & my$dec80 <= 0.05,]
-r1 <- round(summary(x$treat), digits = 3); r1 <- r1[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .40 but not .80 env
-x <- my[my$dec40 <= 0.05 & my$dec80 > 0.05,]
-r2 <- round(summary(x$treat), digits = 3); r2 <- r2[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in the .80 but not .40 env
-x <- my[my$dec40 > 0.05 & my$dec80 <= 0.05,]
-r3 <- round(summary(x$treat), digits = 3); r3 <- r3[c("EH40", "EH40_80", "EH80")]
-
-# how many increase in neither the .80 nor .40 env
-x <- my[my$dec40 > 0.05 & my$dec80 > 0.05,]
-r4 <- round(summary(x$treat), digits = 3); r4 <- r4[c("EH40", "EH40_80", "EH80")]
-
-mymat <- rbind(r1, r2, r3, r4, ext, div_tot)
-colnames(mymat) <- c("EH40", "EH40_80", "EH80")
-rownames(mymat) <- c("dec_both", "dec_40", "dec_80", "dec_neither", "n_extinct", "n_tot")
-mymat
-
-mymat2 <- mymat
-mymat2[1,] <- mymat2[1,] / div_tot; mymat2[2,] <- mymat2[2,] / div_tot; mymat2[3,] <- mymat2[3,] / div_tot; mymat2[4,] <- mymat2[4,] / div_tot; mymat2[5,] <- mymat2[5,] / div_tot
-mymat2 <- round(mymat2, 3); mymat2
-
-mymat3 <- mymat
-mymat3[1,] <- mymat3[1,] / div_ext; mymat3[2,] <- mymat3[2,] / div_ext; mymat3[3,] <- mymat3[3,] / div_ext; mymat3[4,] <- mymat3[4,] / div_ext
-mymat3 <- round(mymat3, 3); mymat3
-
-write.csv(mymat,  file = "table3_COPR_s_g_hs_dec_raw.csv")
-write.csv(mymat2, file = "table3_COPR_s_g_hs_dec_divtot.csv")
-write.csv(mymat3, file = "table3_COPR_s_g_hs_dec_divext.csv")
-```
-
-```{R}
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-my$Environment <- "neither"
-my$Environment[my$dec40 <= 0.05 & my$dec80 <= 0.05] <- "Both"
-my$Environment[my$dec40 <= 0.05 & my$dec80 > 0.05] <- "Low Only"
-my$Environment[my$dec40 > 0.05 & my$dec80 <= 0.05] <- "High Only"
-my$Environment[my$dec40 > 0.05 & my$dec80 > 0.05] <- "Neither"
-my$Environment <-  factor(my$Environment, levels = c("Both", "High Only", "Low Only", "Neither"))
-
-# code modified from: https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label
-pdf(file = "000_stackedbar_COPR_highset_dec.pdf", width = mywidth, height = myheight)
-ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum(n)),
-       aes(treat, n, fill=Environment)) +
-  geom_bar(stat="identity") +
-  ylab("Count")+ xlab("Treatment")+  scale_y_continuous(breaks = seq(0, 32, by = 2), limits = c(0, 32))+
-  scale_fill_discrete(drop=FALSE)+
-  theme_classic()+
-  geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")), position=position_stack(vjust=0.5))
-```
-<br/><br/>
-
-
-
 ALL -- all treatments in 00 and 80
 ```{R}
 my <- mydwcw[mydwcw$treat %in% c("EH0", "EH40", "EH80", "EH0_40", "EH20_60", "EH0_80", "EH40_80") & mydwcw$epo %in% c("COPR_A", "COPR_B"),]
@@ -6767,91 +4319,7 @@ ggplot(my %>% group_by(treat) %>% count(treat, Environment) %>% mutate(pct=n/sum
 
 
 
-Explore the welldata dataset
-```{R}
-my <- welldata
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE; my$omit[my$bc1 == ""]
-my <- my[my$omit == FALSE,]
-my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
-tapply(my$ps, my$treat, summary)
 
-
-# SALT -------------------------------------------------------------------------
-# 00 -----------------------------------
-my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.0,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_SALT_00.csv")
-
-# 40 -----------------------------------
-my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.4,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_SALT_40.csv")
-
-# 80 -----------------------------------
-my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 0.8,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_SALT_80.csv")
-
-# 120 -----------------------------------
-my <- welldata[welldata$epo %in% c("SALT_A", "SALT_B") & welldata$mpasp == 1.2,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_SALT_120.csv")
-
-
-
-# COPR -------------------------------------------------------------------------
-# 00 -----------------------------------
-my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.0,]
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_COPR_00.csv")
-
-# 40 -----------------------------------
-my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.4,]
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_COPR_40.csv")
-
-# 80 -----------------------------------
-my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 0.8,]
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_COPR_80.csv")
-
-# 120 -----------------------------------
-my <- welldata[welldata$epo %in% c("COPR_A", "COPR_B") & welldata$mpasp == 1.2,]
-my$omit <- FALSE
-my$omit[my$epo == "COPR_B" & my$treat %in% c("EH0", "EH40", "EH80")] <- TRUE
-my <- my[my$omit == FALSE,]
-x <- tapply(my$ps, my$treat, summary)
-y <- matrix(nrow = 7, ncol = 6); rownames(y) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"); colnames(y) <- c("II","ID","DD","IX","DX","XX")
-y[1,] <- x$EH0; y[2,] <- x$EH0_40; y[3,] <- x$EH40; y[4,] <- x$EH20_60; y[5,] <- x$EH0_80; y[6,] <- x$EH40_80; y[7,] <- x$EH80; y
-write.csv(y, file = "000_welldata_COPR_120.csv")
-
-rm(my, x, y)
-```
-<br/><br/>
 
 
 
@@ -6925,20 +4393,3 @@ rm(my, x, y)
 # SALT_ext_res_summary <- myres
 ```
 <br/><br/>
-
-
-Create an increase table that is increasers out of the number remaining rather than out of total. 
-```{R}
-# # SALT first -------------------------------------------------------------------
-# mySALTin_prop <- mySALTin/mySALTtot; mySALTin_prop <- round(mySALTin_prop, digits = 2)
-# mySALTin_prop_le <- mySALTin / (mySALTtot - mySALText);  mySALTin_prop_le <- round(mySALTin_prop_le, digits = 2)
-# 
-# myCOPRin_prop <- myCOPRin/myCOPRtot; myCOPRin_prop <- round(myCOPRin_prop, digits = 2)
-# myCOPRin_prop_le <- myCOPRin / (myCOPRtot - myCOPRext);  myCOPRin_prop_le <- round(myCOPRin_prop_le, digits = 2)
-# 
-# mySALTdec_prop <- mySALTdec/mySALTtot; mySALTdec_prop <- round(mySALTdec_prop, digits = 2)
-# mySALTdec_prop_le <- mySALTdec / (mySALTtot - mySALText);  mySALTdec_prop_le <- round(mySALTdec_prop_le, digits = 2)
-# 
-# myCOPRdec_prop <- myCOPRdec/myCOPRtot; myCOPRdec_prop <- round(myCOPRdec_prop, digits = 2)
-# myCOPRdec_prop_le <- myCOPRdec / (myCOPRtot - myCOPRext);  myCOPRdec_prop_le <- round(myCOPRdec_prop_le, digits = 2)
-```
