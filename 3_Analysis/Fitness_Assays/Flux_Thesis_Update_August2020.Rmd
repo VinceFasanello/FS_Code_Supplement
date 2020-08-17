@@ -1,0 +1,2319 @@
+---
+title: "Flux_Thesis_Update_August2020.rmd"
+output:
+  html_document:
+    df_print: paged
+---
+
+***
+### Begin Code Blocks:
+
+Prepare the workspace: clean, set options, load packages, load and final formatting on inputs.
+```{r, warning = FALSE, message=FALSE}
+rm(list = ls()) # clear workspace
+knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE) # set global knitr options.
+options(scipen = 999) # turn off scientific notation
+dichrompalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
+
+# load required packages --- go through these and remove unused ones!
+require(ggplot2); # used for plotting
+require(pwr); # used for power analysis
+require(lme4); # used for mixed effects models
+require(lmerTest); # used to interpret mixed effects models
+require(sjPlot); # used to output tables
+require(weights); # used for weighted t.test
+require(plyr); # used for dataframe manipulation
+require(gridExtra) # used for multipanel plotting
+require(barnard)
+require(GGally)
+require(plotly)
+require(dplyr)
+require(tidyr)
+require(ggthemes)
+require(gtable)
+require(cowplot)
+require(MuMIn)
+require(simr)
+require(scales)
+require(viridis)
+require(reshape2)
+require(grid)
+require(gridExtra)
+require(remotes)
+require(devtools)
+require(ggpubr)
+devtools::install_github("rogiersbart/RTOOLZ"); require(rtoolz)
+
+
+# load data
+load(file = "myd.Rdata")
+
+
+# create a matrix of the geometric fitness surface (used for plotting) -----
+ll <- 600
+geomfit <- matrix(nrow= ll, ncol = ll)
+x <- seq(from = 0.5,1.6, length.out = ll)
+y <- seq(from = 0.5,1.6, length.out = ll)
+colnames(geomfit) <- x
+rownames(geomfit) <- y
+for (i in 1:nrow(geomfit)) {
+  for (j in 1:ncol(geomfit)) {
+    geomfit[i,j] <- (as.numeric(colnames(geomfit)[j]) * as.numeric(rownames(geomfit)[i]))^(0.5)
+  }
+}
+geomfithold <- geomfit
+geomfit <- round(geomfit, digits = 4)
+geomfit <- melt(geomfit)
+colnames(geomfit) <- c("geomfitx", "geomfity", "geomfitfit")
+
+```
+<br/><br/><br/><br/><br/><br/>
+
+
+# clean and prep datasets. 
+```{r}
+my <- myd
+lowcut <- 15
+lowcut2 <- 15
+
+# gen 0, inititial measure
+my$bc1cts_r1i_a[my$bc1cts_r1i_a < lowcut] <- NA
+my$bc1cts_r2i_a[my$bc1cts_r2i_a < lowcut] <- NA
+my$bc1cts_r3i_a[my$bc1cts_r3i_a < lowcut] <- NA
+my$bc1cts_r4i_a[my$bc1cts_r4i_a < lowcut] <- NA
+my$bc1cts_r5i_a[my$bc1cts_r5i_a < lowcut] <- NA
+my$refcts_r1i_a[my$bc1cts_r1i_a < lowcut] <- NA
+my$refcts_r2i_a[my$bc1cts_r2i_a < lowcut] <- NA
+my$refcts_r3i_a[my$bc1cts_r3i_a < lowcut] <- NA
+my$refcts_r4i_a[my$bc1cts_r4i_a < lowcut] <- NA
+my$refcts_r5i_a[my$bc1cts_r5i_a < lowcut] <- NA
+my$re_r1i_a[my$bc1cts_r1i_a < lowcut] <- NA
+my$re_r2i_a[my$bc1cts_r2i_a < lowcut] <- NA
+my$re_r3i_a[my$bc1cts_r3i_a < lowcut] <- NA
+my$re_r4i_a[my$bc1cts_r4i_a < lowcut] <- NA
+my$re_r5i_a[my$bc1cts_r5i_a < lowcut] <- NA
+my$bc1cts_i_a <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_r1i_a", "bc1cts_r2i_a", "bc1cts_r3i_a", "bc1cts_r4i_a", "bc1cts_r5i_a")]), 
+                                                  as.numeric(x[c( "re_r1i_a","re_r2i_a","re_r3i_a","re_r4i_a","re_r5i_a")]), na.rm = T))
+my$refcts_i_a <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_r1i_a", "refcts_r2i_a", "refcts_r3i_a", "refcts_r4i_a", "refcts_r5i_a")]), 
+                                                  as.numeric(x[c( "re_r1i_a","re_r2i_a","re_r3i_a","re_r4i_a","re_r5i_a")]), na.rm = T))
+my$re_i_a <- rowMeans(cbind(my$re_r1i_a, my$re_r2i_a, my$re_r3i_a, my$re_r4i_a, my$re_r5i_a))
+
+
+# gen 0 final measure
+my$bc1cts_f_r1a[my$bc1cts_f_r1a < lowcut] <- NA
+my$bc1cts_f_r2a[my$bc1cts_f_r2a < lowcut] <- NA
+my$bc1cts_f_r3a[my$bc1cts_f_r3a < lowcut] <- NA
+my$bc1cts_f_r4a[my$bc1cts_f_r4a < lowcut] <- NA
+my$refcts_f_r1a[my$bc1cts_f_r1a < lowcut] <- NA
+my$refcts_f_r2a[my$bc1cts_f_r2a < lowcut] <- NA
+my$refcts_f_r3a[my$bc1cts_f_r3a < lowcut] <- NA
+my$refcts_f_r4a[my$bc1cts_f_r4a < lowcut] <- NA
+my$re_f_r1a[my$bc1cts_f_r1a < lowcut] <- NA
+my$re_f_r2a[my$bc1cts_f_r2a < lowcut] <- NA
+my$re_f_r3a[my$bc1cts_f_r3a < lowcut] <- NA
+my$re_f_r4a[my$bc1cts_f_r4a < lowcut] <- NA
+my$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_f_r1a", "bc1cts_f_r2a", "bc1cts_f_r3a", "bc1cts_f_r4a")]), 
+                                                  as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
+my$refcts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_f_r1a", "refcts_f_r2a", "refcts_f_r3a", "refcts_f_r4a")]), 
+                                                  as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
+my$re_f_a <- rowMeans(cbind(my$re_f_r1a, my$re_f_r2a, my$re_f_r3a, my$re_f_r4a))
+
+# gen 0 fitness
+my$fit_a <- exp((log(my$bc1cts_f_a /my$refcts_f_a )- log(my$bc1cts_i_a/my$refcts_i_a))/20)
+my$re_fit_a <- 2/((1/my$re_f_a)+(1/my$re_i_a))
+
+
+
+
+# gen 500 initial measure
+my$bc1cts_r1i_e[my$bc1cts_r1i_e < lowcut] <- NA
+my$bc1cts_r2i_e[my$bc1cts_r2i_e < lowcut] <- NA
+my$bc1cts_r3i_e[my$bc1cts_r3i_e < lowcut] <- NA
+my$bc1cts_r4i_e[my$bc1cts_r4i_e < lowcut] <- NA
+my$bc1cts_r5i_e[my$bc1cts_r5i_e < lowcut] <- NA
+my$refcts_r1i_e[my$bc1cts_r1i_e < lowcut] <- NA
+my$refcts_r2i_e[my$bc1cts_r2i_e < lowcut] <- NA
+my$refcts_r3i_e[my$bc1cts_r3i_e < lowcut] <- NA
+my$refcts_r4i_e[my$bc1cts_r4i_e < lowcut] <- NA
+my$refcts_r5i_e[my$bc1cts_r5i_e < lowcut] <- NA
+my$re_r1i_e[my$bc1cts_r1i_e < lowcut] <- NA
+my$re_r2i_e[my$bc1cts_r2i_e < lowcut] <- NA
+my$re_r3i_e[my$bc1cts_r3i_e < lowcut] <- NA
+my$re_r4i_e[my$bc1cts_r4i_e < lowcut] <- NA
+my$re_r5i_e[my$bc1cts_r5i_e < lowcut] <- NA
+my$bc1cts_i_e <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts_r1i_e", "bc1cts_r2i_e", "bc1cts_r3i_e", "bc1cts_r4i_e", "bc1cts_r5i_e")]), 
+                                                  as.numeric(x[c( "re_r1i_e","re_r2i_e","re_r3i_e","re_r4i_e","re_r5i_e")]), na.rm = T))
+my$refcts_i_e <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_r1i_e", "refcts_r2i_e", "refcts_r3i_e", "refcts_r4i_e", "refcts_r5i_e")]), 
+                                                  as.numeric(x[c( "re_r1i_e","re_r2i_e","re_r3i_e","re_r4i_e","re_r5i_e")]), na.rm = T))
+my$re_i_e <- rowMeans(cbind(my$re_r1i_e, my$re_r2i_e, my$re_r3i_e, my$re_r4i_e, my$re_r5i_e))
+
+# gen 500 final measure
+my$bc1cts_f_e[my$bc1cts_f_e < lowcut2] <- NA
+my$refcts_f_e[my$bc1cts_f_e < lowcut2] <- NA
+my$re_f_e[my$bc1cts_f_e < lowcut2] <- NA
+
+# gen 500 fitness
+my$fit_e <- exp((log(my$bc1cts_f_e /my$refcts_f_e )- log(my$bc1cts_i_e/my$refcts_i_e))/20)
+my$re_fit_e <- 2/((1/my$re_f_e)+(1/my$re_i_e))
+
+colnames(my)
+my <- my[,c(1:7,83:88,103,128,111,129)]
+myd <- my
+```
+
+ASSESS: FITNESS CHANGE IN 500 GENERATIONS OF EVOLUTION ACROSS 7 TREATMENTS IN 4 ENVIRONMENTS AND 2 CHEMICAL STRESSORS* 
+Create an appropriate data frame with 1 entry per bcpID (rather than 1 entry per rep*bcpID)
+        * move to previous script when time allows.
+```{r}
+my <- myd
+x <- my[my$epo %in% c("SALT_A","SALT_B") & my$treat %in% c("EH80") & my$mpasp == 0.8,]
+x$FIT <- x$fit_e - (x$fit_a - 1)
+plot(x$FIT); rm(x)
+my$fit_a[my$bcpID%in%c("d1H5SALT_B") & my$mpasp == 0.8 & my$mpar %in% c(1,3)] <- NA
+my$re_fit_a[my$bcpID%in%c("d1H5SALT_B") & my$mpasp == 0.8 & my$mpar %in% c(1,3)] <- NA
+my$fit_e[my$bcpID%in%c("d1H5SALT_B") & my$mpasp == 0.8 & my$mpar %in% c(1,3)] <- NA
+my$re_fit_e[my$bcpID%in%c("d1H5SALT_B") & my$mpasp == 0.8 & my$mpar %in% c(1,3)] <- NA
+myd <- my
+
+# create the frame, omitting most cols not necessary for these upcoming plots and tests.
+my <- myd
+my1 <- my[my$mpar == 1,] # r1
+my2 <- my[my$mpar == 2,]; colnames(my2) <- paste0(colnames(my2), "_2") # r2
+my3 <- my[my$mpar == 3,]; colnames(my3) <- paste0(colnames(my3), "_3") # r3
+my4 <- my[my$mpar == 4,]; colnames(my4) <- paste0(colnames(my4), "_4") # r4
+my <- cbind(my1, my2$re_fit_e_2, my2$fit_e_2, my3$re_fit_e_3, my3$fit_e_3, my4$re_fit_e_4, my4$fit_e_4) # zip
+colnames(my)[16:ncol(my)] <- c("re_fit_e_1", "fit_e_1","re_fit_e_2", "fit_e_2","re_fit_e_3", "fit_e_3","re_fit_e_4", "fit_e_4") # name fix
+my$mn_fit_e <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "fit_e_1", "fit_e_2", "fit_e_3", "fit_e_4")]), 
+                                                  as.numeric(x[c( "re_fit_e_1","re_fit_e_2","re_fit_e_3","re_fit_e_4")]), na.rm = T)) # calculate wtd.mean dw across reps
+my$mn_fit_e[is.nan(my$mn_fit_e)] <- NA # fix nans
+my$mn_re_fit_e <- apply(my, 1, function(x) mean(as.numeric(x[c("re_fit_e_1","re_fit_e_2","re_fit_e_3","re_fit_e_4")]), na.rm =T)) # calculate reads for mn_dw
+colnames(my)
+my <- my[,c(1:15,25,24)]
+colnames(my)[14:ncol(my)] <- c("reads_a", "fit_a", "reads_e", "fit_e")
+myfit500c <- my # name frame
+
+# While we are at it lets make a wide version as well, this will be needed later.
+my <- myfit500c
+my0 <- my[my$mpasp == 0.0,]
+my40 <- my[my$mpasp == 0.4,]
+my80 <- my[my$mpasp == 0.8,]
+my120 <- my[my$mpasp == 1.2,]
+sum(my0$bcpID != my40$bcpID)
+my <- cbind(my0, 
+            my40$reads_a, my40$fit_a, my40$reads_e, my40$fit_e,
+            my80$reads_a, my80$fit_a, my80$reads_e, my80$fit_e,
+            my120$reads_a, my120$fit_a, my120$reads_e, my120$fit_e)
+colnames(my)[14:ncol(my)] <- c("reads_a_00", "fit_a_00", "reads_e_00", "fit_e_00",
+                               "reads_a_40", "fit_a_40", "reads_e_40", "fit_e_40",
+                               "reads_a_80", "fit_a_80", "reads_e_80", "fit_e_80",
+                               "reads_a_120", "fit_a_120", "reads_e_120", "fit_e_120")
+myfit500cw <- my
+
+# ------------------
+rm(my, my1, my2, my3, my4, my0, my40, my80, my120)
+```
+
+
+
+
+```{r}
+# get the data ---------------------------------------------
+my <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]#; my <- myfit500cw[myfit500cw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$Fitness_in_envX <- my$fit_e_00 
+my$Fitness_in_envY <- my$fit_e_80 
+my$fit0dev_X <- my$fit_a_00 - 1 
+my$fit0dev_Y <- my$fit_a_80 - 1
+my$Fitness_in_envX <- my$Fitness_in_envX - my$fit0dev_X
+my$Fitness_in_envY <- my$Fitness_in_envY - my$fit0dev_Y
+
+
+my <- my[!is.na(my$Fitness_in_envX) & !is.na(my$Fitness_in_envY),]
+# calculate the 2-d outlier cutoff for plotting points and calculating treatment means by treatment (alpha value). 
+alpha <- 0.00
+my$cutoff <- NA; my$md <- NA 
+my$Treatment <- my$treat
+for (i in  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) { 
+  myt <- my[my$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_envX", "Fitness_in_envY")], 
+                  center = colMeans(myt[, c("Fitness_in_envX", "Fitness_in_envY")]), 
+                  cov = cov(myt[, c("Fitness_in_envX", "Fitness_in_envY")]))
+  my[my$Treatment == i,]$md <- md
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(my[my$Treatment == i,][, c("Fitness_in_envX", "Fitness_in_envY")])))
+  my[my$Treatment == i,]$cutoff <- cutoff
+}
+
+# view all points and ommited points for each category. 
+plot(my$Fitness_in_envY ~ my$Fitness_in_envX)
+points(my[my$md >= my$cutoff,]$Fitness_in_envY ~ my[my$md >= my$cutoff,]$Fitness_in_envX, col = "red")
+points(my[my$md >= my$cutoff_elip,]$Fitness_in_envY ~ my[my$md >= my$cutoff_elip,]$Fitness_in_envX, col = "blue")
+
+# remove 2d outliers from the dataset based on alpha value
+my <- my[my$md < my$cutoff,]
+
+# create dataframe for Treatmentment geomtric mean fitness values.
+geomeans <- aggregate(cbind(my$Fitness_in_envX, my$Fitness_in_envY)~my$Treatment,my,psych::geometric.mean)
+colnames(geomeans) <-  c("Treatment","Fitness_in_envX", "Fitness_in_envY")
+
+# Create the Kassen Plot -----------------------------------
+mypalette <- dichrompalette_br_cy
+p1 <- ggplot()+
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+    geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+    geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  stat_ellipse(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, fill = Treatment, color = Treatment), alpha = 0.1, geom = "polygon", linetype = 6, show.legend = F, level = 0.75)+
+  geom_point(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment), size = 1, alpha = 0.5, show.legend = T) +
+  geom_point(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment), shape = 1, size = 1, alpha = 0.5, show.legend = F)+
+  geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=geomeans[3,2], y=geomeans[3,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[3,2], yend=geomeans[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=geomeans, aes(x=Fitness_in_envX, y=Fitness_in_envY, fill = geomeans$Treatment),color = "black", cex = 7.5, shape = 21)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+  theme_bw()+
+  xlab("Fitness in CM (No Added Stress)")+
+  ylab("Fitness in Moderate Salt Stress")+ ggtitle("All Treatments")+
+  coord_equal()+
+  geom_rug(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment))+
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
+p1leg <- cowplot::get_legend(p1)
+p1 <- p1+theme(legend.position = "none")
+
+p1a <- ggplot(data =my) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(aes(x=1, y=1, xend=my$Fitness_in_envX, yend=my$Fitness_in_envY, color = my$Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY, color=my$Treatment, fill = my$Treatment), size = 2.5, alpha = 0.75) +
+  geom_point(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in CM (No Added Stress)")+
+  ylab("Fitness in Moderate Salt Stress")+ ggtitle("All Treatments")+
+  coord_equal()+
+  geom_rug(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY, color=my$Treatment))+
+  theme(legend.position = "none")
+
+
+p2 <- ggplot(data =my[my$Treatment %in% c("EH0"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color =mypalette[1], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color=mypalette[1], fill = mypalette[1], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color=mypalette[1]) + 
+  theme(legend.position = "none")
+
+p3 <- ggplot(data =my[my$Treatment %in% c("EH0_40"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0_40"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color =mypalette[2], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color=mypalette[2], fill = mypalette[2], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0_40")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color=mypalette[2]) + 
+  theme(legend.position = "none")
+
+p4 <- ggplot(data =my[my$Treatment %in% c("EH40"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH40"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH40")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color =mypalette[3], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color=mypalette[3], fill = mypalette[3], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH40")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color=mypalette[3]) + 
+  theme(legend.position = "none")
+
+p5 <- ggplot(data =my[my$Treatment %in% c("EH20_60"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH20_60"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color =mypalette[4], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color=mypalette[4], fill = mypalette[4], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH20_60")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color=mypalette[4]) + 
+  theme(legend.position = "none")
+
+p6 <- ggplot(data =my[my$Treatment %in% c("EH0_80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0_80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color =mypalette[5], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color=mypalette[5], fill = mypalette[5], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0_80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color=mypalette[5]) + 
+  theme(legend.position = "none")
+
+p7 <- ggplot(data =my[my$Treatment %in% c("EH40_80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH40_80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color =mypalette[6], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color=mypalette[6], fill = mypalette[6], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH40_80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color=mypalette[6]) + 
+  theme(legend.position = "none")
+
+p8 <- ggplot(data =my[my$Treatment %in% c("EH80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.05, max(c(my$Fitness_in_envX), na.rm = T) + 0.05)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.05, max(c(my$Fitness_in_envY), na.rm = T) + 0.05)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color =mypalette[7], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color=mypalette[7], fill = mypalette[7], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color=mypalette[7]) + 
+  theme(legend.position = "none")
+
+
+lay<- as.matrix(rbind(cbind(1,1,2,3,4,5),
+                cbind(1,1,6,7,8,9)))
+x <- grid.arrange(p1a,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)
+pdf(file = paste("000_SALT_VectorFitness_00_80_ALLTREAT.pdf"),height = 9, width = 17); grid::grid.draw(x); dev.off()
+
+x <- grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)
+pdf(file = paste("000_SALT_KASSEN_0_80_wlines_allTreatments.pdf"),height = 9, width = 17); grid::grid.draw(x); dev.off()
+
+```
+
+
+
+
+
+```{r}
+# get the data ---------------------------------------------
+my <- myfit500cw[myfit500cw$epo %in% c("SALT_A", "SALT_B"),]#; my <- myfit500cw[myfit500cw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$Fitness_in_envX <- my$fit_e_00 
+my$Fitness_in_envY <- my$fit_e_80 
+my$fit0dev_X <- my$fit_a_00 - 1 
+my$fit0dev_Y <- my$fit_a_80 - 1
+my$Fitness_in_envX <- my$Fitness_in_envX - my$fit0dev_X
+my$Fitness_in_envY <- my$Fitness_in_envY - my$fit0dev_Y
+my$gmf <- sqrt(my$Fitness_in_envX * my$Fitness_in_envY)
+my$vmf <- apply(cbind(my$Fitness_in_envX, my$Fitness_in_envY), 1, var)
+my$gmf <- scale(my$gmf)
+my$vmf <- scale(my$vmf)
+
+my <- my[!is.na(my$gmf) & !is.na(my$vmf),]
+my$Treatment <- my$treat
+
+
+# Create the Kassen Plot -----------------------------------
+p <- ggplot(my, aes(x=gmf, y=vmf, color=Treatment, fill = Treatment)) +
+    geom_abline(slope=1, intercept = 0)+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_point(shape = 1, size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Geometric Mean Fitness: CM, CM + Moderate Stress")+
+  ylab("Variance in Fitness: CM, CM + Moderate Stress")+
+  coord_equal()
+  geom_rug()
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + theme(axis.text.x = element_text(size = 6, angle = 45, vjust = 0.5)) + ylab("")
+p2 <- p + theme(legend.position = "none")
+
+x <- grid.arrange(p2, p1,
+             widths = c(1,2))
+pdf(file = paste("SALT_mnvar.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+```
+
+```{r}
+# get the data ---------------------------------------------
+my <- myfit500cw[myfit500cw$epo %in% c("COPR_A", "COPR_B"),]#; my <- myfit500cw[myfit500cw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$Fitness_in_envX <- my$fit_e_00 
+my$Fitness_in_envY <- my$fit_e_80 
+my$fit0dev_X <- my$fit_a_00 - 1 
+my$fit0dev_Y <- my$fit_a_80 - 1
+my$Fitness_in_envX <- my$Fitness_in_envX - my$fit0dev_X
+my$Fitness_in_envY <- my$Fitness_in_envY - my$fit0dev_Y
+
+
+my <- my[!is.na(my$Fitness_in_envX) & !is.na(my$Fitness_in_envY),]
+# calculate the 2-d outlier cutoff for plotting points and calculating treatment means by treatment (alpha value). 
+alpha <- 0.00
+my$cutoff <- NA; my$md <- NA 
+my$Treatment <- my$treat
+for (i in  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) { 
+  myt <- my[my$Treatment == i,]
+  md <- mahalanobis(x = myt[, c("Fitness_in_envX", "Fitness_in_envY")], 
+                  center = colMeans(myt[, c("Fitness_in_envX", "Fitness_in_envY")]), 
+                  cov = cov(myt[, c("Fitness_in_envX", "Fitness_in_envY")]))
+  my[my$Treatment == i,]$md <- md
+  cutoff <- (qchisq(p = 1 - alpha, df = ncol(my[my$Treatment == i,][, c("Fitness_in_envX", "Fitness_in_envY")])))
+  my[my$Treatment == i,]$cutoff <- cutoff
+}
+
+# view all points and ommited points for each category. 
+plot(my$Fitness_in_envY ~ my$Fitness_in_envX)
+points(my[my$md >= my$cutoff,]$Fitness_in_envY ~ my[my$md >= my$cutoff,]$Fitness_in_envX, col = "red")
+points(my[my$md >= my$cutoff_elip,]$Fitness_in_envY ~ my[my$md >= my$cutoff_elip,]$Fitness_in_envX, col = "blue")
+
+# remove 2d outliers from the dataset based on alpha value
+my <- my[my$md < my$cutoff,]
+
+# create dataframe for Treatmentment geomtric mean fitness values.
+geomeans <- aggregate(cbind(my$Fitness_in_envX, my$Fitness_in_envY)~my$Treatment,my,psych::geometric.mean)
+colnames(geomeans) <-  c("Treatment","Fitness_in_envX", "Fitness_in_envY")
+
+# Create the Kassen Plot -----------------------------------
+mypalette <- dichrompalette_br_cy
+p1 <- ggplot()+
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+    geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+    geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  stat_ellipse(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, fill = Treatment, color = Treatment), alpha = 0.1, geom = "polygon", linetype = 6, show.legend = F, level = 0.75)+
+  geom_point(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment), size = 1, alpha = 0.5, show.legend = T) +
+  geom_point(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment), shape = 1, size = 1, alpha = 0.5, show.legend = F)+
+  geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=geomeans[3,2], y=geomeans[3,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[3,2], yend=geomeans[3,3]), linetype=1, size=1.5, inherit.aes=F)+
+  geom_point(data=geomeans, aes(x=Fitness_in_envX, y=Fitness_in_envY, fill = geomeans$Treatment),color = "black", cex = 7.5, shape = 21)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+  theme_bw()+
+  xlab("Fitness in CM (No Added Stress)")+
+  ylab("Fitness in Moderate Copper Stress")+ ggtitle("All Treatments")+
+  coord_equal()+
+  geom_rug(data = my, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment))+
+  scale_color_manual(values = mypalette)+
+  scale_fill_manual(values = mypalette)
+p1leg <- cowplot::get_legend(p1)
+p1 <- p1+theme(legend.position = "none")
+
+p1a <- ggplot(data =my) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(aes(x=1, y=1, xend=my$Fitness_in_envX, yend=my$Fitness_in_envY, color = my$Treatment), size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY, color=my$Treatment, fill = my$Treatment), size = 2.5, alpha = 0.75) +
+  geom_point(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Fitness in CM (No Added Stress)")+
+  ylab("Fitness in Moderate Copper Stress")+ ggtitle("All Treatments")+
+  coord_equal()+
+  geom_rug(aes(x=my$Fitness_in_envX, y=my$Fitness_in_envY, color=my$Treatment))+
+  theme(legend.position = "none")
+
+
+p2 <- ggplot(data =my[my$Treatment %in% c("EH0"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color =mypalette[1], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color=mypalette[1], fill = mypalette[1], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0")]), color=mypalette[1]) + 
+  theme(legend.position = "none")
+
+p3 <- ggplot(data =my[my$Treatment %in% c("EH0_40"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0_40"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color =mypalette[2], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color=mypalette[2], fill = mypalette[2], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0_40")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0_40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_40")]), color=mypalette[2]) + 
+  theme(legend.position = "none")
+
+p4 <- ggplot(data =my[my$Treatment %in% c("EH40"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH40"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH40")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color =mypalette[3], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color=mypalette[3], fill = mypalette[3], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH40")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH40"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40")]), color=mypalette[3]) + 
+  theme(legend.position = "none")
+
+p5 <- ggplot(data =my[my$Treatment %in% c("EH20_60"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH20_60"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color =mypalette[4], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color=mypalette[4], fill = mypalette[4], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH20_60")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH20_60"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH20_60")], y=my$Fitness_in_envY[my$Treatment %in% c("EH20_60")]), color=mypalette[4]) + 
+  theme(legend.position = "none")
+
+p6 <- ggplot(data =my[my$Treatment %in% c("EH0_80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH0_80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color =mypalette[5], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color=mypalette[5], fill = mypalette[5], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH0_80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH0_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH0_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH0_80")]), color=mypalette[5]) + 
+  theme(legend.position = "none")
+
+p7 <- ggplot(data =my[my$Treatment %in% c("EH40_80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH40_80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color =mypalette[6], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color=mypalette[6], fill = mypalette[6], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH40_80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH40_80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH40_80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH40_80")]), color=mypalette[6]) + 
+  theme(legend.position = "none")
+
+p8 <- ggplot(data =my[my$Treatment %in% c("EH80"),]) +
+  geom_vline(xintercept=1, color = "darkgray")+
+  geom_hline(yintercept = 1, color = "darkgray")+
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.5, color ="darkgray")+  
+  geom_abline(intercept = 2, slope = -1, linetype = "dashed", size = 0.5, color ="darkgray")+
+  xlim( min(c(my$Fitness_in_envX), na.rm = T) - 0.01, max(c(my$Fitness_in_envX), na.rm = T) + 0.01)+
+  ylim( min(c(my$Fitness_in_envY), na.rm = T) - 0.01, max(c(my$Fitness_in_envY), na.rm = T) + 0.01)+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.85,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.9,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 0.95,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.05,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.1,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.15,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.2,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.25,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_line(data = geomfit[geomfit$geomfitfit == 1.3,], aes(x = geomfitx, y = geomfity), lty  = "solid", color = "gray75")+
+  geom_segment(data =my[my$Treatment %in% c("EH80"),],aes(x=1, y=1, xend=my$Fitness_in_envX[my$Treatment %in% c("EH80")], yend=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color =mypalette[7], size=2, inherit.aes=F, alpha = 0.5)+
+  geom_point(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color=mypalette[7], fill = mypalette[7], size = 2.5, alpha = 0.75) +
+  geom_point(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), shape = 1, colour = "black", size = 2.5, alpha = 0.5)+
+  annotate("text", x = c(0.9,0.95, 1.05, 1.1, 1.15), y = c(0.9,0.95, 1.05, 1.1, 1.15), label = c("0.90","0.95", "1.05", "1.10", "1.15"))+
+theme_bw()+
+  xlab("")+
+  ylab("")+ ggtitle("EH80")+
+  coord_equal()+
+  geom_rug(data =my[my$Treatment %in% c("EH80"),],aes(x=my$Fitness_in_envX[my$Treatment %in% c("EH80")], y=my$Fitness_in_envY[my$Treatment %in% c("EH80")]), color=mypalette[7]) + 
+  theme(legend.position = "none")
+
+
+lay<- as.matrix(rbind(cbind(1,1,2,3,4,5),
+                cbind(1,1,6,7,8,9)))
+x <- grid.arrange(p1a,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)
+pdf(file = paste("000_COPR_VectorFitness_00_80_ALLTREAT.pdf"),height = 15, width = 17); grid::grid.draw(x); dev.off()
+
+x <- grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)
+pdf(file = paste("000_COPR_KASSEN_0_80_wlines_allTreatments.pdf"),height = 15, width = 17); grid::grid.draw(x); dev.off()
+
+```
+
+```{r}
+# get the data ---------------------------------------------
+my <- myfit500cw[myfit500cw$epo %in% c("COPR_A", "COPR_B"),]
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$Fitness_in_envX <- my$fit_e_00 
+my$Fitness_in_envY <- my$fit_e_80 
+my$fit0dev_X <- my$fit_a_00 - 1 
+my$fit0dev_Y <- my$fit_a_80 - 1
+my$Fitness_in_envX <- my$Fitness_in_envX - my$fit0dev_X
+my$Fitness_in_envY <- my$Fitness_in_envY - my$fit0dev_Y
+my$gmf <- sqrt(my$Fitness_in_envX * my$Fitness_in_envY)
+my$vmf <- apply(cbind(my$Fitness_in_envX, my$Fitness_in_envY), 1, var)
+my$gmf <- scale(my$gmf)
+my$vmf <- scale(my$vmf)
+
+my <- my[!is.na(my$gmf) & !is.na(my$vmf),]
+my$Treatment <- my$treat
+
+# Create the Kassen Plot -----------------------------------
+p <- ggplot(my, aes(x=gmf, y=vmf, color=Treatment, fill = Treatment)) +
+    geom_abline(slope=1, intercept = 0)+
+  geom_point(size = 2.5, alpha = 0.5) +
+  geom_point(shape = 1, size = 2.5, alpha = 0.5)+
+  scale_color_manual(values = mypalette)+
+  theme_bw()+
+  xlab("Geometric Mean Fitness: CM, CM + Moderate Stress")+
+  ylab("Variance in Fitness: CM, CM + Moderate Stress")+
+  coord_equal()
+  geom_rug()
+p1 <- p + facet_wrap(~Treatment, nrow = 2) + theme(axis.text.x = element_text(size = 6, angle = 45, vjust = 0.5)) + ylab("")
+p2 <- p + theme(legend.position = "none")
+
+x <- grid.arrange(p2, p1,
+             widths = c(1,2))
+pdf(file = paste("COPR_mnvar.pdf"),height = 11, width = 17); grid::grid.draw(x); dev.off()
+```
+
+
+
+
+
+
+
+
+# SALT data...
+# Set universal guides for SALT plotting
+```{r}
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B") & my$mpasp %in% c(0.0, 0.8),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+
+mytitle <- NULL
+myylab <- "Fitness"
+myxlab <- "Treatment"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 0.5
+myrugalpha <- 0.7
+mypalette <- dichrompalette_br_cy
+mytextsize <- 8
+myheight <- 3.5
+mywidth <- 7
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+mywtmeanptcol <- "black"
+
+```
+<br/><br/>
+
+
+# SALT evolved in CM -- STATISTICAL TEST
+```{r}
+# Test - SALT DATA IN CM --------------------------------------------------------
+my <- myd[!is.na(myd$fit_e) & !is.na(myd$fit_a),]
+my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$re_fit_a)+(1/my$re_fit_e))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+# SALT Evolved in CM -- VIZ (Violin w/ heatmap)
+```{r}
+# Visualize -------------------------------------------------------------------
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$mpasp == 0.0 & my$epo %in% c("SALT_A", "SALT_B"),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.75, xmax = 4.75, ymin = 1.3, ymax = 1.55)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.75, xmax = 4.75, ymin = 1.3, ymax = 1.55)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALTinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+<br/><br/>
+
+
+
+# SALT evolved in CM+80% NaCl -- STATISTICAL TEST
+```{r}
+# Test - SALT DATA IN CM --------------------------------------------------------
+my <- myd[!is.na(myd$fit_e) & !is.na(myd$fit_a),]
+my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$re_fit_a)+(1/my$re_fit_e))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+<br/><br/>
+
+# SALT evolved in CM+80% NaCl -- VIZ (Violin w/ heatmap)
+```{r}
+# Visualize -------------------------------------------------------------------
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$mpasp == 0.8 & my$epo %in% c("SALT_A", "SALT_B"),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.75, xmax = 4.75, ymin = 1.3, ymax = 1.55)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.75, xmax = 4.75, ymin = 1.3, ymax = 1.55)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALTinSALT80.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+```{r}
+# Test - SALT DATA IN CM --------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- sqrt(my$FIT00*my$FIT80)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+```{r}
+
+# Visualize -------------------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- sqrt(my$FIT00*my$FIT80)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+p <- ggplot(my, aes(x=treat, y=FIT, weight = re_FIT, color = treat)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 2, xmax = 5, ymin = 1.175, ymax = 1.325)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 2, xmax = 5, ymin = 1.175, ymax = 1.325)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALTinSALT00&80geomean.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+
+```{r}
+# Test - SALT DATA IN CM --------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- apply(cbind(my$FIT00,my$FIT80), 1,var)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+```{r}
+
+# Visualize -------------------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("SALT_A", "SALT_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- apply(cbind(my$FIT00,my$FIT80), 1,var)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.5, xmax = 4.5, ymin = 0.06, ymax = 0.1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.5, xmax = 4.5, ymin = 0.06, ymax = 0.1)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_SALTinSALT00&80varfit.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+
+
+
+
+# COPR data...
+# Set universal guides for COPR plotting
+```{r}
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B") & my$mpasp %in% c(0.0, 0.8),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+
+mytitle <- NULL
+myylab <- "Fitness"
+myxlab <- "Treatment"
+myoutline <-  "grey20"
+myfill <-  "grey90"
+myptalpha <- 0.5
+myrugalpha <- 0.7
+mypalette <- dichrompalette_br_cy
+mytextsize <- 8
+myheight <- 3.5
+mywidth <- 7
+mymeanptsize <- 1
+mywtmeanpttype <- 1
+mywtmeanptcol <- "black"
+
+```
+<br/><br/>
+
+
+# COPR evolved in CM -- STATISTICAL TEST
+```{r}
+# Test - COPR DATA IN CM --------------------------------------------------------
+my <- myd[!is.na(myd$fit_e) & !is.na(myd$fit_a),]
+my <- my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$re_fit_a)+(1/my$re_fit_e))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+# COPR Evolved in CM -- VIZ (Violin w/ heatmap)
+```{r}
+# Visualize -------------------------------------------------------------------
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$mpasp == 0.0 & my$epo %in% c("COPR_A", "COPR_B"),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.75, xmax = 4.75, ymin = 1.475, ymax = 1.85)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.75, xmax = 4.75, ymin = 1.475, ymax = 1.85)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_COPRinCM.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+<br/><br/>
+
+
+
+# COPR evolved in CM+80% NaCl -- STATISTICAL TEST
+```{r}
+# Test - COPR DATA IN CM --------------------------------------------------------
+my <- myd[!is.na(myd$fit_e) & !is.na(myd$fit_a),]
+my <- my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$re_fit_a)+(1/my$re_fit_e))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lmer(my$FIT ~ my$treat + (1|my$bcpID), weights = my$re_FIT, control=lmerControl(optimizer ="bobyqa",optCtrl=list(maxfun=2e4)), na.action = "na.fail"); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+<br/><br/>
+
+# COPR evolved in CM+80% NaCl -- VIZ (Violin w/ heatmap)
+```{r}
+# Visualize -------------------------------------------------------------------
+my <- myfit500c[!is.na(myfit500c$fit_e),]
+my <- my[my$mpasp == 0.8 & my$epo %in% c("COPR_A", "COPR_B"),]
+my$FIT <- my$fit_e - (my$fit_a - 1)
+my$re_FIT <- 2/((1/my$reads_a)+(1/my$reads_e))
+
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.75, xmax = 4.75, ymin = 1.475, ymax = 1.85)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.75, xmax = 4.75, ymin = 1.475, ymax = 1.85)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_COPRinCOPR80.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+<br/><br/>
+
+
+```{r}
+# Test - COPR DATA IN CM --------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- sqrt(my$FIT00*my$FIT80)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+```{r}
+
+# Visualize -------------------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- sqrt(my$FIT00*my$FIT80)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 2, xmax = 5, ymin = 1.175, ymax = 1.325)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 2, xmax = 5, ymin = 1.175, ymax = 1.325)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_COPRinCOPR00&80geomean.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
+
+
+```{r}
+# Test - COPR DATA IN CM --------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- apply(cbind(my$FIT00,my$FIT80), 1,var)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- relevel(my$treat, ref = "EH0")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+AIC(mymod)
+
+mysumm <- summary(mymod)$coefficients
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")
+colnames(myres) <- rownames(myres)
+myres_p <- myres; myres_est <- myres
+for(i in c("my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0",i] <- mysumm[i, "Pr(>|t|)"]
+}
+
+my$treat <- relevel(my$treat, ref = "EH0_40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH40",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH20_60")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH0_80","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH20_60",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH20_60",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH0_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH40_80","my$treatEH80")){
+  myres_est["my$treatEH0_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH0_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH40_80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH80")){
+  myres_est["my$treatEH40_80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH40_80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+my$treat <- relevel(my$treat, ref = "EH80")
+mymod <- lm(my$FIT ~ my$treat, weights = my$re_FIT); summary(mymod)
+mysumm <- summary(mymod)$coefficients
+for(i in c("my$treatEH0","my$treatEH0_40","my$treatEH40","my$treatEH20_60","my$treatEH0_80","my$treatEH40_80")){
+  myres_est["my$treatEH80",i] <- mysumm[i, "Estimate"]
+  myres_p["my$treatEH80",i] <- mysumm[i, "Pr(>|t|)"]
+}
+```
+
+```{r}
+
+# Visualize -------------------------------------------------------------------
+my <- myfit500cw[!is.na(myfit500cw$fit_a_00) & !is.na(myfit500cw$fit_a_80) &!is.na(myfit500cw$fit_e_00) & !is.na(myfit500cw$fit_e_80),]
+my <- my[my$epo %in% c("COPR_A", "COPR_B"),]
+# calculate fitness for dimensions x and y, correcting for initial barcode fitness deviation -----
+my$FIT00 <- my$fit_e_00 - (my$fit_a_00 - 1)
+my$re_FIT00 <- 2/((1/my$reads_a_00)+(1/my$reads_e_00))
+my$FIT80 <- my$fit_e_80 - (my$fit_a_80 - 1)
+my$re_FIT80 <- 2/((1/my$reads_a_80)+(1/my$reads_e_80))
+my$FIT <- apply(cbind(my$FIT00,my$FIT80), 1,var)
+my$re_FIT <-  2/((1/my$re_FIT00)+(1/my$re_FIT80))
+my$treat <- factor(my$treat, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+myx <- my$treat
+myy <- my$FIT
+myr <- my$re_FIT
+myc <- my$treat
+mylowlim <- round(min(my$FIT, na.rm = T)*0.95, 2)
+myhighlim <- round(max(my$FIT, na.rm = T)*1.05, 2)
+
+p <- ggplot(my, aes(x=myx, y=myy, weight = myr, color = myc)) +
+  geom_violin(color = myoutline, fill = myfill, draw_quantiles = NULL, inherit.aes = F, aes( x=myx, y=myy), trim = T) + 
+  geom_jitter(width =0.15, height = 0, alpha = myptalpha) +
+  geom_rug(sides = "l" , alpha = myrugalpha)+
+  geom_point(stat="summary", fun.y="mean", color = mywtmeanptcol, cex = mymeanptsize) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = mywtmeanptcol, width = 0.0, lwd =0.5)+
+  geom_point(stat="summary", fun.y="median", color = mywtmeanptcol, cex = mymeanptsize*2, pch = mywtmeanpttype) + 
+  scale_color_manual(values =mypalette) + 
+  geom_hline(yintercept = 1, lty = "dotted") + 
+  coord_flip() +
+  theme_classic()+
+  theme(legend.position="none") +
+  ggtitle(mytitle) + ylab(myylab) + xlab(myxlab)+
+  scale_x_discrete(labels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")) +
+  scale_y_continuous(breaks = seq(mylowlim, myhighlim,by=.05),
+                     limits = c(mylowlim, myhighlim),
+                     labels = scales::number_format(accuracy = 0.01))+
+  theme(axis.title.y = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.title.x = element_text(size = 8, face = "bold", margin = margin(0,0,0,0, "pt")))+
+  theme(axis.text.y = element_text(size = 8, angle = 0))+
+  theme(axis.text.x = element_text(size = 8, angle = 0))
+
+myp <- 0.05
+myres_est[myres_p >= myp] <- NA
+m <- round(myres_est, 2)
+colnames(m) <- c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+rownames(m) <- colnames(m)
+# m <- get_lower_tri(m) # uncomment for just lower triangle
+melt_m <- reshape::melt(m)
+melt_m$X1 <- factor(melt_m$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m$X2 <- factor(melt_m$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+pp <- ggplot(melt_m, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "black", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+m2 <- m; m2[1:length(m2)] <- 0
+# m2 <- get_lower_tri(m2) # uncomment for just lower triangle
+melt_m2 <- reshape::melt(m2)
+melt_m2$X1 <- factor(melt_m2$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_m2$X2 <- factor(melt_m2$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+ppp <- ggplot(melt_m2, aes(x = X1, y = X2, fill = value)) + 
+  geom_tile(show.legend = F)+
+  geom_text(aes(X1, X2, label = value), color = "gray", size = 2, angle = 0) +
+  theme_tufte(base_family="Helvetica")+
+  scale_y_discrete(position = "right")+
+ theme(axis.ticks = element_blank(),
+        plot.title = element_text(face = "bold"),
+        panel.background = element_rect(colour = NA, fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 6, colour = "white"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5)),
+        axis.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), debug = T))+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "gray", 
+                       midpoint = 0, limit = c(min(melt_m$value),max(melt_m$value)), space = "Lab", 
+                       name="Estimate", na.value = "transparent")
+
+pppp <- p + annotation_custom(ggplotGrob(ppp), xmin = 1.5, xmax = 4.5, ymin = 0.06, ymax = 0.1)
+pppp <- pppp + annotation_custom(ggplotGrob(pp), xmin = 1.5, xmax = 4.5, ymin = 0.06, ymax = 0.1)
+pppp
+# figure output ---------------------------------------------------------------
+pdf(file = "000_COPRinCOPR00&80varfit.pdf", width = mywidth, height = myheight); pppp; dev.off()
+```
