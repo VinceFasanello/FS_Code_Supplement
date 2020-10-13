@@ -76,6 +76,15 @@ rm(ec1, ec2, uc1, uc2) # individual datasets are no longer needed.
 Combine metadata with counts data
 ```{r}
 myd <- cbind(lay, ec)
+
+temp <- myd[which(myd$sample.type == "MPA_Plate"),]
+temp <- unlist(myd[125:237])
+hist(temp, breaks = 100)
+hist(temp[temp < 10000], breaks = 100)
+hist(temp[temp < 1000], breaks = 100)
+hist(temp[temp < 200], breaks = 100)
+hist(temp[temp < 50], breaks = 100); abline(v=15)
+
 myd$ppects <- rowSums(ec, na.rm = T) # primer pair expected counts  *BLANKS WILL BE ZERO HERE!!!!*
 myd$ppccts <- rowSums(uc, na.rm = T) # primer pair cross-contam counts *THESE ONLY MAKE SENSE FOR SINGLE WELL CONTROLS!!!*
 rm(lay, ec, uc)
@@ -469,21 +478,23 @@ DEFINITION: omit = average counts < 2 for generation 500 fitness assay initial t
 my <- myd
 my$extinct <- FALSE
 my$extinct[my$bc1cts_i_e < 15] <- TRUE
-#sum(my$omit)
 myd <- my
 ```
 <br/><br/>
 
 
+Update treatment field for ease of use. 
+```{R}
+my <- myd
+my$treat <- as.factor(my$treat) # make treatment a factor
+my$treat <- relevel(my$treat, ref = "EH0") # set the base level for treatment for future convenience
+myd <- my
+```
+<br/><br/>
 
 
 Finished processing the fitness assay data for analysis and visualization, save. 
 ```{R}
-my <- myd
-my$treat <- as.factor(my$treat)
-my$treat <- relevel(my$treat, ref = "EH0")
-myd <- my
-
 setwd("..")
 setwd(dir_out_f)
 save(myd, file = "myd.Rdata")

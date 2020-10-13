@@ -74,8 +74,10 @@ tmpa <- uc[22:24,]; rownames(tmpa) <- rownames(uc[25:27,])
 tmpb <- uc[25:27,]; rownames(tmpb) <- rownames(uc[22:24,])
 uc[22:24,] <- tmpb 
 uc[25:27,] <- tmpa
+```
 
-
+Combine metadata with counts data
+```{r}
 myd <- cbind(lay, ec)
 myd$ppects <- rowSums(ec, na.rm = T) # primer pair expected counts  *BLANKS WILL BE ZERO HERE!!!!*
 myd$ppccts <- rowSums(uc, na.rm = T) # primer pair cross-contam counts *THESE ONLY MAKE SENSE FOR SINGLE WELL CONTROLS!!!*
@@ -144,7 +146,7 @@ rm(my, i, j)
 
 
 
-Convert the one-pp-per-row dataset to a dataset format with data for a single barcode (at a single fitness assay timepoint) (at either generation 0 or gereration 250) per row.
+Convert the one-pp-per-row dataset to a dataset format with data for a single well (at a single timepoint) per row.
 ```{R}
 my <- myd 
 myttg <- NA # start the new dataframe, this is where we will grow the one well per row dataset. 
@@ -172,7 +174,7 @@ rm(my, myt, mytt, myttg, i, j) # clean up.
 
 
 
-ubset myfa into datasets corresponding to fitness assay initial and fitness assay final timepoints, then combine these datasets into a single dataframe such that each row includes initial and final timepoint data for a single barcode at either generation 0 or generation 500.
+concatonate such that the data for a single well at all timepoints is on a single row. 
 ```{R}
 my <- myd
 my <- my[order(my$experiment.id),]
@@ -403,7 +405,7 @@ my <- myd
 ft <- 0.45  # fixation threshold, anything that reaches and remains at this value is called 'fixed' (this corresponds to 95% --> 0.95 - 0.5 = 0.45)
 st <- 0.25  # start prop threshold, anything  that starts greater is ommited. (this corresponds to 75% --> 0.75 - 0.5 = 0.25)
 my$fixed <- FALSE; my$fixednsl <- FALSE # create columns to hold the fixed boolean value (nsl corresponds to no starting limit on proportion)
-my$fixed[my$diff0 <= st & my$diff25 >= ft] <- TRUE # calculated fixed
+my$fixed[my$diff0 <= st & my$diff49 >= ft] <- TRUE # calculated fixed
 my$fixednsl[my$diff25 >= ft] <- TRUE # calcualte fixed with no starting limit
 myd <- my # pass to myevo
 rm(my, ft, st)
