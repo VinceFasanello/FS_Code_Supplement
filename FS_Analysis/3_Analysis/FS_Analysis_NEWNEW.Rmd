@@ -1,0 +1,810 @@
+---
+title: "FS Analysis"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+This script conducts the statistical analyses and creates the visualizations presented in PAPER TITLE. 
+
+Outline:
+  1 - Prepare the workspace (scrub the environment, load required packages, set working directories, create helper functions).
+  2 - Library Counts.
+  3 - Barcode Cross-Contamination (Reference purity, Single-well controls).
+  4 - Power (indiv bc fitness change, treatment effects).
+  4.5: Treat Effects Stats (ALL)
+  5 - Treat Effects PANEL: 00 env, SALT
+  6 - Treat Effects PANEL: 00 env, COPR
+  7 - Treat Effects PANEL: 40 env, SALT
+  8 - Treat Effects PANEL: 40 env, COPR
+  9 - Treat Effects PANEL: 80 env, SALT
+  10 - Treat Effects PANEL: 80 env, COPR
+  11 - Treat Effects PANEL: 00-80 Geomean, SALT
+  12 - Treat Effects PANEL: 00-80 Geomean, COPR
+  13 - Treat Effects PANEL: 00-80 VarFit, SALT
+  14 - Treat Effects PANEL: 00-80 VarFit, COPR
+  15 - Treat Effects PANEL: 00-40 Geomean, SALT
+  16 - Treat Effects PANEL: 00-40 Geomean, COPR
+  17 - Treat Effects PANEL: 00-40 VarFit, SALT
+  18 - Treat Effects PANEL: 00-40 VarFit, COPR
+  19 - Kassen PANEL: 00-80, SALT
+  20 - Kassen PANEL: 00-80, COPR 
+  21 - Kassen PANEL: 00-40, SALT
+  22 - Kassen PANEL: 00-40, COPR
+  23 - Vector Fitness PANEL: 00-80, SALT
+  24 - Vector Fitness PANEL: 00-80, COPR 
+  25 - Vector Fitness PANEL: 00-40, SALT
+  26 - Vector Fitness PANEL: 00-40, COPR
+  
+1 - Prepare the workspace (scrub the environment, load required packages, set working directories, create helper functions, specify plotting control values).
+```{r Setup}
+# Environment & Notebook Setup -------------------------------------------------
+rm(list = ls())
+options(scipen = 999)
+knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE)
+
+
+
+# Set Working Directory Paths --------------------------------------------------
+DIR_counts_in <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Counts_Data/Combined"
+DIR_evo_formatted <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Evolutionary_Dynamics/Formatted_Data"
+DIR_fit_formatted <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data"
+DIR_out <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/3_Analysis"
+
+
+# Load Packages ----------------------------------------------------------------
+require(pwr)
+require(ggplot2)
+# require(grid)
+# require(gridExtra)
+require(cowplot)
+require(lme4)
+require(lmerTest)
+require(ggthemes)
+require(sjPlot)
+
+# Specify Helper Functions -----------------------------------------------------
+# get_legend ---------------------------
+#   Source: https://stackoverflow.com/questions/12041042/how-to-plot-just-the-legends-in-ggplot2
+#   Description: scrapes figure legend for later plotting in multipannel plot
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+
+# http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+  
+
+# %ni% ---------------------------------
+#   Description: "not in", opposite of %in% operator.
+'%ni%' <- Negate('%in%')
+
+
+
+# Specify Plotting Control Values ----------------------------------------------
+dichrompalette_br_cy <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
+mypalette <- dichrompalette_br_cy; rm(dichrompalette_br_cy)
+```
+
+
+2 - Library Counts (total counts, total counts less reference, average counts per barcode per fit assay).
+```{r Counts}
+setwd(DIR_counts_in); load("metadatapluscounts.rdata")
+temp <- myd[myd$sample.type == "MPA_Plate", 125:237] # retain fitness assay entries only.
+temp <- temp[,which(colnames(temp) %ni% c("d2C5", "d2C9"))] # omit barcode d2C5 and d2C9 columns, these will overinflate reads b/c d2C5 & d2C9 share a barcode sequence).
+lowcut <- 20; temp[temp <= lowcut] <- NA # Data supported by <= 20 counts are unreliable -> NA.
+print(paste0(sum(temp, na.rm = T), " total counts (reference included)"))
+temp <- temp[,which(colnames(temp) %ni% c("d1C2"))] # omit reference barcode column, reference makes up a large proportion of counts (by design).
+print(paste0(sum(temp, na.rm = T), " total counts (reference omitted)"))
+
+# hist of counts frequency
+pA <- ggplot(data = data.frame(unlist(temp))) + 
+  geom_histogram(aes(x=unlist(temp)), colour="black", fill="gray90", bins = 50) +
+  scale_x_continuous(name = "Counts", expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Frequency", expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+ theme(plot.tag = element_text(face = "bold"))+ labs(tag ="A")
+pA <- ggplotGrob(pA)
+
+# hist of log counts frequency (w/ density plot overlay)
+pB <- ggplot(data = data.frame(log(unlist(temp))), aes(x = log(unlist(temp)))) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="gray90", bins = 50)+
+ geom_density(alpha=.2, fill=NA)+
+  scale_x_continuous(name = "Log Counts", limits = c(0,15), expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Frequency", expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+ theme(plot.tag = element_text(face = "bold"))+ labs(tag ="B")
+pB <- ggplotGrob(pB)
+
+temp2 <- colMeans(temp, na.rm = T) 
+print("Summary: counts per barcode across 110 fitness assay sample pools"); summary(temp2)
+print(paste0("Counts per barcode is extremely variable across barcodes due to treatment effects in fitness assays: SD = ", sd(temp2)))
+
+# hist of barcode mean counts frequency
+pC <- ggplot(data = data.frame(unlist(temp2))) + 
+  geom_histogram(aes(x=unlist(temp2)), colour="black", fill="gray90", bins = 50) +
+  scale_x_continuous(name = "Counts",expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Frequency", expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+ theme(plot.tag = element_text(face = "bold"))+ labs(tag ="C")
+pC <- ggplotGrob(pC)
+
+
+# hist of barcode mean log counts frequency (w/ density plot overlay)
+pD <- ggplot(data = data.frame(log(unlist(temp2))), aes(x = log(unlist(temp2)))) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="gray90", bins = 50)+
+ geom_density(alpha=.2, fill=NA)+
+  scale_x_continuous(name = "Log Counts", limits = c(0,15), expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Frequency", expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+ theme(plot.tag = element_text(face = "bold"))+ labs(tag ="D")
+pD <- ggplotGrob(pD)
+
+# output viz
+setwd(DIR_out); pdf("SSS_CountsHists.pdf", height = 8.25, width = 8.25)
+cowplot::plot_grid(pA,pB,pC,pD, nrow=2, align = "v")
+dev.off()
+rm(myd, temp, temp2, lowcut, pA, pB, pC ,pD)
+```
+
+
+3 - Barcode Cross-Contamination (Reference purity, Single-well controls).
+```{r CC}
+# Reference purity. ------------------------------------------------------------
+setwd(DIR_fit_formatted); load("swref.rdata")
+temp <- swref[,c("ppects", "ppccts", "ppcctsm","cc", "ccm")]; rm(swref)
+
+tem <- as.data.frame(cbind(mean(temp$ppects),
+                    sd(temp$ppects)/sqrt(length(temp$ppects)),
+                    mean(temp$ppccts),
+                    sd(temp$ppccts)/sqrt(length(temp$ppccts)),
+                    mean(temp$ppcctsm),
+                    sd(temp$ppcctsm)/sqrt(length(temp$ppcctsm)),
+                    mean(temp$cc),
+                    (sd(temp$cc)/sqrt(length(temp$cc))),
+                    mean(temp$ccm),
+                    (sd(temp$ccm)/sqrt(length(temp$ccm))),
+                    length(temp$ppects)))
+colnames(tem) <- c("ec_mean", "ec_se", "uct_mean", "uct_se", "ucm_mean", "ucm_se", "ccpt_mean", "ccpt_se", "ccpm_mean", "ccpm_se", "n_reps")
+tem$day <- NA; tem$plateloc <- NA; tem$group <- "ref"
+
+
+# single well controls ---------------------------------------------------------
+setwd(DIR_evo_formatted); load("swref.rdata")
+temp <- swref[,c("ppects", "ppccts", "ppcctsm","cc", "ccm", "replicate")]; rm(swref)
+temp <- temp[c(1:(nrow(temp) - 3)),] # remove sulf samples (not used in this manuscript)
+
+temp1s <- temp[c((nrow(temp) - 2):nrow(temp)),]; temp <- temp[c(1:(nrow(temp) - 3)),] 
+temp1s <- as.data.frame(cbind(temp1s$ppects, NA, temp1s$ppccts, NA, temp1s$ppcctsm, NA, temp1s$cc, NA, temp1s$ccm, NA, 1, 50, c("A1", "E6", "F8"), "COPR")); colnames(temp1s) <- colnames(tem)
+tem <- rbind(tem, temp1s); rm(temp1s)
+
+i <- 1
+days <- c(rep(0, times = 9), rep(50, times = 9))
+platelocs <- rep(c("A1", "A1", "A1", "E6", "E6", "E6", "F8", "F8", "F8"), times = 2)
+groups <- c(rep("ancestral", times = 9), rep("SALT", times = 9))
+while (i <= (nrow(temp) - 2)) {
+  te <- temp[i:(i+2),]
+  te <- as.data.frame(cbind(mean(te$ppects),
+                    sd(te$ppects)/sqrt(length(te$ppects)),
+                    mean(te$ppccts),
+                    sd(te$ppccts)/sqrt(length(te$ppccts)),
+                    mean(te$ppcctsm),
+                    sd(te$ppcctsm)/sqrt(length(te$ppcctsm)),
+                    mean(te$cc),
+                    (sd(te$cc)/sqrt(length(te$cc))),
+                    mean(te$ccm),
+                    (sd(te$ccm)/sqrt(length(te$ccm))),
+                    length(te$ppects)))
+  colnames(te) <- c("ec_mean", "ec_se", "uct_mean", "uct_se", "ucm_mean", "ucm_se", "ccpt_mean", "ccpt_se", "ccpm_mean", "ccpm_se", "n_reps")
+  te$day <- days[i]
+  te$plateloc <- platelocs[i]
+  te$group <- groups[i]
+  tem <- rbind(tem, te)
+  rm(te)
+  i <- i + 3
+}
+mycc <- tem; rm(tem, days, platelocs, groups, temp, i)
+for(i in 1:(ncol(mycc) -2)){mycc[,i] <- as.numeric(mycc[,i])}; rm(i)
+setwd(DIR_out); write.csv(mycc, file = "SSS_CC.csv")
+
+# reference BC [%]
+mycc[1,]$ccpt_mean
+mycc[1,]$ccpt_se
+
+# ancestral [%]
+mean(mycc[mycc$group == "ancestral",]$ccpt_mean)
+sd(mycc[mycc$group == "ancestral",]$ccpt_mean)/ sqrt(length(mycc[mycc$group == "ancestral",]$ccpt_mean))
+
+# Day 50 SALT [%]
+mean(mycc[mycc$group == "SALT",]$ccpt_mean)
+sd(mycc[mycc$group == "SALT",]$ccpt_mean)/ sqrt(length(mycc[mycc$group == "SALT",]$ccpt_mean))
+
+# Day 50 COPR [%]
+mean(mycc[mycc$group == "COPR",]$ccpt_mean)
+sd(mycc[mycc$group == "COPR",]$ccpt_mean)/ sqrt(length(mycc[mycc$group == "COPR",]$ccpt_mean))
+
+# Day 50 COMBINED [%]
+# Day 50 COPR [%]
+mean(mycc[mycc$group %in% c("SALT","COPR"),]$ccpt_mean)
+sd(mycc[mycc$group %in% c("SALT","COPR"),]$ccpt_mean)/ sqrt(length(mycc[mycc$group %in% c("SALT","COPR"),]$ccpt_mean))
+```
+
+3.5 - extinction and extirpation
+```{r}
+setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
+
+alive <- function(x){sum(!is.na(x))} # throw-away funciton to sum extant barcodes below.
+chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B")) # loop controls
+outnames <- c("SALT", "COPR")
+
+# calculate extinct/extirpated and surviving lineages in each treatment X assay environment and
+# create formatted tables for output indicating n and proportion of treatment total n in each category.
+for (i in 1:length(chems)) {
+  m <- myrcw[myrcw$epo %in% chems[[i]],]
+  m$ext00 <- is.na(m$dw_00)
+  m$ext80 <- is.na(m$dw_80)
+  m$ext080 <- rowSums(m[,c("ext00", "ext80")])
+  m$ali080 <- apply(m[,c("dw_00", "dw_80")], 1, alive)
+  m$ali080[m$ali080 < 2] <- FALSE
+  m$ali080[m$ali080 == 2] <- TRUE 
+  m$ali080 <- as.logical(m$ali080)
+  m$ext080[m$ext080 < 2] <- FALSE 
+  m$ext080[m$ext080 == 2] <- TRUE
+  m$ext080 <- as.logical(m$ext080)
+  m <- as.matrix(cbind(tapply(m$ali080, m$treat, sum),
+                       tapply(m$ext080, m$treat, sum),
+                       tapply(m$ext00 - m$ext080, m$treat, sum),
+                       tapply(m$ext80 - m$ext080, m$treat, sum),
+                       round(tapply(m$ali080, m$treat, sum)/c(32,32,32,32,30,32,30),2),
+                       round(tapply(m$ext080, m$treat, sum)/c(32,32,32,32,30,32,30),2),
+                       round(tapply(m$ext00 - m$ext080, m$treat, sum)/c(32,32,32,32,30,32,30),2),
+                       round(tapply(m$ext80 - m$ext080, m$treat, sum)/c(32,32,32,32,30,32,30),2)))
+  colnames(m) <- c("pres_both", "ext_both", "ext_00_only", "ext_80_only",
+                   "pres_both_p", "ext_both_p", "ext_00_only_p", "ext_80_only_p")
+  setwd(DIR_out); write.csv(m, file = paste0("SSS_Extinction", outnames[i], ".csv"))
+}
+rm(m, chems,i, outnames, alive)
+```
+
+
+
+4 - Power (indiv bc fitness change, treatment effects).
+```{r Power}
+
+# power to detect fitness increase / decrease (t-tests) ------------------------
+# d = m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
+# here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
+# population standard deviation of the four replicate sets in each row of the dataset.
+
+# prep frame & calculate psd -----------
+temp <- myrc[!is.na(myrc$fit_e_1) & !is.na(myrc$fit_e_2) & !is.na(myrc$fit_e_3) & !is.na(myrc$fit_e_4) & !is.na(myrc$fit_a) & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+temp$dw_1 <- temp$fit_e_1 - temp$fit_a
+temp$dw_2 <- temp$fit_e_2 - temp$fit_a
+temp$dw_3 <- temp$fit_e_3 - temp$fit_a
+temp$dw_4 <- temp$fit_e_4 - temp$fit_a
+temp$psd_r1 <- ((temp$dw - temp$dw_1)^2)/4
+temp$psd_r2 <- ((temp$dw - temp$dw_2)^2)/4
+temp$psd_r3 <- ((temp$dw - temp$dw_3)^2)/4
+temp$psd_r4 <- ((temp$dw - temp$dw_4)^2)/4
+temp$psd_m <- rowMeans(cbind(temp$psd_r1, temp$psd_r2, temp$psd_r3, temp$psd_r4), na.rm = T)
+temp$psd <- sqrt(temp$psd_m)
+psd <- weighted.mean(temp$psd, temp$reads_dw, na.rm = T); rm(temp)
+
+# report power -------------------------
+print(paste0(pwr.t.test(d= 0.01 / psd, n=4, sig.level = 0.05)$power*100, "% power to detect a 1% fitness change for an average BC"))
+print(paste0("80% power to detect a ", pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd*100, "% fitness change for an average BC"))
+
+# create data for plotting -------------
+powerBC <- matrix(nrow=100, ncol = 5); colnames(powerBC) <- c("fitchange", "psd", "n", "power", "sig.level"); powerBC <- as.data.frame(powerBC)
+powerBC$fitchange <- seq(0,0.04,length.out = 100) # fitness changes to calculate power for.
+powerBC$psd <- psd # psd calculated above
+powerBC$n <- 4 # repliacates
+powerBC$sig.level <- 0.05 # significance level
+for(i in 1:nrow(powerBC)){powerBC$power[i] <- pwr.t.test(d=powerBC$fitchange[i] / powerBC$psd[i], n=powerBC$n[i], sig.level = powerBC$sig.level[i])$power};rm(i) # calculate power
+setwd(DIR_out); write.csv(powerBC, file = "SSS_powerBCTable.csv")
+
+# Generate plot panel A ----------------
+pA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
+  geom_segment(x=pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd, xend=pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd, y=0, yend=0.8, lty = "dotdash", color = "gray", size = 0.25)+
+  geom_segment(x=0, xend=pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd, y=0.8, yend=0.8, lty = "dotdash", color = "gray", size = 0.25)+
+  geom_point(x = pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd, y = 0.8, pch = 19, size = 3, color = "darkgray")+
+  geom_text(x = 2.5/100, y = 0.75, label = paste0(round(pwr.t.test(power = 0.8, n=4, sig.level = 0.05)$d*psd*100,2), ", 80"), color = "darkgray", size = 2)+
+  geom_line()+
+  scale_x_continuous(name = "Fitness Change\n (for Individual Strains) \n ", breaks = seq(0.0,0.04,by= 0.005), labels = paste0(seq(0.0,0.04,by= 0.005)*100, "%"), limits = c(0,0.04), expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Power", limits = c(0,1), breaks = seq(0.00,1.00,by=0.25), labels = paste0(seq(0.00,1.00,by=0.25)*100, "%"), expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+
+  labs(tag ="A")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), plot.tag = element_text(face = "bold"))
+
+
+
+# power to detect Treatment effects (lmer model) -------------------------------
+# f2 (effect size) = 1/rmse (where rmse = root mean square error among replicate measures of dw).
+# obtain rmse via rmse = sqrt(mean(residuals(MODEL)^2))*100. Use pwr.f2.test in pwr
+# package to obtain power to detect treatment effects between treatments with a TOTAL 
+# number of barcodes equal to v between them. 
+
+# prep frame & calc effect size (f2) ---
+temp <- my[my$mpasp %in% c(0.0, 0.8), ] # Restrict to SALT & COPR dw data in 0.0 and 0.8 environments
+temp$ID <- paste0(temp$bcpID, temp$mpasp)
+myrmse <- sqrt(mean(residuals(lm(temp$dw ~ temp$ID + 0, weights = I(log(temp$re_dw))))^2))*100; myrmse # this is the rmse from the model*100 --> effect size of 1 corresonds to an 2.41% (rmse) fitness change.
+myeffectsize <- 1/myrmse; myeffectsize; rm(temp) # effect size of 1 is an 2.41% (rmse) fitness cahnge, so for a fitness change of 1(%), expect effect size of 1/2.41 (1/rmse) = 0.415.
+
+# report power -------------------------
+print(paste0(pwr.f2.test(u= 1, v= ((28*2) -1 - 1), f2=myeffectsize, sig.level = 0.05)$power*100, "% power to detect a 1% fitness change between treatments (assuming no ext lineages)"))
+print(paste0("80% power to detect a ", pwr.f2.test(u= 1, v= ((28*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, "% fitness change between treatments (assuming no ext lineages)"))
+print(paste0(pwr.f2.test(u= 1, v= ((10*2) -1 - 1), f2=myeffectsize, sig.level = 0.05)$power*100, "% power to detect a 1% fitness difference between treatments (worst case scenario)"))
+print(paste0("80% power to detect a ", pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, "% fitness change for an average BC (assuming 50% ext lineages)"))
+
+# create data for plotting -------------
+powerTR <- matrix(nrow=200, ncol = 5); colnames(powerTR) <- c("u", "v", "power", "f2", "sig.level")
+powerTR <- as.data.frame(powerTR)
+powerTR$v  <- c(rep((28*2) -1 -1, times = 100), rep((10*2) -1 -1, times = 100))
+powerTR$u <- 1
+powerTR$n <- powerTR$v + 2; powerTR$n <- factor(powerTR$n, levels = c(56,20))
+powerTR$f2 <- seq(0, myeffectsize*1.5, length.out = 100)
+powerTR$sig.level <- 0.05
+for(i in 1:nrow(powerTR)){powerTR$power[i] <-  pwr.f2.test(u=powerTR$u[i], v=powerTR$v[i], f2=powerTR$f2[i],sig.level = powerTR$sig.level[i])$power}; rm(i)
+powerTR$f2 <- powerTR$f2*myrmse
+setwd(DIR_out); write.csv(powerTR, file = "SSS_powerTRTable.csv")
+
+# Generate plot panel B ----------------
+pB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
+  geom_segment(x=pwr.f2.test(u= 1, v= ((28*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse,xend=pwr.f2.test(u= 1, v= ((28*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, y=0, yend=0.8, lty = "dotdash", color = "gray", size= 0.25)+
+  geom_segment(x=pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse,xend=pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, y=0, yend=0.8, lty = "dotdash", color = "gray", size = 0.25)+
+  geom_segment(x=0, xend=pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, y=0.8, yend=0.8, lty = "dotdash", color = "gray", size = 0.25)+
+  geom_point(x =  pwr.f2.test(u= 1, v= ((28*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, y = 0.8, pch = 19, size = 3, color = "darkgray")+
+  geom_point(x =  pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, y = 0.8, pch = 19, size = 3, color = "darkgray")+
+  geom_text(x = 0.2, y = 0.85, label = paste0(round(pwr.f2.test(u= 1, v= ((28*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, 2),", 80"), color = "darkgray", size = 2)+
+  geom_text(x = 1.22, y = 0.75, label = paste0(round(pwr.f2.test(u= 1, v= ((10*2) -1 - 1), power = 0.8, sig.level = 0.05)$f2*myrmse, 2),", 80    "), color = "darkgray", size = 2)+
+  geom_line(aes(lty = n))+
+  scale_x_continuous(name = "Fitness Difference\n (Between Treatments) \n ", breaks = seq(0.0,1.5,by= 0.25), labels = paste0(seq(0.0,1.5,by= 0.25), "%"), limits = c(0,1.5), expand = expand_scale(mult = c(0,0.02)))+
+  scale_y_continuous(name = "Power", limits = c(0,1), breaks = seq(0.00,1.00,by=0.25), labels = paste0(seq(0.00,1.00,by=0.25)*100, "%"), expand = expand_scale(mult = c(0,0.02)))+
+  theme_classic()+
+  labs(tag = "B")+
+  theme(legend.position = c(0.9,0.3))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), plot.tag = element_text(face = "bold"))
+
+pB
+
+# plot panels A&B in a single figure ---
+mywidth <- 3.345
+myheight <- 6.69
+setwd(DIR_out); pdf(file = "SSS_Power.pdf", width = mywidth, height = myheight)
+cowplot::plot_grid(pA, pB, nrow = 2)
+dev.off() # one column wide, equal height
+rm(pA, pB, powerBC, powerTR, myeffectsize, myrmse, psd, myheight, mywidth)
+```
+
+5 - Treatment effects on fitness (statistics)
+```{r}
+# setup
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+treattreatlist <- paste0("treat", treatlist)
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- treattreatlist
+colnames(myres) <- rownames(myres)
+chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
+envs <- c(0.0, 0.8)
+setwd(DIR_out) # outputting with this block, so adjust dir.
+
+# run models for each chemical x assay environment testing treatments against one another
+for (g in 1:length(chems)){
+  for (h in 1:length(envs)){
+    myres_p <- myres; myres_est <- myres
+    for(i in 1:length(treatlist)){
+      m <- my[my$mpasp == envs[h] & my$epo %in% chems[[g]] & !is.na(my$dw) & !is.na(my$re_dw),]
+      m$treat <- relevel(m$treat, ref = treatlist[i])
+      mod <- lmer(dw ~ treat + (1|bcpID), weights = log(re_dw), data=m)
+      print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = paste0("SSS_lmer_TreatEffects_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html")))
+      for(j in 1:length(treattreatlist)){
+        if(treatlist[j] != treatlist[i]){
+          myres_est[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
+          myres_p[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
+        }
+      }
+    }
+    colnames(myres_est) <-  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+    rownames(myres_est) <- colnames(myres_est)
+    assign(paste0("myres_est_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_est)
+    colnames(myres_p) <-  c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80")
+    rownames(myres_p) <- colnames(myres_est)
+    assign(paste0("myres_p_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_p)
+    }
+}
+rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, weights)
+
+
+# run models for each chemical x assay environment testing treatments against 0.
+myres0_est <- myres[,1:4]; colnames(myres0_est) <- c("SALT_0.0", "SALT_0.8", "COPR_0.0", "COPR_0.8")
+myres0_p <- myres0_est
+counter <- 1
+for (g in 1:length(chems)){
+  for (h in 1:length(envs)){
+      m <- my[my$mpasp == envs[h] & my$epo %in% chems[[g]] & !is.na(my$dw),]
+      mod <- lmer(dw ~ treat + 0 + (1|bcpID), weights = log(re_dw), data=m)
+      myres0_est[,counter] <- summary(mod)$coefficients[,1]
+      myres0_p[,counter] <- summary(mod)$coefficients[,5]
+      print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, file = paste0("SSS_lmer_TreatEffects_VS0_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html")))
+      counter <- counter + 1
+  }
+}
+myres0_est[myres0_p > 0.05] <- NA
+write.csv(myres0_est, file = "SSS_lmer_TreatEffects_VS0.csv")
+rm(chems, m, mod, g, h, envs, myres, myres0_p, counter, weights)
+
+
+# run models for each geometric fitness in each CM vs chemical stress pairing, testing treatments against one another
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+colnames(m)
+
+```
+
+
+```{r}
+# get datasets -------------------------
+mAA <- myrc[myrc$mpasp == 0.0 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mCC <- myrc[myrc$mpasp == 0.8 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mBB <- myrc[myrc$mpasp == 0.0 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mDD <- myrc[myrc$mpasp == 0.8 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+
+
+
+# control block ------------------------
+# min(c(mAA$dw, mCC$dw))
+# max(c(mAA$dw, mCC$dw))
+# min(c(mBB$dw, mDD$dw))
+# max(c(mBB$dw, mDD$dw))
+minfitSALT <- -0.15*100
+maxfitSALT <- 0.45*100
+minfitCOPR <- -0.1*100
+maxfitCOPR <- 0.55*100
+
+minboxSALT <- 0.2*100
+maxboxSALT <- 0.49*100
+(maxboxSALT-minboxSALT) / (maxfitSALT - minfitSALT)
+
+minboxCOPR <- 0.275*100
+maxboxCOPR <- 0.59*100
+(maxboxCOPR-minboxCOPR) / (maxfitCOPR - minfitCOPR)
+
+treatlabSALT <- "NaCl Evol. Treatment"
+treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
+fitnesslabCM <- "Fitness Change in CM"
+fitnesslabSALT <- "Fitness Change in CM + NaCl"
+fitnesslabCOPR <- expression(bold("Fitness Change in CM + "*CuSO["4"]))
+
+
+# inset backer -------------------------
+myres_backer <- myres_est_SALT_0 
+myres_backer[myres_backer < 0] <- -1
+myres_backer[myres_backer > 0 | is.na(myres_backer)] <- 1
+myres_backer <- round(myres_backer, 2)
+myres_backer <- get_lower_tri(myres_backer)
+melt_myres_backer <- reshape::melt(myres_backer)
+melt_myres_backer$X1 <- factor(melt_myres_backer$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_myres_backer$X2 <- factor(melt_myres_backer$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+
+# prep p and est values ----------------
+lsuffs <- c("AA", "CC", "BB", "DD")
+lintabs <- c("SALT_0", "SALT_0.8", "COPR_0", "COPR_0.8")
+for (i in 1:4) {
+  assign("myres_est_temp", get(paste0("myres_est_", lintabs[i])))
+  assign("myres_p_temp", get(paste0("myres_p_", lintabs[i])))
+  myres_est_temp[which(myres_p_temp > 0.05)] <- NA
+  myres_est_temp <- round(myres_est_temp*100, 0)
+  myres_est_temp <- get_lower_tri(myres_est_temp) # uncomment for just lower triangle
+  melt_myres_est_temp <- reshape::melt(myres_est_temp)
+  melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+  melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+  assign(paste0("melt_myres_est_", lsuffs[i]), melt_myres_est_temp)
+}
+rm(melt_myres_est_temp, myres_est_COPR_0, myres_est_COPR_0.8, myres_est_SALT_0, myres_est_SALT_0.8, myres_est_temp,
+   myres_p_COPR_0, myres_p_COPR_0.8, myres_p_SALT_0, myres_p_SALT_0.8, myres_p_temp, i, lintabs, lsuffs)
+
+
+# Panel A ------------------------------
+pAA <- ggplot(mAA, aes(x=mAA$treat, y=mAA$dw*100, group=mAA$treat, color = mAA$treat)) +
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_violin(fill = "gray90", color = "gray30", draw_quantiles = NULL, trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = 0.35) + 
+  geom_rug(sides = "l" , alpha = 0.7, length = unit(0.015, "npc")) +
+  geom_point(stat="summary", fun.y="mean", color = "black", cex = 1.5) + 
+  geom_point(stat="summary", fun.y="median", color = "black", cex = 3, pch = 1) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = "black", width = 0.0, lwd =0.5)+
+  scale_y_continuous(breaks = seq(minfitCOPR, maxfitCOPR, by=.1*100), limits = c(minfitSALT, maxfitSALT), labels = scales::number_format(accuracy = 0.01*100))+
+  scale_color_manual(values = mypalette) + 
+  coord_flip() +
+  ylab(fitnesslabCM) + xlab(treatlabSALT) +  labs(tag = "A")+
+  theme_classic() +
+  theme(axis.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.text = element_text(size = 10, face = "bold"),
+        plot.tag = element_text(face = "bold", size = 20),
+        legend.position="none")
+ppAA <- ggplot(melt_myres_backer, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6))+
+  scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, limit=c(0,1), space="Lab", name="Estimate", na.value="transparent")
+pppAA <- ggplot(melt_myres_est_AA, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface = "bold") +
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6, face = "bold"),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6, face = "bold"))+
+  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent", 
+                       limit = c(min(melt_myres_est_AA$value),max(melt_myres_est_AA$value)))
+pAA <- pAA + annotation_custom(ggplotGrob(ppAA), xmin = 0.5, xmax = 3.5, ymin = minboxSALT, ymax = maxboxSALT); rm(ppAA)
+pAA <- pAA + annotation_custom(ggplotGrob(pppAA), xmin = 0.5, xmax = 3.5, ymin = minboxSALT, ymax = maxboxSALT); rm(pppAA)
+pAA
+
+# Panel C ------------------------------
+pCC <- ggplot(mCC, aes(x=mCC$treat, y=mCC$dw*100, group=mCC$treat, color = mCC$treat)) +
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_violin(fill = "gray90", color = "gray30", draw_quantiles = NULL, trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = 0.35) + 
+  geom_rug(sides = "l" , alpha = 0.7, length = unit(0.015, "npc")) +
+  geom_point(stat="summary", fun.y="mean", color = "black", cex = 1.5) + 
+  geom_point(stat="summary", fun.y="median", color = "black", cex = 3, pch = 1) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = "black", width = 0.0, lwd =0.5)+
+  scale_y_continuous(breaks = seq(minfitCOPR, maxfitCOPR, by=.1*100), limits = c(minfitSALT, maxfitSALT), labels = scales::number_format(accuracy = 0.01*100))+
+  scale_color_manual(values = mypalette) + 
+  coord_flip() +
+  ylab(fitnesslabSALT) + xlab(treatlabSALT) +  labs(tag = "C")+
+  theme_classic() +
+  theme(axis.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.text = element_text(size = 10, face = "bold"),
+        plot.tag = element_text(face = "bold", size = 20),
+        legend.position="none")
+ppCC <- ggplot(melt_myres_backer, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6))+
+  scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, limit=c(0,1), space="Lab", name="Estimate", na.value="transparent")
+pppCC <- ggplot(melt_myres_est_CC, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface = "bold") +
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6, face = "bold"),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6, face = "bold"))+
+  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent", 
+                       limit = c(min(melt_myres_est_CC$value),max(melt_myres_est_CC$value)))
+pCC <- pCC + annotation_custom(ggplotGrob(ppCC), xmin = 0.5, xmax = 3.5, ymin = minboxSALT, ymax = maxboxSALT); rm(ppCC)
+pCC <- pCC + annotation_custom(ggplotGrob(pppCC), xmin = 0.5, xmax = 3.5, ymin = minboxSALT, ymax = maxboxSALT); rm(pppCC)
+pCC
+
+
+# Panel B ------------------------------
+pBB <- ggplot(mBB, aes(x=mBB$treat, y=mBB$dw*100, group=mBB$treat, color = mBB$treat)) +
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_violin(fill = "gray90", color = "gray30", draw_quantiles = NULL, trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = 0.35) + 
+  geom_rug(sides = "l" , alpha = 0.7, length = unit(0.015, "npc")) +
+  geom_point(stat="summary", fun.y="mean", color = "black", cex = 1.5) + 
+  geom_point(stat="summary", fun.y="median", color = "black", cex = 3, pch = 1) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = "black", width = 0.0, lwd =0.5)+
+  scale_y_continuous(breaks = seq(minfitCOPR, maxfitCOPR, by=.1*100), limits = c(minfitCOPR, maxfitCOPR), labels = scales::number_format(accuracy = 0.01*100))+
+  scale_color_manual(values = mypalette) + 
+  coord_flip() +
+  ylab(fitnesslabCM) + xlab(treatlabCOPR) +  labs(tag = "B")+
+  theme_classic() +
+  theme(axis.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.text = element_text(size = 10, face = "bold"),
+        plot.tag = element_text(face = "bold", size = 20),
+        legend.position="none")
+ppBB <- ggplot(melt_myres_backer, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6))+
+  scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, limit=c(0,1), space="Lab", name="Estimate", na.value="transparent")
+pppBB <- ggplot(melt_myres_est_BB, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface = "bold") +
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6, face = "bold"),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6, face = "bold"))+
+  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent", 
+                       limit = c(min(melt_myres_est_BB$value),max(melt_myres_est_BB$value)))
+pBB <- pBB + annotation_custom(ggplotGrob(ppBB), xmin = 0.5, xmax = 3.5, ymin = minboxCOPR, ymax = maxboxCOPR); rm(ppBB)
+pBB <- pBB + annotation_custom(ggplotGrob(pppBB), xmin = 0.5, xmax = 3.5, ymin = minboxCOPR, ymax = maxboxCOPR); rm(pppBB)
+pBB
+
+
+
+# Panel D ------------------------------
+pDD <- ggplot(mDD, aes(x=mDD$treat, y=mDD$dw*100, group=mDD$treat, color = mDD$treat)) +
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_violin(fill = "gray90", color = "gray30", draw_quantiles = NULL, trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = 0.35) + 
+  geom_rug(sides = "l" , alpha = 0.7, length = unit(0.015, "npc")) +
+  geom_point(stat="summary", fun.y="mean", color = "black", cex = 1.5) + 
+  geom_point(stat="summary", fun.y="median", color = "black", cex = 3, pch = 1) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = "black", width = 0.0, lwd =0.5)+
+  scale_y_continuous(breaks = seq(minfitCOPR, maxfitCOPR, by=.1*100), limits = c(minfitCOPR, maxfitCOPR), labels = scales::number_format(accuracy = 0.01*100))+
+  scale_color_manual(values = mypalette) + 
+  coord_flip() +
+  ylab(fitnesslabCOPR) + xlab(treatlabCOPR) +  labs(tag = "D")+
+  theme_classic() +
+  theme(axis.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.text = element_text(size = 10, face = "bold"),
+        plot.tag = element_text(face = "bold", size = 20),
+        legend.position="none")
+ppDD <- ggplot(melt_myres_backer, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6))+
+  scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, limit=c(0,1), space="Lab", name="Estimate", na.value="transparent")
+pppDD <- ggplot(melt_myres_est_DD, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface = "bold") +
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6, face = "bold"),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6, face = "bold"))+
+  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent", 
+                       limit = c(min(melt_myres_est_DD$value),max(melt_myres_est_DD$value)))
+pDD <- pDD + annotation_custom(ggplotGrob(ppDD), xmin = 0.5, xmax = 3.5, ymin = minboxCOPR, ymax = maxboxCOPR); rm(ppDD)
+pDD <- pDD + annotation_custom(ggplotGrob(pppDD), xmin = 0.5, xmax = 3.5, ymin = minboxCOPR, ymax = maxboxCOPR); rm(pppDD)
+pDD
+
+mywidth <- 11
+myheight <- 8.5
+setwd(DIR_out); pdf(file = "SSS_TreatEffectViolins.pdf", width = mywidth, height = myheight)
+cowplot::plot_grid(pAA, pBB, pCC, pDD, nrow = 2)
+dev.off() # one column wide, equal height
+```
+
+```{r}
+
+```
+
+
+
+
+```{r}
+# get datasets -------------------------
+mAA <- myrc[myrc$mpasp == 0.0 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mCC <- myrc[myrc$mpasp == 0.8 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mBB <- myrc[myrc$mpasp == 0.0 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mDD <- myrc[myrc$mpasp == 0.8 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+
+
+
+# control block ------------------------
+# min(c(mAA$dw, mCC$dw)); max(c(mAA$dw, mCC$dw))
+# min(c(mBB$dw, mDD$dw)); max(c(mBB$dw, mDD$dw))
+fitaxdatlimSALT <- c(-0.15*100, 0.45*100)
+fitaxdatlimCOPR <- c(-0.1*100, 0.55*100)
+fitaxlablim <- c(-0.1*100, 0.5*100) 
+boxSALT <- c(0.2*100, 0.49*100); (boxSALT[2]-boxSALT[1]) / (fitaxdatlimSALT[2] - fitaxdatlimSALT[1])
+boxCOPR <- c(0.275*100, 0.59*100); (boxCOPR[2]-boxCOPR[1]) / (fitaxdatlimCOPR[2] - fitaxdatlimCOPR[1])
+
+treatlabSALT <- "NaCl Evol. Treatment"
+treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
+fitnesslabCM <- "Fitness Change in CM"
+fitnesslabSALT <- "Fitness Change in CM + NaCl"
+fitnesslabCOPR <- expression(bold("Fitness Change in CM + "*CuSO["4"]))
+
+
+
+# inset backer -------------------------
+myres_backer <- myres_est_SALT_0 
+myres_backer[myres_backer < 0] <- -1
+myres_backer[myres_backer > 0 | is.na(myres_backer)] <- 1
+myres_backer <- round(myres_backer, 2)
+myres_backer <- get_lower_tri(myres_backer)
+melt_myres_backer <- reshape::melt(myres_backer)
+melt_myres_backer$X1 <- factor(melt_myres_backer$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+melt_myres_backer$X2 <- factor(melt_myres_backer$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+
+
+# prep p and est values ----------------
+lsuffs <- c("AA", "CC", "BB", "DD")
+lintabs <- c("SALT_0", "SALT_0.8", "COPR_0", "COPR_0.8")
+for (i in 1:4) {
+  assign("myres_est_temp", get(paste0("myres_est_", lintabs[i])))
+  assign("myres_p_temp", get(paste0("myres_p_", lintabs[i])))
+  myres_est_temp[which(myres_p_temp > 0.05)] <- NA
+  myres_est_temp <- round(myres_est_temp*100, 0)
+  myres_est_temp <- get_lower_tri(myres_est_temp) # uncomment for just lower triangle
+  melt_myres_est_temp <- reshape::melt(myres_est_temp)
+  melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+  melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels = c("EH0", "EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80", "EH80"))
+  assign(paste0("melt_myres_est_", lsuffs[i]), melt_myres_est_temp)
+}
+rm(melt_myres_est_temp, myres_est_COPR_0, myres_est_COPR_0.8, myres_est_SALT_0, myres_est_SALT_0.8, myres_est_temp,
+   myres_p_COPR_0, myres_p_COPR_0.8, myres_p_SALT_0, myres_p_SALT_0.8, myres_p_temp, i, lintabs, lsuffs)
+
+
+viopanel <- function(dwdata, statsdata, backerdata, fitlims, insetlims, fitaxlablim, treatlab, fitlab, tag, usepalette){
+  pZZ <- ggplot(dwdata, aes(x=dwdata$treat, y=dwdata$dw*100, group=dwdata$treat, color = dwdata$treat)) +
+  geom_hline(yintercept = 0, lty = "dotted") + 
+  geom_violin(fill = "gray90", color = "gray30", draw_quantiles = NULL, trim = T) +
+  geom_jitter(width =0.15, height = 0, alpha = 0.35) + 
+  geom_rug(sides = "l" , alpha = 0.7, length = unit(0.015, "npc")) +
+  geom_point(stat="summary", fun.y="mean", color = "black", cex = 1.5) + 
+  geom_point(stat="summary", fun.y="median", color = "black", cex = 3, pch = 1) + 
+  geom_errorbar(stat="summary", fun.data = "mean_se",color = "black", width = 0.0, lwd =0.5)+
+  scale_y_continuous(breaks = seq(fitaxlablim[1], fitaxlablim[2], by=.1*100), limits = c(fitlims[1], fitlims[2]), labels = scales::number_format(accuracy = 0.01*100))+
+  scale_color_manual(values = usepalette) + 
+  coord_flip() +
+  ylab(fitlab) + xlab(treatlab) +  labs(tag = tag)+
+  theme_classic() +
+  theme(axis.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.text = element_text(size = 10, face = "bold"),
+        plot.tag = element_text(face = "bold", size = 20),
+        legend.position="none")
+ppZZ <- ggplot(backerdata, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6))+
+  scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, limit=c(0,1), space="Lab", name="Estimate", na.value="transparent")
+pppZZ <- ggplot(statsdata, aes(x=X1, y=X2, fill=value)) + 
+  geom_tile(show.legend=F)+
+  geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface = "bold") +
+  scale_y_discrete(position ="right")+
+  theme_tufte(base_family="Helvetica")+
+  theme(axis.ticks = element_blank(), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, margin = margin(t=-2.5, b = -2.5), size = 6, face = "bold"),
+        axis.text.y.right = element_text(angle = 0, hjust = 0, vjust = 0.5, margin = margin(l=-2.5, r = -2.5), size = 6, face = "bold"))+
+  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent", 
+                       limit = c(min(statsdata$value),max(statsdata$value)))
+pZZ <- pZZ + annotation_custom(ggplotGrob(ppZZ), xmin = 0.5, xmax = 3.5, ymin = insetlims[1], ymax = insetlims[2]); rm(ppZZ)
+pZZ <- pZZ + annotation_custom(ggplotGrob(pppZZ), xmin = 0.5, xmax = 3.5, ymin = insetlims[1], ymax = insetlims[2]); rm(pppZZ)
+return(pZZ)
+}
+
+pAA <- viopanel(dwdata = mAA, statsdata = melt_myres_est_AA, backerdata = melt_myres_backer,
+              fitlims = fitaxdatlimSALT, insetlims = boxSALT, fitaxlablim = fitaxlablim,
+              treatlab = treatlabSALT, fitlab = fitnesslabCM, tag = "A", usepalette = mypalette)
+pCC <- viopanel(dwdata = mCC, statsdata = melt_myres_est_CC, backerdata = melt_myres_backer,
+              fitlims = fitaxdatlimSALT, insetlims = boxSALT, fitaxlablim = fitaxlablim,
+              treatlab = treatlabSALT, fitlab = fitnesslabSALT, tag = "C", usepalette = mypalette)
+pBB <- viopanel(dwdata = mBB, statsdata = melt_myres_est_BB, backerdata = melt_myres_backer,
+              fitlims = fitaxdatlimCOPR, insetlims = boxCOPR, fitaxlablim = fitaxlablim,
+              treatlab = treatlabCOPR, fitlab = fitnesslabCM, tag = "B", usepalette = mypalette)
+pDD <- viopanel(dwdata = mDD, statsdata = melt_myres_est_DD, backerdata = melt_myres_backer,
+              fitlims = fitaxdatlimCOPR, insetlims = boxCOPR, fitaxlablim = fitaxlablim,
+              treatlab = treatlabCOPR, fitlab = fitnesslabCOPR, tag = "D", usepalette = mypalette)
+
+setwd(DIR_out); pdf(file = "SSS_TreatEffectViolins.pdf", width = 11, height = 8.5)
+cowplot::plot_grid(pAA, pBB, pCC, pDD, nrow = 2)
+dev.off() # one column wide, equal height
+```

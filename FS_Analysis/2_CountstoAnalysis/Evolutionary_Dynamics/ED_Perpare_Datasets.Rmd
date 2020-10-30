@@ -103,6 +103,8 @@ setwd(dir_out_f)
 
 # read on cross contam
 swref <- myd[myd$sample.type == "sw",] # sequence of wells containing only the reference strain run through the fitness assay, for cross contamination estimation. 
+swref$ppcctsm <- swref$ppccts/110  # counts per contaminant
+swref$ccm <- swref$cc/110 # cc rate per contaminant
 save(swref, file = "swref.Rdata")
 
 # controls...
@@ -509,7 +511,7 @@ myd <- my
 rm(EH0, EH20, EH40, EH60, EH80, EH100, EH0.40, EH0.60, EH0.80, EH20.60, EH40.80, my)
 ```
 
-DONT FORGET TO REMOVE ALL PROBLEM ENTRIES
+REMOVE ALL PROBLEM ENTRIES
 ```{R}
 my <- myd
 # remove rows with bc1 id == "d2C5" and "d2C9", these barcodes share a barcode sequence and therefore cannot be analyzed.
@@ -524,7 +526,7 @@ myd <- my # pass back to myfa
 rm(my)
 ```
 
-DONT FORGET TO APPEND FIT ASSAY FIT VALUES
+APPEND FIT ASSAY FIT VALUES - append fitness assay values here if desired. Not currently implemented. 
 ```{R}
 # do not implement unless requested. 
 ```
