@@ -492,7 +492,6 @@ my <- myd
 lowcut <- 20
 
 # gen 0, inititial measure
-
 my$refcts_r1i_a[my$bc1cts_r1i_a <= lowcut] <- NA
 my$refcts_r2i_a[my$bc1cts_r2i_a <= lowcut] <- NA
 my$refcts_r3i_a[my$bc1cts_r3i_a <= lowcut] <- NA
@@ -512,11 +511,13 @@ my$bc1cts_i_a <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1ct
                                                   as.numeric(x[c( "re_r1i_a","re_r2i_a","re_r3i_a","re_r4i_a","re_r5i_a")]), na.rm = T))
 my$refcts_i_a <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_r1i_a", "refcts_r2i_a", "refcts_r3i_a", "refcts_r4i_a", "refcts_r5i_a")]), 
                                                   as.numeric(x[c( "re_r1i_a","re_r2i_a","re_r3i_a","re_r4i_a","re_r5i_a")]), na.rm = T))
-my$re_i_a <- rowMeans(cbind(my$re_r1i_a, my$re_r2i_a, my$re_r3i_a, my$re_r4i_a, my$re_r5i_a))
+my$re_i_a <- rowMeans(cbind(my$re_r1i_a, my$re_r2i_a, my$re_r3i_a, my$re_r4i_a, my$re_r5i_a), na.rm = T)
+my$refcts_i_a[my$bc1cts_i_a <= lowcut] <- NA
+my$re_i_a[my$bc1cts_i_a <= lowcut] <- NA
+my$bc1cts_i_a[my$bc1cts_i_a <= lowcut] <- NA
 
 
 # gen 0 final measure
-
 my$refcts_f_r1a[my$bc1cts_f_r1a <= lowcut] <- NA
 my$refcts_f_r2a[my$bc1cts_f_r2a <= lowcut] <- NA
 my$refcts_f_r3a[my$bc1cts_f_r3a <= lowcut] <- NA
@@ -533,13 +534,15 @@ my$bc1cts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1cts
                                                   as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
 my$refcts_f_a <- apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_f_r1a", "refcts_f_r2a", "refcts_f_r3a", "refcts_f_r4a")]), 
                                                   as.numeric(x[c( "re_f_r1a","re_f_r2a","re_f_r3a","re_f_r4a")]), na.rm = T))
-my$re_f_a <- rowMeans(cbind(my$re_f_r1a, my$re_f_r2a, my$re_f_r3a, my$re_f_r4a))
-
+my$re_f_a <- rowMeans(cbind(my$re_f_r1a, my$re_f_r2a, my$re_f_r3a, my$re_f_r4a), na.rm = T)
+my$refcts_f_a[my$bc1cts_f_a <= lowcut] <- NA
+my$re_f_a[my$bc1cts_f_a <= lowcut] <- NA
+my$bc1cts_f_a[my$bc1cts_f_a <= lowcut] <- NA
 
 # gen 0 fitness
 my$fit_a <- exp((log(my$bc1cts_f_a /my$refcts_f_a )- log(my$bc1cts_i_a/my$refcts_i_a))/20)
 my$re_fit_a <- 2/((1/my$re_f_a)+(1/my$re_i_a))
-
+min(my$re_fit_a, na.rm = T) # okay with filtering @ gen 0, removed all unsupported data.
 
 
 
@@ -563,7 +566,12 @@ my$bc1cts_i_e <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "bc1ct
                                                   as.numeric(x[c( "re_r1i_e","re_r2i_e","re_r3i_e","re_r4i_e","re_r5i_e")]), na.rm = T))
 my$refcts_i_e <-  apply(myd, 1, function(x) weighted.mean(as.numeric(x[c( "refcts_r1i_e", "refcts_r2i_e", "refcts_r3i_e", "refcts_r4i_e", "refcts_r5i_e")]), 
                                                   as.numeric(x[c( "re_r1i_e","re_r2i_e","re_r3i_e","re_r4i_e","re_r5i_e")]), na.rm = T))
-my$re_i_e <- rowMeans(cbind(my$re_r1i_e, my$re_r2i_e, my$re_r3i_e, my$re_r4i_e, my$re_r5i_e))
+my$re_i_e <- rowMeans(cbind(my$re_r1i_e, my$re_r2i_e, my$re_r3i_e, my$re_r4i_e, my$re_r5i_e), na.rm = T)
+my$refcts_i_e[my$bc1cts_i_e <= lowcut] <- NA
+my$re_i_e[my$bc1cts_i_e <= lowcut] <- NA
+my$bc1cts_i_e[my$bc1cts_i_e <= lowcut] <- NA
+
+
 
 # gen 500 final measure
 my$refcts_f_e[my$bc1cts_f_e <= lowcut] <- NA
@@ -573,16 +581,12 @@ my$bc1cts_f_e[my$bc1cts_f_e <= lowcut] <- NA
 # gen 500 fitness
 my$fit_e <- exp((log(my$bc1cts_f_e /my$refcts_f_e )- log(my$bc1cts_i_e/my$refcts_i_e))/20)
 my$re_fit_e <- 2/((1/my$re_f_e)+(1/my$re_i_e))
-
+min(my$re_fit_e, na.rm = T) # okay with filtering @ gen 500, removed all unsupported data.
 
 # fitness change
 my$dw <- my$fit_e - my$fit_a
 my$re_dw <- 2/((1/my$re_fit_e)+(1/my$re_fit_a))
-
-
-min(my$re_fit_e, na.rm = T)
-min(my$re_fit_a, na.rm = T)
-min(my$re_dw, na.rm = T)
+min(my$re_dw, na.rm = T) # double check passes, all dw data are as expected.
 
 
 
@@ -613,9 +617,12 @@ my$mn_fit_e <- apply(my, 1, function(x) weighted.mean(as.numeric(x[c( "fit_e_1",
 my$mn_fit_e[is.nan(my$mn_fit_e)] <- NA # fix nans
 my$mn_re_fit_e <- apply(my, 1, function(x) mean(as.numeric(x[c("re_fit_e_1","re_fit_e_2","re_fit_e_3","re_fit_e_4")]), na.rm =T)) # calculate reads for mn_dw
 colnames(my)[c(14,15,25,24)] <- c("reads_a", "fit_a", "reads_e", "fit_e")
+min(my$reads_a, na.rm = T) # still good here
+min(my$reads_e, na.rm = T) # here too.
 
 my$reads_dw <- 2/((1/my$reads_a)+(1/my$reads_e))
 my$dw <- my$fit_e - my$fit_a
+min(my$reads_dw, na.rm = T) # and here as well.
 
 myfit500c <- my # name frame
 rm(my, my1, my2, my3, my4)
@@ -641,7 +648,10 @@ colnames(my)[14:ncol(my)] <- c("reads_a_00", "fit_a_00", "reads_e_00", "fit_e_00
 # geomean fitness in 00_80 environments
 my$dw_00_80 <- sqrt((my$dw_00 + 1)*(my$dw_80 +1)) - 1; my$dw_00_80[is.nan(my$dw_00_80)] <- NA
 my$var_dw_00_80 <- apply(my[,c("dw_00", "dw_80")], 1, var, na.rm = T)
-my$reads_dw_00_80 <- rowMeans(my[,c("dw_00", "dw_80")], na.rm = T); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
+my$absdif_dw_00_80 <- abs(my$dw_00 - my$dw_80)
+
+my$reads_dw_00_80 <- rowMeans(my[,c("reads_dw_00", "reads_dw_80")], na.rm = T); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
+min(my$reads_dw_00_80, na.rm = T) # reads min still appropriate.
 
 myfit500cw <- my
 rm(my, my0, my40, my80, my120)
