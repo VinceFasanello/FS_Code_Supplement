@@ -259,9 +259,9 @@ myeffectsize <- 1/myrmse; rm(temp)
 powerTR <- matrix(nrow=200, ncol=5)
 colnames(powerTR) <- c("u", "v", "power", "f2", "sig.level")
 powerTR <- as.data.frame(powerTR)
-powerTR$v  <- c(rep((28*2) -1 -1, times=100), rep((10*2) -1 -1, times=100)) # v's
+powerTR$v  <- c(rep((32*2) -1 -1, times=100), rep((16*2) -1 -1, times=100)) # v's
 powerTR$u <- 1 # u
-powerTR$n <- powerTR$v + 2; powerTR$n <- factor(powerTR$n, levels=c(56,20)) # n=v+2
+powerTR$n <- powerTR$v + 2; powerTR$n <- factor(powerTR$n, levels=c(64,32)) # n=v+2
 powerTR$f2 <- seq(0, myeffectsize*1.5, length.out=100) # effect size
 powerTR$sig.level <- 0.05 # significance level
 for(i in 1:nrow(powerTR)){
@@ -269,10 +269,10 @@ for(i in 1:nrow(powerTR)){
                                    sig.level=powerTR$sig.level[i])$power
 }; rm(i)
 powerTR$f2 <- powerTR$f2*myrmse # scale effect size to be % fitness difference.
-reportvals[3] <- paste0(pwr.f2.test(u=1, v=((28*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness change between treatments (Best Case)")
-reportvals[4] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((28*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change between treatments (Best Case)")
-reportvals[5] <- paste0(pwr.f2.test(u=1, v=((10*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness difference between treatments (Worst Case)")
-reportvals[6] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change for an average BC (Worst Case)")
+reportvals[3] <- paste0(pwr.f2.test(u=1, v=((32*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness change between treatments (Best Case)")
+reportvals[4] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change between treatments (Best Case)")
+reportvals[5] <- paste0(pwr.f2.test(u=1, v=((16*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness difference between treatments (Worst Case)")
+reportvals[6] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change for an average BC (Worst Case)")
 
 
 # Visualization ----------------------------------------------------------------
@@ -289,15 +289,15 @@ pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
   theme_VJF + labs(tag="A")
 
 pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
-  geom_segment(x=pwr.f2.test(u=1, v=((28*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
-               xend=pwr.f2.test(u=1, v=((28*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_segment(x=pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
-               xend=pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_segment(x=0, xend=pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_point(x=pwr.f2.test(u=1, v=((28*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
-  geom_point(x=pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
-  geom_text(x=0.2, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((28*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
-  geom_text(x=1.22, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((10*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
+  geom_segment(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
+               xend=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_segment(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
+               xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_segment(x=0, xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_point(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
+  geom_point(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
+  geom_text(x=0.19, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
+  geom_text(x=0.75, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
   geom_line(aes(lty=n))+
   scale_x_continuous(name="Fitness Difference (%)\n (Between Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
                      labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
@@ -653,7 +653,7 @@ m$Treatment <- m$treat
 
 # Create the geomeans dataset --------------------------------------------------
 geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, psych::geometric.mean)
-geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, mean) # no qualitative difference if just "mean" is used. 
+# geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, mean) # no qualitative difference if just "mean" is used. 
 # geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, median) # no qualitative difference if just "median" is used. 
 colnames(geomeans) <-  c("Treatment","Fitness_in_envX", "Fitness_in_envY")
 geomeans[,c(2,3)] <- geomeans[,c(2,3)] - 1
@@ -711,8 +711,8 @@ kassenpanel <- function(pxlab, pylab, ptag, pxlim, pylim, pannotate){
                  alpha = 0.1, geom = "polygon", linetype = 6, show.legend = F, level = 0.75)+
     geom_point(data = m, aes(x=Fitness_in_envX, y=Fitness_in_envY, color = Treatment), size = 1, alpha = 0.33, show.legend = F) +
     geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.25, inherit.aes=F)+
-    geom_segment(mapping = aes(x=geomeans[3,2], y=geomeans[3,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.25, inherit.aes=F)+
-    geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[3,2], yend=geomeans[3,3]), linetype=1, size=1.25, inherit.aes=F)+
+    # geom_segment(mapping = aes(x=geomeans[3,2], y=geomeans[3,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.25, inherit.aes=F)+
+    # geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[3,2], yend=geomeans[3,3]), linetype=1, size=1.25, inherit.aes=F)+
     geom_point(data=geomeans, aes(x=Fitness_in_envX, y=Fitness_in_envY, fill = Treatment),color = "black", cex = 5, shape = 21, show.legend = F)+
     annotate("text", x = c((0.9-1)*100,(0.95-1)*100, (1.00-1)*100, (1.05-1)*100, (1.1-1)*100, (1.15-1)*100),
              y = c((0.9-1)*100,(0.95-1)*100, (1.00-1)*100, (1.05-1)*100, (1.1-1)*100, (1.15-1)*100),
@@ -741,6 +741,7 @@ vectorpanel <- function(ptreat, palettecolorpos, ptag, pxlim, pylim, pannotate){
     }
   # plot data layer --------------------
   pZZ <- pZZ +
+    geom_segment(mapping = aes(x=geomeans[1,2], y=geomeans[1,3], xend=geomeans[7,2], yend=geomeans[7,3]), linetype=1, size=1.25, inherit.aes=F)+
     geom_segment(data =m[m$treat %in% c(ptreat),],aes(x=1, y=1, xend=m$Fitness_in_envX[m$treat %in% c(ptreat)], yend=m$Fitness_in_envY[m$treat %in% c(ptreat)]),
                  color =mypalette[palettecolorpos], size=2/2, inherit.aes=F, alpha = 0.5)+
     geom_point(data =m[m$treat %in% c(ptreat),],aes(x=m$Fitness_in_envX[m$treat %in% c(ptreat)], y=m$Fitness_in_envY[m$treat %in% c(ptreat)]),
@@ -771,7 +772,7 @@ p8 <- vectorpanel(ptreat = "EH80", palettecolorpos = 7, ptag = "H", pxlim = c(-1
 lay<- as.matrix(rbind(cbind(1,1,2,3,4,5),
                       cbind(1,1,6,7,8,9)))
 
-setwd(DIR_out); pdf(file = paste("000_Figure_2_arith.pdf"),height = 6, width = 11)
+setwd(DIR_out); pdf(file = paste("000_Figure_2_oneline.pdf"),height = 6, width = 11)
 grid::grid.draw(grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)); dev.off()
 rm(p1, p2, p3, p4, p5, p6, p7, p8, geomeans, m)
 ```
@@ -788,7 +789,7 @@ m$Treatment <- m$treat
 
 # Create the geomeans dataset --------------------------------------------------
 geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, psych::geometric.mean)
-geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, mean) # no qualitative difference if just "mean" is used. 
+# geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, mean) # no qualitative difference if just "mean" is used. 
 # geomeans <- aggregate(cbind(m$Fitness_in_envX+1, m$Fitness_in_envY+1) ~ m$treat, m, median) # no qualitative difference if just "median" is used. 
 colnames(geomeans) <-  c("Treatment","Fitness_in_envX", "Fitness_in_envY")
 geomeans[,c(2,3)] <- geomeans[,c(2,3)] - 1
@@ -808,7 +809,7 @@ p8 <- vectorpanel(ptreat = "EH80", palettecolorpos = 7, ptag = "H", pxlim = c(-1
 
 
 # Save outputs to file ---------------------------------------------------------
-setwd(DIR_out); pdf(file = paste("000_Figure_2_COPR_arith.pdf"),height = 6, width = 11)
+setwd(DIR_out); pdf(file = paste("000_Figure_2_COPR_oneline.pdf"),height = 6, width = 11)
 grid::grid.draw(grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p1leg, layout_matrix =lay)); dev.off()
 rm(m, p1, p1leg, p2, p3, p4, p5, p6, p7, p8, kassenpanel, vectorpanel, geomeans, geomfit, lay)
 ```
