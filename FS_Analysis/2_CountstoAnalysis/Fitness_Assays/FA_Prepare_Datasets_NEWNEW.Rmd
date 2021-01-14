@@ -650,8 +650,17 @@ my$dw_00_80 <- sqrt((my$dw_00 + 1)*(my$dw_80 +1)) - 1; my$dw_00_80[is.nan(my$dw_
 my$var_dw_00_80 <- apply(my[,c("dw_00", "dw_80")], 1, var, na.rm = T)
 my$absdif_dw_00_80 <- abs(my$dw_00 - my$dw_80)
 
-my$reads_dw_00_80 <- rowMeans(my[,c("reads_dw_00", "reads_dw_80")], na.rm = T); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
+# my$reads_dw_00_80 <- rowMeans(my[,c("reads_dw_00", "reads_dw_80")], na.rm = T); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
+# min(my$reads_dw_00_80, na.rm = T) # reads min still appropriate.
+
+my$reads_dw_00_40 <- 2/((1/my$reads_dw_00)+(1/my$reads_dw_40)); my$reads_dw_00_40[is.nan(my$reads_dw_00_40)] <- NA
+my$reads_dw_00_80 <- 2/((1/my$reads_dw_00)+(1/my$reads_dw_80)); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
 min(my$reads_dw_00_80, na.rm = T) # reads min still appropriate.
+my$reads_dw_00_120 <- 2/((1/my$reads_dw_00)+(1/my$reads_dw_120)); my$reads_dw_00_120[is.nan(my$reads_dw_00_120)] <- NA
+my$reads_dw_40_80 <- 2/((1/my$reads_dw_40)+(1/my$reads_dw_80)); my$reads_dw_40_80[is.nan(my$reads_dw_40_80)] <- NA
+my$reads_dw_40_120 <- 2/((1/my$reads_dw_40)+(1/my$reads_dw_120)); my$reads_dw_40_120[is.nan(my$reads_dw_40_120)] <- NA
+my$reads_dw_80_120 <- 2/((1/my$reads_dw_80)+(1/my$reads_dw_120)); my$reads_dw_80_120[is.nan(my$reads_dw_80_120)] <- NA
+
 
 myfit500cw <- my
 rm(my, my0, my40, my80, my120)

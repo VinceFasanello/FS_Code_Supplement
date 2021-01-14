@@ -43,8 +43,6 @@ load(file = "myd.Rdata")
 ```
 <br/><br/>
 
-
-
 Assess Fixation rate for wells that started between 50:50 and 25:75 prop. denom is all wells with init props less extreme than 25:75
 ```{r, warning = FALSE, message=FALSE}
 mymin <- c(0,20,0,0,40,20,0,60,40,80,100)
@@ -79,9 +77,52 @@ my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", 
 my_fix_SULF <- my_fix
 
 
-write.csv(my_fix_SALT,  file = "my_fix_SALT.csv")
-write.csv(my_fix_COPR,  file = "my_fix_COPR.csv")
-write.csv(my_fix_SULF,  file = "my_fix_SULF.csv")
+write.csv(my_fix_SALT,  file = "my_fix_SALT7525.csv")
+write.csv(my_fix_COPR,  file = "my_fix_COPR7525.csv")
+write.csv(my_fix_SULF,  file = "my_fix_SULF7525.csv")
+
+
+rm(my_fix, mymax, mymin)
+```
+<br/><br/>
+
+Assess Fixation rate for wells that started between 50:50 and 25:75 prop. denom is all wells with init props less extreme than 25:75
+```{r, warning = FALSE, message=FALSE}
+mymin <- c(0,20,0,0,40,20,0,60,40,80,100)
+mymax <- c(0,20,40,60,40,60,80,60,80,80,100)
+
+my_fix <- myd[myd$plate %in% c("SALT_A", "SALT_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .45]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_SALT <- my_fix
+
+
+
+my_fix <- myd[myd$plate %in% c("COPR_A", "COPR_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .45]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_COPR <- my_fix
+
+
+
+my_fix <- myd[myd$plate %in% c("SULF_A", "SULF_B"),] %>%
+  group_by(treat) %>%
+  summarize(sumtreat = length(treat[diff0 <= .45]),
+            fixedtreat = length(treat[fixed]),
+            fixedprop = fixedtreat/sumtreat)
+my_fix$min <- mymin; my_fix$max <- mymax; my_fix$mn <- rowMeans(my_fix[c("min", "max")])
+my_fix_SULF <- my_fix
+
+
+write.csv(my_fix_SALT,  file = "my_fix_SALT9010.csv")
+write.csv(my_fix_COPR,  file = "my_fix_COPR9010.csv")
+write.csv(my_fix_SULF,  file = "my_fix_SULF9010.csv")
 
 
 rm(my_fix, mymax, mymin)
