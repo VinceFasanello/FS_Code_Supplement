@@ -647,11 +647,14 @@ colnames(my)[14:ncol(my)] <- c("reads_a_00", "fit_a_00", "reads_e_00", "fit_e_00
 
 # geomean fitness in 00_80 environments
 my$dw_00_80 <- sqrt((my$dw_00 + 1)*(my$dw_80 +1)) - 1; my$dw_00_80[is.nan(my$dw_00_80)] <- NA
+my$dw_00_40 <- sqrt((my$dw_00 + 1)*(my$dw_40 +1)) - 1; my$dw_00_40[is.nan(my$dw_00_40)] <- NA
+my$dw_40_80 <- sqrt((my$dw_40 + 1)*(my$dw_80 +1)) - 1; my$dw_40_80[is.nan(my$dw_40_80)] <- NA
 my$var_dw_00_80 <- apply(my[,c("dw_00", "dw_80")], 1, var, na.rm = T)
+my$var_dw_00_40 <- apply(my[,c("dw_00", "dw_40")], 1, var, na.rm = T)
+my$var_dw_40_80 <- apply(my[,c("dw_40", "dw_80")], 1, var, na.rm = T)
 my$absdif_dw_00_80 <- abs(my$dw_00 - my$dw_80)
-
-# my$reads_dw_00_80 <- rowMeans(my[,c("reads_dw_00", "reads_dw_80")], na.rm = T); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
-# min(my$reads_dw_00_80, na.rm = T) # reads min still appropriate.
+my$absdif_dw_00_40 <- abs(my$dw_00 - my$dw_40)
+my$absdif_dw_40_80 <- abs(my$dw_40 - my$dw_80)
 
 my$reads_dw_00_40 <- 2/((1/my$reads_dw_00)+(1/my$reads_dw_40)); my$reads_dw_00_40[is.nan(my$reads_dw_00_40)] <- NA
 my$reads_dw_00_80 <- 2/((1/my$reads_dw_00)+(1/my$reads_dw_80)); my$reads_dw_00_80[is.nan(my$reads_dw_00_80)] <- NA
