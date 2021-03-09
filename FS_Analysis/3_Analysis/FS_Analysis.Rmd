@@ -224,27 +224,136 @@ rm(mycc, reportvals, i, DIR_evo_formatted) # tidy
 ```{R Survival, warning=FALSE}
 # calculate extinct/extirpated and surviving lineages in each treatment X assay environment and
 # create formatted tables for output indicating n and proportion of treatment total n in each category.
-setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
-chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
-outnames <- c("SALT", "COPR")
-treatn <- c(32,32,32,32,30,32,30)
-for (i in 1:length(chems)) {
-  m <- myrcw[myrcw$epo %in% chems[[i]],]
-  m$ext00 <- is.na(m$dw_00); m$ext80 <- is.na(m$dw_80)
-  m$ext080 <- rowSums(m[,c("ext00", "ext80")])
-  m$ext080[m$ext080 < 2] <- FALSE; m$ext080[m$ext080 == 2] <- TRUE
-  m$ali080 <- apply(m[,c("dw_00", "dw_80")], 1, function(x) sum(!is.na(x)))
-  m$ali080[m$ali080 < 2] <- FALSE; m$ali080[m$ali080 == 2] <- TRUE
-  m <- as.matrix(cbind(tapply(m$ali080, m$treat, sum), tapply(m$ext080, m$treat, sum),
-                       tapply(m$ext00 - m$ext080, m$treat, sum), tapply(m$ext80 - m$ext080, m$treat, sum),
-                       round(tapply(m$ali080, m$treat, sum)/treatn,2),
-                       round(tapply(m$ext080, m$treat, sum)/treatn,2),
-                       round(tapply(m$ext00 - m$ext080, m$treat, sum)/treatn,2),
-                       round(tapply(m$ext80 - m$ext080, m$treat, sum)/treatn,2)))
-  colnames(m) <- c("pres_both", "ext_both", "ext_00_only", "ext_80_only",
-                   "pres_both_p", "ext_both_p", "ext_00_only_p", "ext_80_only_p")
-  setwd(DIR_out); write.csv(m, file = paste0("000_Table_S2_", outnames[i], ".csv")) # Save outputs to file
-}; rm(m, chems,i, outnames, treatn, DIR_fit_formatted) # tidy
+# setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
+# chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
+# outnames <- c("SALT", "COPR")
+# treatn <- c(32,32,32,32,30,32,30)
+# for (i in 1:length(chems)) {
+#   m <- myrcw[myrcw$epo %in% chems[[i]],]
+#   m$ext00 <- is.na(m$dw_00); m$ext80 <- is.na(m$dw_80)
+#   m$ext080 <- rowSums(m[,c("ext00", "ext80")])
+#   m$ext080[m$ext080 < 2] <- FALSE; m$ext080[m$ext080 == 2] <- TRUE
+#   m$ali080 <- apply(m[,c("dw_00", "dw_80")], 1, function(x) sum(!is.na(x)))
+#   m$ali080[m$ali080 < 2] <- FALSE; m$ali080[m$ali080 == 2] <- TRUE
+#   m <- as.matrix(cbind(tapply(m$ali080, m$treat, sum), tapply(m$ext080, m$treat, sum),
+#                        tapply(m$ext00 - m$ext080, m$treat, sum), tapply(m$ext80 - m$ext080, m$treat, sum),
+#                        round(tapply(m$ali080, m$treat, sum)/treatn,2),
+#                        round(tapply(m$ext080, m$treat, sum)/treatn,2),
+#                        round(tapply(m$ext00 - m$ext080, m$treat, sum)/treatn,2),
+#                        round(tapply(m$ext80 - m$ext080, m$treat, sum)/treatn,2)))
+#   colnames(m) <- c("pres_both", "ext_both", "ext_00_only", "ext_80_only",
+#                    "pres_both_p", "ext_both_p", "ext_00_only_p", "ext_80_only_p")
+#   setwd(DIR_out); write.csv(m, file = paste0("000_Table_S2_", outnames[i], ".csv")) # Save outputs to file
+# }; rm(m, chems,i, outnames, treatn, DIR_fit_formatted) # tidy
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH20_60",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("SALT_Ad1C9d2C9", "SALT_Bd1C9d2C9"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("SALT_Ad1C5d2C5", "SALT_Bd1C5d2C5"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+# ----------------
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH20_60",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("COPR_Ad1C9d2C9", "COPR_Bd1C9d2C9"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("COPR_Ad1C5d2C5", "COPR_Bd1C5d2C5"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
 ```
 <br/><br/>
 
@@ -1351,7 +1460,270 @@ dev.off()
 ```
 
 
+```{r}
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
 
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in40 <- mean(m$dw_40, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in40 <- mean(m$dw_40, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH40_80in00 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+                         cbind(EH40in00, EH40in40, EH40in80),
+                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+                         cbind(EH80in00, EH80in40, EH80in80)))
+rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+colnames(x) <- c("dw_00", "dw_40", "dw_80")
+x$treat <- rownames(x)
+x$indiv <- c(91,92,93,94,95,96,97)
+x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+mm$indiv <- seq(1:nrow(mm))
+mm <- melt(mm, id = c("treat", "indiv"))
+lims <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+
+p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0mean",])+
+  geom_point(data = x[x$treat == "EH0mean",])+
+  scale_color_manual(values = c(mypalette[1], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0_40mean",])+
+  geom_point(data = x[x$treat == "EH0_40mean",])+
+  scale_color_manual(values = c(mypalette[2], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH40mean",])+
+  geom_point(data = x[x$treat == "EH40mean",])+
+  scale_color_manual(values = c(mypalette[3], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH20_60mean",])+
+  geom_point(data = x[x$treat == "EH20_60mean",])+
+  scale_color_manual(values = c(mypalette[4], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0_80mean",])+
+  geom_point(data = x[x$treat == "EH0_80mean",])+
+  scale_color_manual(values = c(mypalette[5], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH40_80mean",])+
+  geom_point(data = x[x$treat == "EH40_80mean",])+
+  scale_color_manual(values = c(mypalette[6], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH80mean",])+
+  geom_point(data = x[x$treat == "EH80mean",])+
+  scale_color_manual(values = c(mypalette[7], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+pdf("plot3_new.pdf", width = 11, height = 4.25)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+dev.off()
+
+
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in40 <- mean(m$dw_40, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in40 <- mean(m$dw_40, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH40_80in00 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+                         cbind(EH40in00, EH40in40, EH40in80),
+                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+                         cbind(EH80in00, EH80in40, EH80in80)))
+rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+colnames(x) <- c("dw_00", "dw_40", "dw_80")
+x$treat <- rownames(x)
+x$indiv <- c(91,92,93,94,95,96,97)
+x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+mm$indiv <- seq(1:nrow(mm))
+mm <- melt(mm, id = c("treat", "indiv"))
+lims <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+
+p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0mean",])+
+  geom_point(data = x[x$treat == "EH0mean",])+
+  scale_color_manual(values = c(mypalette[1], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0_40mean",])+
+  geom_point(data = x[x$treat == "EH0_40mean",])+
+  scale_color_manual(values = c(mypalette[2], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH40mean",])+
+  geom_point(data = x[x$treat == "EH40mean",])+
+  scale_color_manual(values = c(mypalette[3], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH20_60mean",])+
+  geom_point(data = x[x$treat == "EH20_60mean",])+
+  scale_color_manual(values = c(mypalette[4], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH0_80mean",])+
+  geom_point(data = x[x$treat == "EH0_80mean",])+
+  scale_color_manual(values = c(mypalette[5], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH40_80mean",])+
+  geom_point(data = x[x$treat == "EH40_80mean",])+
+  scale_color_manual(values = c(mypalette[6], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0, lty = "dotted")+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_line(data = x[x$treat == "EH80mean",])+
+  geom_point(data = x[x$treat == "EH80mean",])+
+  scale_color_manual(values = c(mypalette[7], "black"))+
+  ylim(c(limmin, limmax))+
+  theme_VJF+
+  theme(legend.position = "none")
+pdf("plot3c_new.pdf", width = 11, height = 4.25)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+dev.off()
+```
 
 
 
@@ -2280,7 +2652,52 @@ for (i in 1:length(chems)){
 ```
 <br/><br/>
 
+```{R Single Environment Treatment Effects: Models NEWNEW}
+# setup ------------------------------------------------------------------------
+setwd(DIR_out)
+chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
+envs <- c(0.0, 0.4, 0.8, 1.2)
 
+# among treatment effects X chemical X environment -----------------------------
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+treattreatlist <- paste0("treat", treatlist)
+myres <- matrix(nrow=7, ncol=7)
+rownames(myres) <- treattreatlist; colnames(myres) <- rownames(myres)
+for (g in 1:length(chems)){
+  for (h in 1:length(envs)){
+    myres_p <- myres; myres_est <- myres
+    for(i in 1:length(treatlist)){
+      m <- my[my$mpasp==envs[h] & my$epo %in% chems[[g]] & !is.na(my$dw) & !is.na(my$re_dw),]
+      m$treat <- relevel(m$treat, ref=treatlist[i])
+      mod <- lmer(dw ~ treat + (1|bcpID), data=m)
+      print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+                      file=paste0("000_Table_S3_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html")))
+      for(j in 1:length(treattreatlist)){
+        if(treatlist[j] !=treatlist[i]){
+          myres_est[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
+          myres_p[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
+        }
+      }
+    }
+    colnames(myres_est) <-  treatlist; rownames(myres_est) <- treatlist
+    colnames(myres_p) <- treatlist; rownames(myres_p) <- treatlist
+    assign(paste0("myres_est_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_est)
+    assign(paste0("myres_p_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_p)
+    }
+}; rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, weights, myres)
+
+
+# treatment vs 0. X chemical X environment -------------------------------------
+for (i in 1:length(chems)){
+  for (j in 1:length(envs)){
+      m <- my[my$mpasp==envs[j] & my$epo %in% chems[[i]] & !is.na(my$dw),]
+      mod <- lmer(dw ~ treat + 0 + (1|bcpID), data=m)
+      print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+                      file=paste0("000_Table_S4_",strsplit(chems[[i]][1], "_")[[1]][1],"_",envs[j], ".html")))
+  }
+}; rm(chems, m, mod, i, j, envs, weights)
+```
+<br/><br/>
 
 ```{R Single Environment Treatment Effects: Visualization, warning=FALSE}
 # get datasets for panels A, B, C, D -------------------------------------------
