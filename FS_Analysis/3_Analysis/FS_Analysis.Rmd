@@ -23,10 +23,10 @@ knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE)
 
 
 # Set Working Directory Paths --------------------------------------------------
-DIR_counts_in <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Counts_Data/Combined"
-DIR_evo_formatted <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Evolutionary_Dynamics/Formatted_Data"
-DIR_fit_formatted <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data"
-DIR_out <- "~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/3_Analysis"
+DIR_counts_in <- "C:/Users/VJF/Desktop/passback/FLUXCODE/FS_Code_Supplement-master/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Counts_Data/Combined"
+DIR_evo_formatted <- "C:/Users/VJF/Desktop/passback/FLUXCODE/FS_Code_Supplement-master/FS_Analysis/2_CountstoAnalysis/Evolutionary_Dynamics/Formatted_Data"
+DIR_fit_formatted <- "C:/Users/VJF/Desktop/passback/FLUXCODE/FS_Code_Supplement-master/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data"
+DIR_out <- "C:/Users/VJF/Desktop/passback/FLUXCODE/FS_Code_Supplement-master/FS_Analysis/3_Analysis"
 
 
 # Load Packages ----------------------------------------------------------------
@@ -224,7 +224,7 @@ rm(mycc, reportvals, i, DIR_evo_formatted) # tidy
 ```{R Survival, warning=FALSE}
 # calculate extinct/extirpated and surviving lineages in each treatment X assay environment and
 # create formatted tables for output indicating n and proportion of treatment total n in each category.
-# setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
+setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
 # chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
 # outnames <- c("SALT", "COPR")
 # treatn <- c(32,32,32,32,30,32,30)
@@ -698,25 +698,47 @@ m$var_00_80_g0 <- apply(cbind(m$fit_a_00, m$fit_a_80), 1, var)
 m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
 m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
 m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
-summary(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
 
+# car::vif(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
+
+summary(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
+
+mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
 mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
 
+cor.test(m$dw_00_80 , m$darith_00_80)
+cor.test(m$dw_00_80 , m$dvar_00_80)
+
 m %>% group_by(m$treat) %>%
-  dplyr::summarize(plus = sum(dvar_00_80 > 0)/length(dvar_00_80),
-            minus = sum(dvar_00_80 < 0)/length(dvar_00_80),
-            len = length(dvar_00_80))
+  dplyr::summarize(plus_perc = sum(dw_00_80 > 0)/length(dw_00_80),
+                   nplus = sum(dw_00_80 > 0),
+                   len = length(dw_00_80))
+
+
+m %>% group_by(m$treat) %>%
+  dplyr::summarize(plus_perc = sum(dvar_00_80 > 0)/length(dvar_00_80),
+                   nplus = sum(dvar_00_80 > 0),
+                   len = length(dvar_00_80))
+
 
 ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
   geom_point() +
   scale_color_manual(values=mypalette)
+
+
+# treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+# for(i in 1:length(treatlist)){
+#   m$treat <- relevel(m$treat, ref = treatlist[i])
+#   mod <- glm(dw_00_80 ~ treat, data = m)
+#   print(summary(mod))
+# }
 
 # m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_40),]
 # m$var_00_40_g0 <- apply(cbind(m$fit_a_00, m$fit_a_40), 1, var)
@@ -759,21 +781,31 @@ m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
 m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
 m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
 
-summary(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
-mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
+# summary(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
 
+mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
 mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
 
+cor.test(m$dw_00_80 , m$darith_00_80)
+
+
 m %>% group_by(m$treat) %>%
-  dplyr::summarize(plus = sum(dvar_00_80 > 0)/length(dvar_00_80),
-            minus = sum(dvar_00_80 < 0)/length(dvar_00_80),
-            len = length(dvar_00_80))
+  dplyr::summarize(plus_perc = sum(dw_00_80 > 0)/length(dw_00_80),
+                   nplus = sum(dw_00_80 > 0),
+                   len = length(dw_00_80))
+
+
+m %>% group_by(m$treat) %>%
+  dplyr::summarize(plus_perc = sum(dvar_00_80 > 0)/length(dvar_00_80),
+                   nplus = sum(dvar_00_80 > 0),
+                   len = length(dvar_00_80))
 
 
 ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
@@ -1588,7 +1620,7 @@ p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat
   ylim(c(limmin, limmax))+
   theme_VJF+
   theme(legend.position = "none")
-pdf("plot3_new.pdf", width = 11, height = 4.25)
+png("plot3_new.png", width = 1056/2, height = 432/2)
 grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
 dev.off()
 
@@ -1720,7 +1752,7 @@ p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat
   ylim(c(limmin, limmax))+
   theme_VJF+
   theme(legend.position = "none")
-pdf("plot3c_new.pdf", width = 11, height = 4.25)
+png("plot3c_new.png", width = 1056/2, height = 432/2)
 grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
 dev.off()
 ```
@@ -1912,6 +1944,114 @@ pdf("plot1noweights.pdf", width = 7, height =2)
 grid.arrange(p2,p1,p4, ncol = 3)
 dev.off()
 ```
+
+
+
+# spread
+```{r}
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH40_80in0 <- mean(m$dw_00, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+m$d2treatmean <- NA
+m$d2treatmean[m$treat == "EH0"] <- raster::pointDistance(p1 = c(EH0in00, EH0in80), p2 = cbind(m$dw_00[m$treat == "EH0"], m$dw_80[m$treat == "EH0"]), lonlat = F)
+m$d2treatmean[m$treat == "EH0_40"] <- raster::pointDistance(p1 = c(EH0_40in00, EH0_40in80), p2 = cbind(m$dw_00[m$treat == "EH0_40"], m$dw_80[m$treat == "EH0_40"]), lonlat = F)
+m$d2treatmean[m$treat == "EH40"] <- raster::pointDistance(p1 = c(EH40in00, EH40in80), p2 = cbind(m$dw_00[m$treat == "EH40"], m$dw_80[m$treat == "EH40"]), lonlat = F)
+m$d2treatmean[m$treat == "EH20_60"] <- raster::pointDistance(p1 = c(EH20_60in00, EH20_60in80), p2 = cbind(m$dw_00[m$treat == "EH20_60"], m$dw_80[m$treat == "EH20_60"]), lonlat = F)
+m$d2treatmean[m$treat == "EH0_80"] <- raster::pointDistance(p1 = c(EH0_80in00, EH0_80in80), p2 = cbind(m$dw_00[m$treat == "EH0_80"], m$dw_80[m$treat == "EH0_80"]), lonlat = F)
+m$d2treatmean[m$treat == "EH40_80"] <- raster::pointDistance(p1 = c(EH40_80in00, EH40_80in80), p2 = cbind(m$dw_00[m$treat == "EH40_80"], m$dw_80[m$treat == "EH40_80"]), lonlat = F)
+m$d2treatmean[m$treat == "EH80"] <- raster::pointDistance(p1 = c(EH80in00, EH80in80), p2 = cbind(m$dw_00[m$treat == "EH80"], m$dw_80[m$treat == "EH80"]), lonlat = F)
+mod <- glm(m$d2treatmean ~ m$treat + 0)
+summary(mod)
+
+a <- m %>% group_by(m$treat) %>%
+  dplyr::summarize(mean = mean(d2treatmean),
+            var = var(d2treatmean))
+plot(a$mean ~ a$var)
+ggplot(data = a, aes(y = mean, x = var, color= a$'m$treat'))+
+  geom_point()+
+  scale_color_manual(values = mypalette)
+
+
+
+
+
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH40_80in0 <- mean(m$dw_00, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+m$d2treatmean <- NA
+m$d2treatmean[m$treat == "EH0"] <- raster::pointDistance(p1 = c(EH0in00, EH0in80), p2 = cbind(m$dw_00[m$treat == "EH0"], m$dw_80[m$treat == "EH0"]), lonlat = F)
+m$d2treatmean[m$treat == "EH0_40"] <- raster::pointDistance(p1 = c(EH0_40in00, EH0_40in80), p2 = cbind(m$dw_00[m$treat == "EH0_40"], m$dw_80[m$treat == "EH0_40"]), lonlat = F)
+m$d2treatmean[m$treat == "EH40"] <- raster::pointDistance(p1 = c(EH40in00, EH40in80), p2 = cbind(m$dw_00[m$treat == "EH40"], m$dw_80[m$treat == "EH40"]), lonlat = F)
+m$d2treatmean[m$treat == "EH20_60"] <- raster::pointDistance(p1 = c(EH20_60in00, EH20_60in80), p2 = cbind(m$dw_00[m$treat == "EH20_60"], m$dw_80[m$treat == "EH20_60"]), lonlat = F)
+m$d2treatmean[m$treat == "EH0_80"] <- raster::pointDistance(p1 = c(EH0_80in00, EH0_80in80), p2 = cbind(m$dw_00[m$treat == "EH0_80"], m$dw_80[m$treat == "EH0_80"]), lonlat = F)
+m$d2treatmean[m$treat == "EH40_80"] <- raster::pointDistance(p1 = c(EH40_80in00, EH40_80in80), p2 = cbind(m$dw_00[m$treat == "EH40_80"], m$dw_80[m$treat == "EH40_80"]), lonlat = F)
+m$d2treatmean[m$treat == "EH80"] <- raster::pointDistance(p1 = c(EH80in00, EH80in80), p2 = cbind(m$dw_00[m$treat == "EH80"], m$dw_80[m$treat == "EH80"]), lonlat = F)
+mod <- glm(m$d2treatmean ~ m$treat + 0)
+summary(mod)
+
+a <- m %>% group_by(m$treat) %>%
+  dplyr::summarize(mean = mean(d2treatmean),
+            var = var(d2treatmean))
+plot(a$mean ~ a$var)
+ggplot(data = a, aes(y = mean, x = var, color= a$'m$treat'))+
+  geom_point()+
+  scale_color_manual(values = mypalette)
+```
+
+
+
 
 ```{r}
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
