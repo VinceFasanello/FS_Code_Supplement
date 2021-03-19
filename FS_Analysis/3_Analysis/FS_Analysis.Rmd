@@ -2,7 +2,6 @@
 title: "FS Analysis"
 output: html_document
 ---
-Last edited: 1/13/2021
 
 This script conducts the statistical analyses and creates the visualizations presented in PAPER TITLE. 
 
