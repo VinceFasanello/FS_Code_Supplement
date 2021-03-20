@@ -81,6 +81,15 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
+# get legend function found on stack exchange ----------------------------------
+#  Source: https://stackoverflow.com/questions/12041042/how-to-plot-just-the-legends-in-ggplot2
+#  scrapes figure legend for later plotting in multipannel plot
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
 
 # %ni% ---------------------------------
 #   Description: "not in", opposite of %in% operator.
@@ -219,185 +228,456 @@ rm(mycc, reportvals, i, DIR_evo_formatted) # tidy
 <br/><br/>
 
 
-```{R Survival, warning=FALSE}
-# calculate extinct/extirpated and surviving lineages in each treatment X assay environment and
-# create formatted tables for output indicating n and proportion of treatment total n in each category.
+```{R Power}
 setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_40",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH20_60",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-# m <- m[order(m$uni),]
-# m$uni
-m <- m[m$uni %ni% c("SALT_Ad1C9d2C9", "SALT_Bd1C9d2C9"),]
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+# # Calculate power to detect indiv BC fitness increase / decrease (t-tests) -----
+# # d=m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
+# # here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
+# # population standard deviation of the four replicate sets in each row of the dataset.
+# temp <- myrc[!is.na(myrc$fit_e_1) & !is.na(myrc$fit_e_2) & !is.na(myrc$fit_e_3) & !is.na(myrc$fit_e_4)
+#              & !is.na(myrc$fit_a) & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+# temp$dw_1 <- temp$fit_e_1 - temp$fit_a; temp$psd_r1 <- ((temp$dw - temp$dw_1)^2)/4
+# temp$dw_2 <- temp$fit_e_2 - temp$fit_a; temp$psd_r2 <- ((temp$dw - temp$dw_2)^2)/4
+# temp$dw_3 <- temp$fit_e_3 - temp$fit_a; temp$psd_r3 <- ((temp$dw - temp$dw_3)^2)/4
+# temp$dw_4 <- temp$fit_e_4 - temp$fit_a; temp$psd_r4 <- ((temp$dw - temp$dw_4)^2)/4
+# temp$psd_m <- rowMeans(cbind(temp$psd_r1, temp$psd_r2, temp$psd_r3, temp$psd_r4), na.rm=T)
+# psd <- weighted.mean(sqrt(temp$psd_m), temp$reads_dw, na.rm=T); rm(temp)
+# 
+# powerBC <- matrix(nrow=100, ncol=5)
+# colnames(powerBC) <- c("fitchange", "psd", "n", "power", "sig.level")
+# powerBC <- as.data.frame(powerBC)
+# powerBC$fitchange <- seq(0,0.04,length.out=100) # fitness changes to calculate power for.
+# powerBC$psd <- psd # psd calculated above
+# powerBC$n <- 4 # n replicates
+# powerBC$sig.level <- 0.05 # significance level
+# for(i in 1:nrow(powerBC)){
+#   powerBC$power[i] <- pwr.t.test(d=powerBC$fitchange[i] / powerBC$psd[i],
+#                                  n=powerBC$n[i], sig.level=powerBC$sig.level[i])$power
+# }; rm(i) # calculate power
+reportvals <- c(NA, NA, NA, NA, NA, NA)
+# reportvals[1] <- paste0(pwr.t.test(d=0.01 / psd, n=4, sig.level=0.05)$power*100, "% power to detect a 1% fitness change for an average BC")
+# reportvals[2] <- paste0("80% power to detect a ", pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100, "% fitness change for an average BC")
 
 
+# Calculate power to detect Treatment effects (lmer model) ---------------------
+# f2 (effect size)=1/rmse (where rmse=root mean square error among replicate measures of dw). obtain rmse via 
+# rmse=sqrt(mean(residuals(MODEL)^2))*100. Use pwr.f2.test in pwr package to obtain power to detect treatment 
+# effects between treatments with a TOTAL number of barcodes equal to v+2=n between them. 
+temp <- my[my$mpasp %in% c(0.0, 0.8), ] # Restrict to SALT & COPR dw data in 0.0 and 0.8 environments
+temp$ID <- paste0(temp$bcpID, temp$mpasp) 
+# rmse from the model*100 --> effect size of 1 corresonds to an x.xx% (rmse) fitness change.
+myrmse <- sqrt(mean(residuals(lm(temp$dw ~ temp$ID + 0, weights=I(log(temp$re_dw))))^2))*100
+# effect size of 1 is an x.xx% (rmse) fitness cahnge, so for a fitness change of 1(%), expect effect size of 1/x.xx (1/rmse)=x.xxx.
+myeffectsize <- 1/myrmse; rm(temp) 
 
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40_80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-# m <- m[order(m$uni),]
-# m$uni
-m <- m[m$uni %ni% c("SALT_Ad1C5d2C5", "SALT_Bd1C5d2C5"),]
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-
-# ----------------
-
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_40",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+powerTR <- matrix(nrow=200, ncol=5)
+colnames(powerTR) <- c("u", "v", "power", "f2", "sig.level")
+powerTR <- as.data.frame(powerTR)
+powerTR$v  <- c(rep((32*2) -1 -1, times=100), rep((16*2) -1 -1, times=100)) # v's
+powerTR$u <- 1 # u
+powerTR$n <- powerTR$v + 2; powerTR$n <- factor(powerTR$n, levels=c(64,32)) # n=v+2
+powerTR$f2 <- seq(0, myeffectsize*1.5, length.out=100) # effect size
+powerTR$sig.level <- 0.05 # significance level
+for(i in 1:nrow(powerTR)){
+  powerTR$power[i] <-  pwr.f2.test(u=powerTR$u[i], v=powerTR$v[i], f2=powerTR$f2[i],
+                                   sig.level=powerTR$sig.level[i])$power
+}; rm(i)
+powerTR$f2 <- powerTR$f2*myrmse # scale effect size to be % fitness difference.
+reportvals[3] <- paste0(pwr.f2.test(u=1, v=((32*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness change between treatments (Best Case)")
+reportvals[4] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change between treatments (Best Case)")
+reportvals[5] <- paste0(pwr.f2.test(u=1, v=((16*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness difference between treatments (Worst Case)")
+reportvals[6] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change for an average BC (Worst Case)")
 
 
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH20_60",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+# Visualization ----------------------------------------------------------------
+# pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
+#   geom_segment(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd,
+#                xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+#   geom_segment(x=0, xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+#   geom_point(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, pch=19, size=3, color="darkgray")+
+#   geom_text(x=2.5/100, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100,2), ", 80"))+
+#   geom_line()+
+#   scale_x_continuous(name="Fitness Change (%)\n (for Individual Strains) \n ", breaks=seq(0.0,0.04,by=0.005),
+#                      labels=seq(0.0,0.04,by=0.005)*100, limits=c(0,0.04), expand=expansion(mult=c(0,0.02)))+
+#   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
+#   theme_VJF + labs(tag="A")
 
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-# m <- m[order(m$uni),]
-# m$uni
-m <- m[m$uni %ni% c("COPR_Ad1C9d2C9", "COPR_Bd1C9d2C9"),]
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
+  geom_segment(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
+               xend=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_segment(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
+               xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_segment(x=0, xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_point(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
+  geom_point(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
+  geom_text(x=0.19, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
+  geom_text(x=0.75, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
+  geom_line(aes(lty=n))+
+  scale_x_continuous(name="Fitness Difference (%)\n (Between Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
+                     labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
+  scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
+  theme_VJF + theme(legend.position=c(0.9,0.3)) #+ labs(tag="B")
 
 
+# Save outputs to file ---------------------------------------------------------
+# setwd(DIR_out); write.csv(powerBC, file="000_Table_S3_indiv.csv")
+setwd(DIR_out); write.csv(powerTR, file="000_Table_S3.csv")
+# setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
+# cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
+setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.5, height=3.5)
+pBB; dev.off()
 
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40_80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
-
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH80",]
-m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
-# m <- m[order(m$uni),]
-# m$uni
-m <- m[m$uni %ni% c("COPR_Ad1C5d2C5", "COPR_Bd1C5d2C5"),]
-x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
-x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
-x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+# # report -----------------------------------------------------------------------
+# for (i in 1:6){print(reportvals[i])}
+# rm(pAA, pBB, powerBC, powerTR, myeffectsize, myrmse, psd, i, reportvals) # tidy
 ```
 <br/><br/>
 
 
-```{r}
-# calculate change in variance in fitness
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
-m$var_00_80_g0 <- apply(cbind(m$fit_a_00, m$fit_a_80), 1, var)
-m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
-m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
-m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
-
-# car::vif(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
-mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
-summary(mymod)
-getwd()
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_2.html")
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
-# 
-# mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
-# mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
-# 
-# cor.test(m$dw_00_80 , m$darith_00_80)
-# cor.test(m$dw_00_80 , m$dvar_00_80)
-# 
-# ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
-#   geom_point() +
-#   scale_color_manual(values=mypalette)
 
 
 
-# calculate change in variance in fitness
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
-m$var_00_80_g0 <- apply(cbind(m$fit_a_00, m$fit_a_80), 1, var)
-m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
-m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
-m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
 
-# car::vif(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
-mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
-summary(mymod)
-getwd()
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_3.html")
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
-# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
-# 
-# mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
-# mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
-#
-# cor.test(m$dw_00_80 , m$darith_00_80)
-# cor.test(m$dw_00_80 , m$dvar_00_80)
-#
-# ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
-#   geom_point() +
-#   scale_color_manual(values=mypalette)
+```{R Single Environment Treatment Effects: Models NEWNEW}
+# setup ------------------------------------------------------------------------
+setwd(DIR_out)
+chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
+envs <- c(0.0, 0.8)
+
+# among treatment effects X chemical X environment -----------------------------
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+treattreatlist <- paste0("treat", treatlist)
+myres <- matrix(nrow=7, ncol=7)
+rownames(myres) <- treattreatlist; colnames(myres) <- rownames(myres)
+for (g in 1:length(chems)){
+  for (h in 1:length(envs)){
+    myres_p <- myres; myres_est <- myres
+    for(i in 1:length(treatlist)){
+      m <- my[my$mpasp==envs[h] & my$epo %in% chems[[g]] & !is.na(my$dw) & !is.na(my$re_dw),]
+      m$treat <- relevel(m$treat, ref=treatlist[i])
+      mod <- lmer(dw ~ treat + (1|bcpID), data=m)
+      # print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+      #                 file=paste0("000_Table_Sn_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html")))
+      for(j in 1:length(treattreatlist)){
+        if(treatlist[j] !=treatlist[i]){
+          myres_est[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
+          myres_p[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
+        }
+      }
+    }
+    colnames(myres_est) <-  treatlist; rownames(myres_est) <- treatlist
+    colnames(myres_p) <- treatlist; rownames(myres_p) <- treatlist
+    assign(paste0("myres_est_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_est)
+    assign(paste0("myres_p_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_p)
+    }
+}; rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, weights, myres)
+
+
+# treatment vs 0. X chemical X environment -------------------------------------
+for (i in 1:length(chems)){
+  for (j in 1:length(envs)){
+      m <- my[my$mpasp==envs[j] & my$epo %in% chems[[i]] & !is.na(my$dw),]
+      mod <- lmer(dw ~ treat + 0 + (1|bcpID), data=m)
+      print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+                      file=paste0("000_Table_Sn_",strsplit(chems[[i]][1], "_")[[1]][1],"_",envs[j], ".html")))
+  }
+}; rm(chems, m, mod, i, j, envs)
 ```
+<br/><br/>
+
+```{R Single Environment Treatment Effects: Visualization, warning=FALSE}
+# get datasets for panels A, B, C, D -------------------------------------------
+mAA <- myrc[myrc$mpasp==0.0 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mCC <- myrc[myrc$mpasp==0.8 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mBB <- myrc[myrc$mpasp==0.0 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+mDD <- myrc[myrc$mpasp==0.8 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+
+
+# Set plotting controls --------------------------------------------------------
+fitaxdatlimSALT <- c(-0.16*100, 0.45*100) #; min(c(mAA$dw, mCC$dw)); max(c(mAA$dw, mCC$dw))
+fitaxdatlimCOPR <- c(-0.1*100, 0.57*100) #; min(c(mBB$dw, mDD$dw)); max(c(mBB$dw, mDD$dw))
+
+fitaxlablim <- c(-0.1*100, 0.5*100) 
+boxSALT <- c(0.2*100, 0.49*100) #; (boxSALT[2]-boxSALT[1]) / (fitaxdatlimSALT[2] - fitaxdatlimSALT[1])
+boxCOPR <- c(0.275*100, 0.59*100) #; (boxCOPR[2]-boxCOPR[1]) / (fitaxdatlimCOPR[2] - fitaxdatlimCOPR[1])
+
+treatlabSALT <- "NaCl Evol. Treatment"
+treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
+fitnesslabCM <- "Fitness Change in CM (%)"
+fitnesslabSALT <- "Fitness Change in CM + NaCl (%)"
+fitnesslabCOPR <- expression(bold("Fitness Change in CM + "*CuSO["4"]* " (%)"))
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+
+
+# Create stats results backer --------------------------------------------------
+myres_backer <- myres_est_SALT_0 
+myres_backer[myres_backer < 0] <- -1
+myres_backer[myres_backer > 0 | is.na(myres_backer)] <- 1
+myres_backer <- get_lower_tri(round(myres_backer, 2))
+melt_myres_backer <- reshape::melt(myres_backer)
+melt_myres_backer$X1 <- factor(melt_myres_backer$X1, levels=treatlist)
+melt_myres_backer$X2 <- factor(melt_myres_backer$X2, levels=treatlist)
+
+
+# Create stats results dataframes for plotting ---------------------------------
+lsuffs <- c("AA", "CC", "BB", "DD")
+lintabs <- c("SALT_0", "SALT_0.8", "COPR_0", "COPR_0.8")
+for (i in 1:4) {
+  assign("myres_est_temp", get(paste0("myres_est_", lintabs[i])))
+  assign("myres_p_temp", get(paste0("myres_p_", lintabs[i])))
+  myres_est_temp[which(myres_p_temp > 0.05)] <- NA
+  myres_est_temp <- get_lower_tri(round(myres_est_temp*100, 0))
+  melt_myres_est_temp <- reshape::melt(myres_est_temp)
+  melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels=treatlist)
+  melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels=treatlist)
+  assign(paste0("melt_myres_est_", lsuffs[i]), melt_myres_est_temp)
+}; rm(melt_myres_est_temp, myres_est_COPR_0, myres_est_COPR_0.8, myres_est_SALT_0, myres_est_SALT_0.8, myres_est_temp,
+      myres_p_COPR_0, myres_p_COPR_0.8, myres_p_SALT_0, myres_p_SALT_0.8, myres_p_temp, i, lintabs, lsuffs, treatlist)
+
+
+# Define plot function for panels A, B, C, D -----------------------------------
+viopanel <- function(dwdata, statsdata, backerdata=melt_myres_backer, dcol="dw", 
+                     fitlims, insetlims, fitaxlablims=fitaxlablim, fitaxstep=0.1*100,
+                     treatlab, fitlab, tag, usepalette=mypalette){
+  # main panel matter ------------------
+  pZZ <- ggplot(dwdata, aes(x=treat, y=dwdata[,dcol]*100, group=treat, color=treat)) +
+    geom_hline(yintercept=0, lty="dotted") + 
+    geom_violin(fill="gray90", color="gray30", draw_quantiles=NULL, trim=T) +
+    geom_jitter(width=0.15, height=0, alpha=0.35) + 
+    geom_rug(sides="l" , alpha=0.7, length=unit(0.015, "npc")) +
+    geom_point(stat="summary", fun="mean", color="black", cex=1.5) + 
+    geom_point(stat="summary", fun="median", color="black", cex=3, pch=1) + 
+    geom_errorbar(stat="summary", fun.data="mean_se",color="black", width=0.0, lwd=0.5)+
+    scale_y_continuous(breaks=seq(fitaxlablims[1], fitaxlablims[2], by=fitaxstep), 
+                       limits=c(fitlims[1], fitlims[2]),
+                       labels=scales::number_format(accuracy=0.01*100))+
+    scale_color_manual(values=usepalette) + 
+    coord_flip() +
+    ylab(fitlab) + xlab(treatlab) +  labs(tag=tag)+
+    theme_VJF + theme(legend.position="none")
+  # stats results backer ---------------
+  ppZZ <- ggplot(backerdata, aes(x=X1, y=X2, fill=value)) + 
+    geom_tile(show.legend=F)+
+    scale_y_discrete(position="right")+
+    theme_tufte(base_family="Helvetica")+
+    theme(axis.ticks=element_blank(), axis.title=element_blank(),
+          axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, margin=margin(t=-2.5, b=-2.5), size=6),
+          axis.text.y.right=element_text(hjust=0, vjust=0.5, margin=margin(l=-2.5, r=-2.5), size=6))+
+    scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, space="Lab", name="Estimate", na.value="transparent")
+  # Stats results ----------------------
+  pppZZ <- ggplot(statsdata, aes(x=X1, y=X2, fill=value)) + 
+    geom_tile(show.legend=F)+
+    geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface="bold") +
+    scale_y_discrete(position="right")+
+    theme_tufte(base_family="Helvetica")+
+    theme(axis.ticks=element_blank(), axis.title=element_blank(),
+          axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, margin=margin(t=-2.5, b=-2.5), size=6, face="bold"),
+          axis.text.y.right=element_text(hjust=0, vjust=0.5, margin=margin(l=-2.5, r=-2.5), size=6, face="bold"))+
+    scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent")
+  # Combine components -----------------
+  pZZ <- pZZ + annotation_custom(ggplotGrob(ppZZ), xmin=0.5, xmax=3.5, ymin=insetlims[1], ymax=insetlims[2]); rm(ppZZ)
+  pZZ <- pZZ + annotation_custom(ggplotGrob(pppZZ), xmin=0.5, xmax=3.5, ymin=insetlims[1], ymax=insetlims[2]); rm(pppZZ)
+  return(pZZ)
+}
+
+
+# Visualization ----------------------------------------------------------------
+pAA <- viopanel(dwdata=mAA, statsdata=melt_myres_est_AA, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabCM, tag="A")
+pAA <- pAA + 
+  annotate("text", x=1,y=16,label = "***", size = 6, fontface = "bold") +  
+  annotate("text", x=2,y=11,label = "*", size = 6, fontface = "bold") +
+  annotate("text", x=5,y=-12,label = "*", size = 6, fontface = "bold") +
+  annotate("text", x=6,y=-9.5,label = "*", size = 6, fontface = "bold") +
+  annotate("text", x=7,y=-16,label = "**", size = 6, fontface = "bold")
+pAA
+  
+pCC <- viopanel(dwdata=mCC, statsdata=melt_myres_est_CC, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabSALT, tag="C")
+pCC <- pCC +
+  annotate("text", x=1,y=-10,label = "*", size = 6, fontface = "bold") +  
+  annotate("text", x=4,y=23,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=5,y=45,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=6,y=40,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=7,y=42,label = "***", size = 6, fontface = "bold")
+pCC
+
+pBB <- viopanel(dwdata=mBB, statsdata=melt_myres_est_BB, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCM, tag="B")
+pBB <- pBB  + 
+  annotate("text", x=1,y=12,label = "***", size = 6, fontface = "bold") +  
+  annotate("text", x=2,y=15,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=3,y=14.5,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=4,y=15,label = "***", size = 6, fontface = "bold")
+pBB
+
+pDD <- viopanel(dwdata=mDD, statsdata=melt_myres_est_DD, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCOPR, tag="D")
+pDD <- pDD  + 
+  annotate("text", x=1,y=14,label = "*", size = 6, fontface = "bold") +  
+  annotate("text", x=3,y=21,label = "*", size = 6, fontface = "bold") +
+  annotate("text", x=4,y=23,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=5,y=48,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=6,y=37,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=7,y=56,label = "***", size = 6, fontface = "bold")
+pDD
+
+# Save outputs to file ---------------------------------------------------------
+setwd(DIR_out); pdf(file="000_Figure_1.pdf", width=11, height=8.5)
+cowplot::plot_grid(pAA, pBB, pCC, pDD, nrow=2); dev.off()
+rm(mAA, mBB, mCC, mDD, melt_myres_est_AA, melt_myres_est_BB, melt_myres_est_CC, melt_myres_est_DD,
+   myres_backer, myres0_est, myres0_p, pAA, pBB, pCC, pDD, boxCOPR, boxSALT, fitaxdatlimCOPR, fitaxdatlimSALT, fitaxlablim,
+   fitnesslabCM, fitnesslabCOPR, fitnesslabSALT, treatlabCOPR, treatlabSALT) # tidy
+```
+<br/><br/>
+
+
+
+
+```{r}
+getwd()
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+a <- c(EH0in00, EH0in80)
+aa <- c(EH80in00, EH80in80)
+b <- c(EH0in00, EH0in40)
+bb <- c(EH40in00, EH40in40)
+c <- c(EH40in40, EH40in80)
+cc <- c(EH80in40, EH80in80)
+
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+za <- c(EH0in00, EH0in80)
+zaa <- c(EH80in00, EH80in80)
+zb <- c(EH0in00, EH0in40)
+zbb <- c(EH40in00, EH40in40)
+zc <- c(EH40in40, EH40in80)
+zcc <- c(EH80in40, EH80in80)
+
+# all in one.
+# p1 <- ggplot()+
+#   xlim(min(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10,
+#        max(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10)+
+#   ylim(min(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10,
+#        max(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10)+
+#   
+#   geom_abline(slope = getline(a, aa)[1], intercept = getline(a, aa)[2], color = "purple", lty = "dotted") +
+#   geom_abline(slope = getline(b, bb)[1], intercept = getline(b, bb)[2], color = "blue", lty = "dotted") +
+#   geom_abline(slope = getline(c, cc)[1], intercept = getline(c, cc)[2], color = "red", lty = "dotted") +
+# 
+#   geom_abline(slope = getline(za, zaa)[1], intercept = getline(za, zaa)[2], lty = "dotted", color = "purple", lwd = 0.5) +
+#   geom_abline(slope = getline(zb, zbb)[1], intercept = getline(zb, zbb)[2], lty = "dotted", color = "blue", lwd = 0.5) +
+#   geom_abline(slope = getline(zc, zcc)[1], intercept = getline(zc, zcc)[2], lty = "dotted", color = "red", lwd = 0.5) +
+#   # 
+#   geom_segment(aes(x=a[1], xend=aa[1], y=a[2], yend=aa[2]), color = "purple", lwd = 1)+
+#   geom_segment(aes(x=b[1], xend=bb[1], y=b[2], yend=bb[2]), color = "blue", lwd = 1)+
+#   geom_segment(aes(x=c[1], xend=cc[1], y=c[2], yend=cc[2]), color = "red", lwd = 1)+
+# 
+#   geom_segment(aes(x=za[1], xend=zaa[1], y=za[2], yend=zaa[2]), color = "purple", lwd = 1)+
+#   geom_segment(aes(x=zb[1], xend=zbb[1], y=zb[2], yend=zbb[2]), color = "blue", lwd = 1)+
+#   geom_segment(aes(x=zc[1], xend=zcc[1], y=zc[2], yend=zcc[2]), color = "red", lwd = 1)+
+#   
+#   geom_point(aes(x = a[1], y = a[2]), color = "purple", size = 5)+
+#   geom_point(aes(x = aa[1], y = aa[2]), color = "purple", size = 5)+
+#   geom_point(aes(x = b[1], y = b[2]), color = "blue", size = 5)+
+#   geom_point(aes(x = bb[1], y = bb[2]), color = "blue", size = 5)+
+#   geom_point(aes(x = c[1], y = c[2]), color = "red", size = 5)+
+#   geom_point(aes(x = cc[1], y = cc[2]), color = "red", size = 5)+
+#   
+#   geom_point(aes(x = za[1], y = za[2]), color = "purple", size = 5, pch = 17)+
+#   geom_point(aes(x = zaa[1], y = zaa[2]), color = "purple", size = 5, pch = 17)+
+#   geom_point(aes(x = zb[1], y = zb[2]), color = "blue", size = 5, pch = 17)+
+#   geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
+#   geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
+#   geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
+#   theme_VJF+xlab("Fitness Change: lower")+ylab("Fitness Change: higher")
+# p1
+
+
+p1 <- ggplot()+
+  xlim(min(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10,
+       max(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10)+
+  ylim(min(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10,
+       max(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10)+
+  
+  geom_abline(slope = getline(b, bb)[1], intercept = getline(b, bb)[2], color = "blue", lty = "dotted") +
+  geom_abline(slope = getline(zb, zbb)[1], intercept = getline(zb, zbb)[2], lty = "dotted", color = "blue", lwd = 0.5) +
+  geom_segment(aes(x=b[1], xend=bb[1], y=b[2], yend=bb[2]), color = "blue", lwd = 1)+
+  geom_segment(aes(x=zb[1], xend=zbb[1], y=zb[2], yend=zbb[2]), color = "blue", lwd = 1)+
+  geom_point(aes(x = b[1], y = b[2]), color = "blue", size = 5)+
+  geom_point(aes(x = bb[1], y = bb[2]), color = "blue", size = 5)+
+  geom_point(aes(x = zb[1], y = zb[2]), color = "blue", size = 5, pch = 17)+
+  geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
+  theme_VJF+xlab("Fitness Change: 0%")+ylab("Fitness Change: 40%") + labs(tag="A")
+p1 <- p1 + annotate("text", x=0.015,y=0.38,label = "Chemical Identity", size = 3, fontface = "bold")
+p1 <- p1 + annotate("text", x=0.01,y=0.33,label = "NaCl", size = 3, fontface = "bold")
+p1 <- p1 + annotate("text", x=0.012,y=0.35,label = "CuSO4", size = 3, fontface = "bold")
+p1 <- p1 + geom_point(aes(x = -0.005, y = 0.33), size = 5, color = "black")
+p1 <- p1 + geom_point(aes(x = -0.005, y = 0.35), size = 5, color = "black", pch = 17)
+p1
+
+
+
+p2 <- ggplot()+
+  xlim(min(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10,
+       max(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10)+
+  ylim(min(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10,
+       max(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10)+
+  
+  geom_abline(slope = getline(a, aa)[1], intercept = getline(a, aa)[2], color = "purple", lty = "dotted") +
+  geom_abline(slope = getline(za, zaa)[1], intercept = getline(za, zaa)[2], lty = "dotted", color = "purple", lwd = 0.5) +
+  geom_segment(aes(x=a[1], xend=aa[1], y=a[2], yend=aa[2]), color = "purple", lwd = 1)+
+  geom_segment(aes(x=za[1], xend=zaa[1], y=za[2], yend=zaa[2]), color = "purple", lwd = 1)+
+  geom_point(aes(x = a[1], y = a[2]), color = "purple", size = 5)+
+  geom_point(aes(x = aa[1], y = aa[2]), color = "purple", size = 5)+
+  geom_point(aes(x = za[1], y = za[2]), color = "purple", size = 5, pch = 17)+
+  geom_point(aes(x = zaa[1], y = zaa[2]), color = "purple", size = 5, pch = 17)+
+  theme_VJF+xlab("Fitness Change: 0%")+ylab("Fitness Change: 80%")+ labs(tag="B")
+p2
+
+p3 <- ggplot()+
+  xlim(min(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10,
+       max(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10)+
+  ylim(min(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10,
+       max(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10)+
+  geom_abline(slope = getline(c, cc)[1], intercept = getline(c, cc)[2], color = "red", lty = "dotted") +
+  geom_abline(slope = getline(zc, zcc)[1], intercept = getline(zc, zcc)[2], lty = "dotted", color = "red", lwd = 0.5) +
+  geom_segment(aes(x=c[1], xend=cc[1], y=c[2], yend=cc[2]), color = "red", lwd = 1)+
+  geom_segment(aes(x=zc[1], xend=zcc[1], y=zc[2], yend=zcc[2]), color = "red", lwd = 1)+
+  geom_point(aes(x = c[1], y = c[2]), color = "red", size = 5)+
+  geom_point(aes(x = cc[1], y = cc[2]), color = "red", size = 5)+
+  geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
+  geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
+  theme_VJF+xlab("Fitness Change: 40%")+ylab("Fitness Change: 80%")+ labs(tag="C")
+p3
+
+setwd(DIR_out); pdf(file="000_Figure_2.pdf", width=8.5, height=5)
+cowplot::plot_grid(p1, p2, p3, nrow=1); dev.off()
+```
+<br/><br/>
+
 
 
 ```{r}
@@ -468,6 +748,18 @@ m <- m[m$dw_40_80 >0,]
 table(sign(m$dw_00))
 table(sign(m$dw_120))
 ```
+
+```{r}
+m <- myrcw
+legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
+  geom_point(size = 1.5) + theme_VJF + scale_color_manual(values = mypalette) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  theme(legend.title = element_text(size = 7), 
+          legend.text = element_text(size = 7))
+legp
+
+legp <- get_legend(legp)
+```
+
 
 
 ```{r}
@@ -593,17 +885,8 @@ p2 <- ggplot()+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  # xlim(-0.13,0.1)+
   theme_VJF
-
-
-lay<- as.matrix(cbind(c(1,1,2)))
-pdf("000_Figure_3ac.pdf", width = 3, height = 6)
-grid::grid.draw(grid.arrange(p1,p2, layout_matrix =lay))
-dev.off()
 ```
-
-
 ```{r}
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
@@ -648,63 +931,63 @@ q <- c(EH40in00, EH40in80)
 b <- c(EH0in00, EH0in80)
 c <- c(EH80in00, EH80in80)
 
-aaa <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-aaa <- aaa[!is.na(aaa$dw_00) & !is.na(aaa$dw_80),]
-aaa$dist <- apply(cbind(aaa$dw_00, aaa$dw_80), 1, dist2d, b=b, c=c)
-aaa$sign <- apply(cbind(aaa$dw_00, aaa$dw_80), 1, lineside, b=b, c=c)
+zaaa <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zaaa <- zaaa[!is.na(zaaa$dw_00) & !is.na(zaaa$dw_80),]
+zaaa$dist <- apply(cbind(zaaa$dw_00, zaaa$dw_80), 1, dist2d, b=b, c=c)
+zaaa$sign <- apply(cbind(zaaa$dw_00, zaaa$dw_80), 1, lineside, b=b, c=c)
 
-zzz <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-zzz <- zzz[!is.na(zzz$dw_00) & !is.na(zzz$dw_80),]
-zzz$dist <- apply(cbind(zzz$dw_00, zzz$dw_80), 1, dist2d, b=b, c=c)
-zzz$sign <- apply(cbind(zzz$dw_00, zzz$dw_80), 1, lineside, b=b, c=c)
+zzzz <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zzzz <- zzzz[!is.na(zzzz$dw_00) & !is.na(zzzz$dw_80),]
+zzzz$dist <- apply(cbind(zzzz$dw_00, zzzz$dw_80), 1, dist2d, b=b, c=c)
+zzzz$sign <- apply(cbind(zzzz$dw_00, zzzz$dw_80), 1, lineside, b=b, c=c)
 
-nnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-nnn <- nnn[!is.na(nnn$dw_00) & !is.na(nnn$dw_80),]
-nnn$dist <- apply(cbind(nnn$dw_00, nnn$dw_80), 1, dist2d, b=b, c=c)
-nnn$sign <- apply(cbind(nnn$dw_00, nnn$dw_80), 1, lineside, b=b, c=c)
+znnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+znnn <- znnn[!is.na(znnn$dw_00) & !is.na(znnn$dw_80),]
+znnn$dist <- apply(cbind(znnn$dw_00, znnn$dw_80), 1, dist2d, b=b, c=c)
+znnn$sign <- apply(cbind(znnn$dw_00, znnn$dw_80), 1, lineside, b=b, c=c)
 
-ppp <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-ppp <- ppp[!is.na(ppp$dw_00) & !is.na(ppp$dw_80),]
-ppp$dist <- apply(cbind(ppp$dw_00, ppp$dw_80), 1, dist2d, b=b, c=c)
-ppp$sign <- apply(cbind(ppp$dw_00, ppp$dw_80), 1, lineside, b=b, c=c)
+zppp <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zppp <- zppp[!is.na(zppp$dw_00) & !is.na(zppp$dw_80),]
+zppp$dist <- apply(cbind(zppp$dw_00, zppp$dw_80), 1, dist2d, b=b, c=c)
+zppp$sign <- apply(cbind(zppp$dw_00, zppp$dw_80), 1, lineside, b=b, c=c)
 
-qqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-qqq <- qqq[!is.na(qqq$dw_00) & !is.na(qqq$dw_80),]
-qqq$dist <- apply(cbind(qqq$dw_00, qqq$dw_80), 1, dist2d, b=b, c=c)
-qqq$sign <- apply(cbind(qqq$dw_00, qqq$dw_80), 1, lineside, b=b, c=c)
+zqqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zqqq <- zqqq[!is.na(zqqq$dw_00) & !is.na(zqqq$dw_80),]
+zqqq$dist <- apply(cbind(zqqq$dw_00, zqqq$dw_80), 1, dist2d, b=b, c=c)
+zqqq$sign <- apply(cbind(zqqq$dw_00, zqqq$dw_80), 1, lineside, b=b, c=c)
 
 dist2d(a, b, c) # distance to line for generalist
-nrow(aaa[aaa$sign < 0,])/nrow(aaa) # prop on side 1
-nrow(aaa[aaa$sign > 0,])/nrow(aaa) # prop on side 2
+nrow(zaaa[zaaa$sign < 0,])/nrow(zaaa) # prop on side 1
+nrow(zaaa[zaaa$sign > 0,])/nrow(zaaa) # prop on side 2
 
 dist2d(z, b, c) # distance to line for generalist
-nrow(zzz[zzz$sign < 0,])/nrow(zzz) # prop on side 1
-nrow(zzz[zzz$sign > 0,])/nrow(zzz) # prop on side 2
+nrow(zzzz[zzzz$sign < 0,])/nrow(zzzz) # prop on side 1
+nrow(zzzz[zzzz$sign > 0,])/nrow(zzzz) # prop on side 2
 
 dist2d(n, b, c) # distance to line for generalist
-nrow(nnn[nnn$sign < 0,])/nrow(nnn) # prop on side 1
-nrow(nnn[nnn$sign > 0,])/nrow(nnn) # prop on side 2
+nrow(znnn[znnn$sign < 0,])/nrow(znnn) # prop on side 1
+nrow(znnn[znnn$sign > 0,])/nrow(znnn) # prop on side 2
 
 dist2d(p, b, c) # distance to line for generalist
-nrow(ppp[ppp$sign < 0,])/nrow(ppp) # prop on side 1
-nrow(ppp[ppp$sign > 0,])/nrow(ppp) # prop on side 2
+nrow(zppp[zppp$sign < 0,])/nrow(zppp) # prop on side 1
+nrow(zppp[zppp$sign > 0,])/nrow(zppp) # prop on side 2
 
 dist2d(q, b, c) # distance to line for generalist
-nrow(qqq[qqq$sign < 0,])/nrow(qqq) # prop on side 1
-nrow(qqq[qqq$sign > 0,])/nrow(qqq) # prop on side 2
+nrow(zqqq[zqqq$sign < 0,])/nrow(zqqq) # prop on side 1
+nrow(zqqq[zqqq$sign > 0,])/nrow(zqqq) # prop on side 2
 
 
-p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+
-  xlim(min(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10,
-       max(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10) +
-  ylim(min(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_00, ppp$dw_00, qqq$dw_80)*1.10,
-       max(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_80, ppp$dw_80, qqq$dw_80)*1.10)+
+p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+
+  xlim(min(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10,
+       max(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10) +
+  ylim(min(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_00, zppp$dw_00, zqqq$dw_80)*1.10,
+       max(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_80, zppp$dw_80, zqqq$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
-  geom_point(data =zzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+
-  geom_point(data =nnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+
-  geom_point(data =ppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+
-  geom_point(data =qqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+
+  geom_point(data =zzzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+
+  geom_point(data =znnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+
+  geom_point(data =zppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+
+  geom_point(data =zqqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
   geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
@@ -713,491 +996,41 @@ p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
   theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+80%")
+p3 <- p3 + annotation_custom(legp, xmin = 0.075, ymin = 0.3)
 
 
-p2 <- ggplot()+
+p4 <- ggplot()+
   geom_vline(aes(xintercept = 0), color = "black", lty = "dotdash")+
-  geom_vline(aes(xintercept = mean(aaa$dist*aaa$sign)), lty = "dotted", color = mypalette[5])+
-  geom_vline(aes(xintercept = mean(zzz$dist*zzz$sign)), lty = "dotted", color = mypalette[4])+
-  geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
-  geom_vline(aes(xintercept = mean(ppp$dist*ppp$sign)), lty = "dotted", color = mypalette[6])+
-  geom_vline(aes(xintercept = mean(qqq$dist*qqq$sign)), lty = "dotted", color = mypalette[3])+
-  geom_density(data = aaa, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=aaa, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[5], 0.5))+
-  geom_density(data = zzz, aes(x = dist*sign), color = mypalette[4]) + geom_rug(data=zzz, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[4], 0.5))+
-  geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
-  geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
-  geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  # xlim(-0.13,0.1)+
+  geom_vline(aes(xintercept = mean(zaaa$dist*zaaa$sign)), lty = "dotted", color = mypalette[5])+
+  geom_vline(aes(xintercept = mean(zzzz$dist*zzzz$sign)), lty = "dotted", color = mypalette[4])+
+  geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
+  geom_vline(aes(xintercept = mean(zppp$dist*zppp$sign)), lty = "dotted", color = mypalette[6])+
+  geom_vline(aes(xintercept = mean(zqqq$dist*zqqq$sign)), lty = "dotted", color = mypalette[3])+
+  geom_density(data = zaaa, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zaaa, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[5], 0.5))+
+  geom_density(data = zzzz, aes(x = dist*sign), color = mypalette[4]) + geom_rug(data=zzzz, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[4], 0.5))+
+  geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
+  geom_density(data = zppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=zppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
+  geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   theme_VJF
 
 
-lay<- as.matrix(cbind(c(1,1,2)))
-pdf("000_Figure_3bd.pdf", width = 3, height = 6)
-grid::grid.draw(grid.arrange(p1,p2, layout_matrix =lay))
+lay<- as.matrix(cbind(c(1,1,2), c(3,3,4)))
+pdf("000_Figure_3.pdf", width = 6, height = 6)
+grid::grid.draw(grid.arrange(p1,p2,p3,p4, layout_matrix =lay))
 dev.off()
 ```
-
 
 
 ```{r}
-getwd()
-m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH0in00 <- mean(m$dw_00, na.rm = T)
-EH0in40 <- mean(m$dw_40, na.rm = T)
-EH0in80 <- mean(m$dw_80, na.rm = T)
+m <- myrcw[myrcw$treat %in% c("EH0_40", "EH0_80"),]
+legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
+  geom_point(size = 2) + theme_VJF + scale_color_manual(values = mypalette[c(2,5)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  theme(legend.title = element_text(size = 8), 
+          legend.text = element_text(size = 8))
+legp
 
-m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH40in00 <- mean(m$dw_00, na.rm = T)
-EH40in40 <- mean(m$dw_40, na.rm = T)
-EH40in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH80in00 <- mean(m$dw_00, na.rm = T)
-EH80in40 <- mean(m$dw_40, na.rm = T)
-EH80in80 <- mean(m$dw_80, na.rm = T)
-
-a <- c(EH0in00, EH0in80)
-aa <- c(EH80in00, EH80in80)
-b <- c(EH0in00, EH0in40)
-bb <- c(EH40in00, EH40in40)
-c <- c(EH40in40, EH40in80)
-cc <- c(EH80in40, EH80in80)
-
-m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH0in00 <- mean(m$dw_00, na.rm = T)
-EH0in40 <- mean(m$dw_40, na.rm = T)
-EH0in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH40in00 <- mean(m$dw_00, na.rm = T)
-EH40in40 <- mean(m$dw_40, na.rm = T)
-EH40in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH80in00 <- mean(m$dw_00, na.rm = T)
-EH80in40 <- mean(m$dw_40, na.rm = T)
-EH80in80 <- mean(m$dw_80, na.rm = T)
-
-za <- c(EH0in00, EH0in80)
-zaa <- c(EH80in00, EH80in80)
-zb <- c(EH0in00, EH0in40)
-zbb <- c(EH40in00, EH40in40)
-zc <- c(EH40in40, EH40in80)
-zcc <- c(EH80in40, EH80in80)
-
-
-
-
-
-p1 <- ggplot()+
-  xlim(min(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10,
-       max(a[1], aa[1], b[1], bb[1], c[1], cc[1], za[1], zaa[1], zb[1], zbb[1], zc[1], zcc[1])*1.10)+
-  ylim(min(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10,
-       max(a[2], aa[2], b[2], bb[2], c[2], cc[2], za[2], zaa[2], zb[2], zbb[2], zc[2], zcc[2])*1.10)+
-  
-  geom_abline(slope = getline(a, aa)[1], intercept = getline(a, aa)[2], color = "purple", lty = "dotted") +
-  geom_abline(slope = getline(b, bb)[1], intercept = getline(b, bb)[2], color = "blue", lty = "dotted") +
-  geom_abline(slope = getline(c, cc)[1], intercept = getline(c, cc)[2], color = "red", lty = "dotted") +
-
-  geom_abline(slope = getline(za, zaa)[1], intercept = getline(za, zaa)[2], lty = "dotted", color = "purple", lwd = 0.5) +
-  geom_abline(slope = getline(zb, zbb)[1], intercept = getline(zb, zbb)[2], lty = "dotted", color = "blue", lwd = 0.5) +
-  geom_abline(slope = getline(zc, zcc)[1], intercept = getline(zc, zcc)[2], lty = "dotted", color = "red", lwd = 0.5) +
-  # 
-  geom_segment(aes(x=a[1], xend=aa[1], y=a[2], yend=aa[2]), color = "purple", lwd = 1)+
-  geom_segment(aes(x=b[1], xend=bb[1], y=b[2], yend=bb[2]), color = "blue", lwd = 1)+
-  geom_segment(aes(x=c[1], xend=cc[1], y=c[2], yend=cc[2]), color = "red", lwd = 1)+
-
-  geom_segment(aes(x=za[1], xend=zaa[1], y=za[2], yend=zaa[2]), color = "purple", lwd = 1)+
-  geom_segment(aes(x=zb[1], xend=zbb[1], y=zb[2], yend=zbb[2]), color = "blue", lwd = 1)+
-  geom_segment(aes(x=zc[1], xend=zcc[1], y=zc[2], yend=zcc[2]), color = "red", lwd = 1)+
-  
-  geom_point(aes(x = a[1], y = a[2]), color = "purple", size = 5)+
-  geom_point(aes(x = aa[1], y = aa[2]), color = "purple", size = 5)+
-  geom_point(aes(x = b[1], y = b[2]), color = "blue", size = 5)+
-  geom_point(aes(x = bb[1], y = bb[2]), color = "blue", size = 5)+
-  geom_point(aes(x = c[1], y = c[2]), color = "red", size = 5)+
-  geom_point(aes(x = cc[1], y = cc[2]), color = "red", size = 5)+
-  
-  geom_point(aes(x = za[1], y = za[2]), color = "purple", size = 5, pch = 17)+
-  geom_point(aes(x = zaa[1], y = zaa[2]), color = "purple", size = 5, pch = 17)+
-  geom_point(aes(x = zb[1], y = zb[2]), color = "blue", size = 5, pch = 17)+
-  geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
-  geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
-  geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change: lower")+ylab("Fitness Change: higher")
-
-pdf("000_Figure_2.pdf", width = 4, height = 5)
-p1
-dev.off()
+legp <- get_legend(legp)
 ```
-
-
-
-```{R Power}
-# # Calculate power to detect indiv BC fitness increase / decrease (t-tests) -----
-# # d=m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
-# # here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
-# # population standard deviation of the four replicate sets in each row of the dataset.
-# temp <- myrc[!is.na(myrc$fit_e_1) & !is.na(myrc$fit_e_2) & !is.na(myrc$fit_e_3) & !is.na(myrc$fit_e_4)
-#              & !is.na(myrc$fit_a) & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-# temp$dw_1 <- temp$fit_e_1 - temp$fit_a; temp$psd_r1 <- ((temp$dw - temp$dw_1)^2)/4
-# temp$dw_2 <- temp$fit_e_2 - temp$fit_a; temp$psd_r2 <- ((temp$dw - temp$dw_2)^2)/4
-# temp$dw_3 <- temp$fit_e_3 - temp$fit_a; temp$psd_r3 <- ((temp$dw - temp$dw_3)^2)/4
-# temp$dw_4 <- temp$fit_e_4 - temp$fit_a; temp$psd_r4 <- ((temp$dw - temp$dw_4)^2)/4
-# temp$psd_m <- rowMeans(cbind(temp$psd_r1, temp$psd_r2, temp$psd_r3, temp$psd_r4), na.rm=T)
-# psd <- weighted.mean(sqrt(temp$psd_m), temp$reads_dw, na.rm=T); rm(temp)
-# 
-# powerBC <- matrix(nrow=100, ncol=5)
-# colnames(powerBC) <- c("fitchange", "psd", "n", "power", "sig.level")
-# powerBC <- as.data.frame(powerBC)
-# powerBC$fitchange <- seq(0,0.04,length.out=100) # fitness changes to calculate power for.
-# powerBC$psd <- psd # psd calculated above
-# powerBC$n <- 4 # n replicates
-# powerBC$sig.level <- 0.05 # significance level
-# for(i in 1:nrow(powerBC)){
-#   powerBC$power[i] <- pwr.t.test(d=powerBC$fitchange[i] / powerBC$psd[i],
-#                                  n=powerBC$n[i], sig.level=powerBC$sig.level[i])$power
-# }; rm(i) # calculate power
-reportvals <- c(NA, NA, NA, NA, NA, NA)
-# reportvals[1] <- paste0(pwr.t.test(d=0.01 / psd, n=4, sig.level=0.05)$power*100, "% power to detect a 1% fitness change for an average BC")
-# reportvals[2] <- paste0("80% power to detect a ", pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100, "% fitness change for an average BC")
-
-
-# Calculate power to detect Treatment effects (lmer model) ---------------------
-# f2 (effect size)=1/rmse (where rmse=root mean square error among replicate measures of dw). obtain rmse via 
-# rmse=sqrt(mean(residuals(MODEL)^2))*100. Use pwr.f2.test in pwr package to obtain power to detect treatment 
-# effects between treatments with a TOTAL number of barcodes equal to v+2=n between them. 
-temp <- my[my$mpasp %in% c(0.0, 0.8), ] # Restrict to SALT & COPR dw data in 0.0 and 0.8 environments
-temp$ID <- paste0(temp$bcpID, temp$mpasp) 
-# rmse from the model*100 --> effect size of 1 corresonds to an x.xx% (rmse) fitness change.
-myrmse <- sqrt(mean(residuals(lm(temp$dw ~ temp$ID + 0, weights=I(log(temp$re_dw))))^2))*100
-# effect size of 1 is an x.xx% (rmse) fitness cahnge, so for a fitness change of 1(%), expect effect size of 1/x.xx (1/rmse)=x.xxx.
-myeffectsize <- 1/myrmse; rm(temp) 
-
-powerTR <- matrix(nrow=200, ncol=5)
-colnames(powerTR) <- c("u", "v", "power", "f2", "sig.level")
-powerTR <- as.data.frame(powerTR)
-powerTR$v  <- c(rep((32*2) -1 -1, times=100), rep((16*2) -1 -1, times=100)) # v's
-powerTR$u <- 1 # u
-powerTR$n <- powerTR$v + 2; powerTR$n <- factor(powerTR$n, levels=c(64,32)) # n=v+2
-powerTR$f2 <- seq(0, myeffectsize*1.5, length.out=100) # effect size
-powerTR$sig.level <- 0.05 # significance level
-for(i in 1:nrow(powerTR)){
-  powerTR$power[i] <-  pwr.f2.test(u=powerTR$u[i], v=powerTR$v[i], f2=powerTR$f2[i],
-                                   sig.level=powerTR$sig.level[i])$power
-}; rm(i)
-powerTR$f2 <- powerTR$f2*myrmse # scale effect size to be % fitness difference.
-reportvals[3] <- paste0(pwr.f2.test(u=1, v=((32*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness change between treatments (Best Case)")
-reportvals[4] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change between treatments (Best Case)")
-reportvals[5] <- paste0(pwr.f2.test(u=1, v=((16*2) -1 - 1), f2=myeffectsize, sig.level=0.05)$power*100, "% power to detect a 1% fitness difference between treatments (Worst Case)")
-reportvals[6] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, "% fitness change for an average BC (Worst Case)")
-
-
-# Visualization ----------------------------------------------------------------
-# pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
-#   geom_segment(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd,
-#                xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-#   geom_segment(x=0, xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-#   geom_point(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, pch=19, size=3, color="darkgray")+
-#   geom_text(x=2.5/100, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100,2), ", 80"))+
-#   geom_line()+
-#   scale_x_continuous(name="Fitness Change (%)\n (for Individual Strains) \n ", breaks=seq(0.0,0.04,by=0.005),
-#                      labels=seq(0.0,0.04,by=0.005)*100, limits=c(0,0.04), expand=expansion(mult=c(0,0.02)))+
-#   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-#   theme_VJF + labs(tag="A")
-
-pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
-  geom_segment(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
-               xend=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_segment(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
-               xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_segment(x=0, xend=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-  geom_point(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
-  geom_point(x=pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, y=0.8, pch=19, size=3, color="darkgray")+
-  geom_text(x=0.19, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
-  geom_text(x=0.75, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
-  geom_line(aes(lty=n))+
-  scale_x_continuous(name="Fitness Difference (%)\n (Between Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
-                     labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
-  scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-  theme_VJF + theme(legend.position=c(0.9,0.3)) #+ labs(tag="B")
-
-
-# Save outputs to file ---------------------------------------------------------
-# setwd(DIR_out); write.csv(powerBC, file="000_Table_S3_indiv.csv")
-setwd(DIR_out); write.csv(powerTR, file="000_Table_S3_treat.csv")
-# setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
-# cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
-setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.5, height=3.5)
-pBB; dev.off()
-
-# # report -----------------------------------------------------------------------
-# for (i in 1:6){print(reportvals[i])}
-# rm(pAA, pBB, powerBC, powerTR, myeffectsize, myrmse, psd, i, reportvals) # tidy
-```
-<br/><br/>
-
-
-```{R Single Environment Treatment Effects: Models NEWNEW}
-# setup ------------------------------------------------------------------------
-setwd(DIR_out)
-chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
-envs <- c(0.0, 0.8)
-
-# among treatment effects X chemical X environment -----------------------------
-treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
-treattreatlist <- paste0("treat", treatlist)
-myres <- matrix(nrow=7, ncol=7)
-rownames(myres) <- treattreatlist; colnames(myres) <- rownames(myres)
-for (g in 1:length(chems)){
-  for (h in 1:length(envs)){
-    myres_p <- myres; myres_est <- myres
-    for(i in 1:length(treatlist)){
-      m <- my[my$mpasp==envs[h] & my$epo %in% chems[[g]] & !is.na(my$dw) & !is.na(my$re_dw),]
-      m$treat <- relevel(m$treat, ref=treatlist[i])
-      mod <- lmer(dw ~ treat + (1|bcpID), data=m)
-      # print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
-      #                 file=paste0("000_Table_Sn_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html")))
-      for(j in 1:length(treattreatlist)){
-        if(treatlist[j] !=treatlist[i]){
-          myres_est[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
-          myres_p[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
-        }
-      }
-    }
-    colnames(myres_est) <-  treatlist; rownames(myres_est) <- treatlist
-    colnames(myres_p) <- treatlist; rownames(myres_p) <- treatlist
-    assign(paste0("myres_est_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_est)
-    assign(paste0("myres_p_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_p)
-    }
-}; rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, weights, myres)
-
-
-# treatment vs 0. X chemical X environment -------------------------------------
-for (i in 1:length(chems)){
-  for (j in 1:length(envs)){
-      m <- my[my$mpasp==envs[j] & my$epo %in% chems[[i]] & !is.na(my$dw),]
-      mod <- lmer(dw ~ treat + 0 + (1|bcpID), data=m)
-      print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
-                      file=paste0("000_Table_Sn_",strsplit(chems[[i]][1], "_")[[1]][1],"_",envs[j], ".html")))
-  }
-}; rm(chems, m, mod, i, j, envs)
-```
-<br/><br/>
-
-```{R Single Environment Treatment Effects: Visualization, warning=FALSE}
-# get datasets for panels A, B, C, D -------------------------------------------
-mAA <- myrc[myrc$mpasp==0.0 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-mCC <- myrc[myrc$mpasp==0.8 & myrc$epo %in% c("SALT_A", "SALT_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-mBB <- myrc[myrc$mpasp==0.0 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-mDD <- myrc[myrc$mpasp==0.8 & myrc$epo %in% c("COPR_A", "COPR_B") & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-
-
-# Set plotting controls --------------------------------------------------------
-fitaxdatlimSALT <- c(-0.15*100, 0.45*100) #; min(c(mAA$dw, mCC$dw)); max(c(mAA$dw, mCC$dw))
-fitaxdatlimCOPR <- c(-0.1*100, 0.55*100) #; min(c(mBB$dw, mDD$dw)); max(c(mBB$dw, mDD$dw))
-
-fitaxlablim <- c(-0.1*100, 0.5*100) 
-boxSALT <- c(0.2*100, 0.49*100) #; (boxSALT[2]-boxSALT[1]) / (fitaxdatlimSALT[2] - fitaxdatlimSALT[1])
-boxCOPR <- c(0.275*100, 0.59*100) #; (boxCOPR[2]-boxCOPR[1]) / (fitaxdatlimCOPR[2] - fitaxdatlimCOPR[1])
-
-treatlabSALT <- "NaCl Evol. Treatment"
-treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
-fitnesslabCM <- "Fitness Change in CM (%)"
-fitnesslabSALT <- "Fitness Change in CM + NaCl (%)"
-fitnesslabCOPR <- expression(bold("Fitness Change in CM + "*CuSO["4"]* " (%)"))
-treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
-
-
-# Create stats results backer --------------------------------------------------
-myres_backer <- myres_est_SALT_0 
-myres_backer[myres_backer < 0] <- -1
-myres_backer[myres_backer > 0 | is.na(myres_backer)] <- 1
-myres_backer <- get_lower_tri(round(myres_backer, 2))
-melt_myres_backer <- reshape::melt(myres_backer)
-melt_myres_backer$X1 <- factor(melt_myres_backer$X1, levels=treatlist)
-melt_myres_backer$X2 <- factor(melt_myres_backer$X2, levels=treatlist)
-
-
-# Create stats results dataframes for plotting ---------------------------------
-lsuffs <- c("AA", "CC", "BB", "DD")
-lintabs <- c("SALT_0", "SALT_0.8", "COPR_0", "COPR_0.8")
-for (i in 1:4) {
-  assign("myres_est_temp", get(paste0("myres_est_", lintabs[i])))
-  assign("myres_p_temp", get(paste0("myres_p_", lintabs[i])))
-  myres_est_temp[which(myres_p_temp > 0.05)] <- NA
-  myres_est_temp <- get_lower_tri(round(myres_est_temp*100, 0))
-  melt_myres_est_temp <- reshape::melt(myres_est_temp)
-  melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels=treatlist)
-  melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels=treatlist)
-  assign(paste0("melt_myres_est_", lsuffs[i]), melt_myres_est_temp)
-}; rm(melt_myres_est_temp, myres_est_COPR_0, myres_est_COPR_0.8, myres_est_SALT_0, myres_est_SALT_0.8, myres_est_temp,
-      myres_p_COPR_0, myres_p_COPR_0.8, myres_p_SALT_0, myres_p_SALT_0.8, myres_p_temp, i, lintabs, lsuffs, treatlist)
-
-
-# Define plot function for panels A, B, C, D -----------------------------------
-viopanel <- function(dwdata, statsdata, backerdata=melt_myres_backer, dcol="dw", 
-                     fitlims, insetlims, fitaxlablims=fitaxlablim, fitaxstep=0.1*100,
-                     treatlab, fitlab, tag, usepalette=mypalette){
-  # main panel matter ------------------
-  pZZ <- ggplot(dwdata, aes(x=treat, y=dwdata[,dcol]*100, group=treat, color=treat)) +
-    geom_hline(yintercept=0, lty="dotted") + 
-    geom_violin(fill="gray90", color="gray30", draw_quantiles=NULL, trim=T) +
-    geom_jitter(width=0.15, height=0, alpha=0.35) + 
-    geom_rug(sides="l" , alpha=0.7, length=unit(0.015, "npc")) +
-    geom_point(stat="summary", fun="mean", color="black", cex=1.5) + 
-    geom_point(stat="summary", fun="median", color="black", cex=3, pch=1) + 
-    geom_errorbar(stat="summary", fun.data="mean_se",color="black", width=0.0, lwd=0.5)+
-    scale_y_continuous(breaks=seq(fitaxlablims[1], fitaxlablims[2], by=fitaxstep), 
-                       limits=c(fitlims[1], fitlims[2]),
-                       labels=scales::number_format(accuracy=0.01*100))+
-    scale_color_manual(values=usepalette) + 
-    coord_flip() +
-    ylab(fitlab) + xlab(treatlab) +  labs(tag=tag)+
-    theme_VJF + theme(legend.position="none")
-  # stats results backer ---------------
-  ppZZ <- ggplot(backerdata, aes(x=X1, y=X2, fill=value)) + 
-    geom_tile(show.legend=F)+
-    scale_y_discrete(position="right")+
-    theme_tufte(base_family="Helvetica")+
-    theme(axis.ticks=element_blank(), axis.title=element_blank(),
-          axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, margin=margin(t=-2.5, b=-2.5), size=6),
-          axis.text.y.right=element_text(hjust=0, vjust=0.5, margin=margin(l=-2.5, r=-2.5), size=6))+
-    scale_fill_gradient2(low="transparent", high="gray80", mid="gray80", midpoint=0, space="Lab", name="Estimate", na.value="transparent")
-  # Stats results ----------------------
-  pppZZ <- ggplot(statsdata, aes(x=X1, y=X2, fill=value)) + 
-    geom_tile(show.legend=F)+
-    geom_text(aes(X1, X2, label=value), color="black", size=2, angle=0, fontface="bold") +
-    scale_y_discrete(position="right")+
-    theme_tufte(base_family="Helvetica")+
-    theme(axis.ticks=element_blank(), axis.title=element_blank(),
-          axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, margin=margin(t=-2.5, b=-2.5), size=6, face="bold"),
-          axis.text.y.right=element_text(hjust=0, vjust=0.5, margin=margin(l=-2.5, r=-2.5), size=6, face="bold"))+
-    scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, space="Lab", name="Estimate", na.value="transparent")
-  # Combine components -----------------
-  pZZ <- pZZ + annotation_custom(ggplotGrob(ppZZ), xmin=0.5, xmax=3.5, ymin=insetlims[1], ymax=insetlims[2]); rm(ppZZ)
-  pZZ <- pZZ + annotation_custom(ggplotGrob(pppZZ), xmin=0.5, xmax=3.5, ymin=insetlims[1], ymax=insetlims[2]); rm(pppZZ)
-  return(pZZ)
-}
-
-
-# Visualization ----------------------------------------------------------------
-pAA <- viopanel(dwdata=mAA, statsdata=melt_myres_est_AA, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabCM, tag="A")
-pCC <- viopanel(dwdata=mCC, statsdata=melt_myres_est_CC, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabSALT, tag="C")
-pBB <- viopanel(dwdata=mBB, statsdata=melt_myres_est_BB, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCM, tag="B")
-pDD <- viopanel(dwdata=mDD, statsdata=melt_myres_est_DD, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCOPR, tag="D")
-
-
-# Save outputs to file ---------------------------------------------------------
-setwd(DIR_out); pdf(file="000_Figure_1.pdf", width=11, height=8.5)
-cowplot::plot_grid(pAA, pBB, pCC, pDD, nrow=2); dev.off()
-rm(mAA, mBB, mCC, mDD, melt_myres_est_AA, melt_myres_est_BB, melt_myres_est_CC, melt_myres_est_DD,
-   myres_backer, myres0_est, myres0_p, pAA, pBB, pCC, pDD, boxCOPR, boxSALT, fitaxdatlimCOPR, fitaxdatlimSALT, fitaxlablim,
-   fitnesslabCM, fitnesslabCOPR, fitnesslabSALT, treatlabCOPR, treatlabSALT) # tidy
-```
-<br/><br/>
-
-
-
-```{R Multiple Environment Treatment Effects: Models}
-# setup ------------------------------------------------------------------------
-setwd(DIR_out)
-chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
-
-
-# among treatment effects X chemical -------------------------------------------
-treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
-treattreatlist <- paste0("treat", treatlist)
-myres <- matrix(nrow = 7, ncol=7)
-rownames(myres) <- treattreatlist; colnames(myres) <- rownames(myres)
-for (g in 1:length(chems)){
-  myres_p_mn <- myres; myres_est_mn <- myres
-  for(i in 1:length(treatlist)){
-    m <- myrcw[myrcw$epo %in% chems[[g]] & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
-    m$treat <- relevel(m$treat, ref = treatlist[i])
-    mod <- lm(dw_00_80 ~ treat, data=m) # mean
-    # print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100,
-    #                 file = paste0("000_Table_Sm_",strsplit(chems[[g]][1], "_")[[1]][1], ".html")))
-    for(j in 1:length(treattreatlist)){
-      if(treatlist[j] != treatlist[i]){
-        myres_est_mn[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
-        myres_p_mn[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
-      }
-    }
-  }
-  colnames(myres_est_mn) <-  treatlist; rownames(myres_est_mn) <- treatlist
-  colnames(myres_p_mn) <-  treatlist; rownames(myres_p_mn) <- treatlist
-  assign(paste0("myres_est_mn_",strsplit(chems[[g]][1], "_")[[1]][1]), myres_est_mn)
-  assign(paste0("myres_p_mn_",strsplit(chems[[g]][1], "_")[[1]][1]), myres_p_mn)
-}; rm(m, mod, g, i, j, treattreatlist, myres_est_mn, myres_p_mn, myres)
-
-
-# treatment vs 0. X chemical ---------------------------------------------------
-for (i in 1:length(chems)){
-  m <- myrcw[myrcw$epo %in% chems[[i]] & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
-  mod <- lm(dw_00_80 ~ treat + 0, data=m)
-  print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100,
-                  file = paste0("000_Table_Sm_",strsplit(chems[[i]][1], "_")[[1]][1], ".html")))
-}; rm(chems, m, mod, i)
-```
-<br/><br/>
-
-
-
-```{R  Multiple Environment Treatment Effects: Visualization, warning=FALSE}
-# get datasets for panels A, B, C, D -------------------------------------------
-m1 <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
-m2 <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
-
-# Set plotting controls --------------------------------------------------------
-fitaxdatlimMN <- c(-0.1*100, 0.3*100) #; min(myrcw$dw_00_80, na.rm = T); max(myrcw$dw_00_80, na.rm=T)
-fitaxlablimMN <- c(-0.1*100, 0.3*100) 
-boxMN <- c(0.125*100, 0.32*100) #; (boxMN[2]-boxMN[1]) / (fitaxdatlimMN[2] - fitaxdatlimMN[1])
-
-treatlabSALT <- "NaCl Evol. Treatment"
-treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
-fitnesslab1 <- "Geometric Mean Fitness Change (%)"
-treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
-
-
-# Create stats results dataframes for plotting ---------------------------------
-for (i in c("SALT", "COPR")) {
-  for (j in c("mn")) {
-    assign("myres_est_temp", get(paste0("myres_est_", j, "_", i)))
-    assign("myres_p_temp", get(paste0("myres_p_", j, "_", i)))
-    myres_est_temp[which(myres_p_temp > 0.05)] <- NA
-    myres_est_temp <- round(myres_est_temp*100, 0)
-    myres_est_temp <- get_lower_tri(myres_est_temp) # uncomment for just lower triangle
-    melt_myres_est_temp <- reshape::melt(myres_est_temp)
-    melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels = treatlist)
-    melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels = treatlist)
-    assign(paste0("melt_myres_est_", j, "_", i), melt_myres_est_temp)
-  }
-}; rm(i, j, myres_est_temp, myres_p_temp, melt_myres_est_temp, treatlist,
-      myres_est_mn_COPR, myres_est_mn_SALT,
-      myres_p_mn_COPR, myres_p_mn_SALT, get_lower_tri)
-
-
-# Visualization ----------------------------------------------------------------
-pAA <- viopanel(dwdata=m1, statsdata=melt_myres_est_mn_SALT, fitlims=fitaxdatlimMN, insetlims=boxMN, 
-                fitaxlablim=fitaxlablimMN, treatlab=treatlabSALT, fitlab=fitnesslab1, tag="A", dcol="dw_00_80")
-
-pBB <- viopanel(dwdata=m2, statsdata=melt_myres_est_mn_COPR, fitlims=fitaxdatlimMN, insetlims=boxMN,
-                fitaxlablim=fitaxlablimMN, treatlab=treatlabCOPR, fitlab=fitnesslab1, tag="B", dcol="dw_00_80")
-
-
-
-# Save outputs to file ---------------------------------------------------------
-setwd(DIR_out); pdf(file = "000_Figure_S3.pdf", width = 11/2, height = 8.5)
-cowplot::plot_grid(pAA, pBB, nrow = 2); dev.off()
-rm(pAA, pBB, melt_myres_backer, melt_myres_est_mn_COPR, melt_myres_est_mn_SALT,
-    treatlabCOPR, treatlabSALT,
-   fitnesslab1, fitnesslab2, boxMN,  fitaxlablimMN, viopanel)
-```
-<br/><br/>
-
-
-
 
 ```{r}
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$dw_00_40),]
@@ -1281,17 +1114,9 @@ p4 <- ggplot()+
   geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = mmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=mmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color = mypalette[2])+
-  # geom_density(data = ppp, aes(x = dist*sign), color = "red") + geom_rug(data=ppp, (aes(x=dist*sign)), color = rgb(1,0,0,0.5))+ 
-  # geom_vline(aes(xintercept = mean(ppp$dist*ppp$sign)), lty = "dotted", color = "red")+
-  # xlim(-0.13,0.1)+
-  theme_VJF
-
-pdf("000_Figure_S3abc.pdf", width = 7, height =2)
-grid.arrange(p2,p1,p4, ncol = 3)
-dev.off()
+  theme_VJF + annotation_custom(legp, xmin = 0.025, ymin = 10)
 ```
-
-
+<br/><br/>
 
 
 ```{r}
@@ -1324,20 +1149,20 @@ EH0_40in80 <- mean(m$dw_80, na.rm = T)
 a <- c(EH0_80in00, EH0_80in80)
 b <- c(EH0in00, EH0in80)
 c <- c(EH80in00, EH80in80)
-mmm <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
-mmm <- mmm[!is.na(mmm$dw_00) & !is.na(mmm$dw_80),]
-mmm$dist <- apply(cbind(mmm$dw_00, mmm$dw_80), 1, dist2d, b=b, c=c)
-mmm$sign <- apply(cbind(mmm$dw_00, mmm$dw_80), 1, lineside, b=b, c=c)
+zmmm <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zmmm <- zmmm[!is.na(zmmm$dw_00) & !is.na(zmmm$dw_80),]
+zmmm$dist <- apply(cbind(zmmm$dw_00, zmmm$dw_80), 1, dist2d, b=b, c=c)
+zmmm$sign <- apply(cbind(zmmm$dw_00, zmmm$dw_80), 1, lineside, b=b, c=c)
 
 b
 c
 getline(b, c) # line (slope, intercept)
 dist2d(a, b, c) # distance to line for generalist
-nrow(mmm[mmm$sign < 0,])/nrow(mmm) # prop on side 1
-nrow(mmm[mmm$sign > 0,])/nrow(mmm) # prop on side 2
+nrow(zmmm[zmmm$sign < 0,])/nrow(zmmm) # prop on side 1
+nrow(zmmm[zmmm$sign > 0,])/nrow(zmmm) # prop on side 2
 
-p1 <- ggplot(data = mmm, aes(x = dw_00, y = dw_80))+
-  xlim(min(b[1], c[1], mmm$dw_00)*1.10,max(b[1], c[1], mmm$dw_00)*1.10) + ylim(min(b[2], c[2], mmm$dw_80)*1.10,max(b[2], c[2], mmm$dw_80)*1.10)+
+zp1 <- ggplot(data = zmmm, aes(x = dw_00, y = dw_80))+
+  xlim(min(b[1], c[1], zmmm$dw_00)*1.10,max(b[1], c[1], zmmm$dw_00)*1.10) + ylim(min(b[2], c[2], zmmm$dw_80)*1.10,max(b[2], c[2], zmmm$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
@@ -1349,20 +1174,20 @@ p1 <- ggplot(data = mmm, aes(x = dw_00, y = dw_80))+
 a <- c(EH0_40in00, EH0_40in40)
 b <- c(EH0in00, EH0in40)
 c <- c(EH40in00, EH40in40)
-nnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_40")]
-nnn <- nnn[!is.na(nnn$dw_00) & !is.na(nnn$dw_40),]
-nnn$dist <- apply(cbind(nnn$dw_00, nnn$dw_40), 1, dist2d, b=b, c=c)
-nnn$sign <- apply(cbind(nnn$dw_00, nnn$dw_40), 1, lineside, b=b, c=c)
+znnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_40")]
+znnn <- znnn[!is.na(znnn$dw_00) & !is.na(znnn$dw_40),]
+znnn$dist <- apply(cbind(znnn$dw_00, znnn$dw_40), 1, dist2d, b=b, c=c)
+znnn$sign <- apply(cbind(znnn$dw_00, znnn$dw_40), 1, lineside, b=b, c=c)
 
 b
 c
 getline(b, c) # line (slope, intercept)
 dist2d(a, b, c) # distance to line for generalist
-nrow(nnn[nnn$sign < 0,])/nrow(nnn) # prop on side 1
-nrow(nnn[nnn$sign > 0,])/nrow(nnn) # prop on side 2
+nrow(znnn[znnn$sign < 0,])/nrow(znnn) # prop on side 1
+nrow(znnn[znnn$sign > 0,])/nrow(znnn) # prop on side 2
 
-p2 <- ggplot(data = nnn, aes(x = dw_00, y = dw_40))+
-  xlim(min(b[1], c[1], nnn$dw_00)*1.10,max(b[1], c[1], nnn$dw_00)*1.10) + ylim(min(b[2], c[2], nnn$dw_40)*1.10,max(b[2], c[2], nnn$dw_40)*1.10)+
+zp2 <- ggplot(data = znnn, aes(x = dw_00, y = dw_40))+
+  xlim(min(b[1], c[1], znnn$dw_00)*1.10,max(b[1], c[1], znnn$dw_00)*1.10) + ylim(min(b[2], c[2], znnn$dw_40)*1.10,max(b[2], c[2], znnn$dw_40)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[2], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[2], size = 3, pch = 21)+
@@ -1371,18 +1196,308 @@ p2 <- ggplot(data = nnn, aes(x = dw_00, y = dw_40))+
   theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+40%")
 
 
-p4 <- ggplot()+
+zp4 <- ggplot()+
   geom_vline(aes(xintercept = 0), color = "black", lty = "dotdash")+
-  geom_vline(aes(xintercept = mean(mmm$dist*mmm$sign)), lty = "dotted", color = mypalette[5])+
-  geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
-  geom_density(data = mmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=mmm, aes(x=dist*sign), color = mypalette[5])+
-  geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color = mypalette[2])+
-  # geom_density(data = ppp, aes(x = dist*sign), color = "red") + geom_rug(data=ppp, (aes(x=dist*sign)), color = rgb(1,0,0,0.5))+ 
-  # geom_vline(aes(xintercept = mean(ppp$dist*ppp$sign)), lty = "dotted", color = "red")+
-  # xlim(-0.13,0.1)+
+  geom_vline(aes(xintercept = mean(zmmm$dist*zmmm$sign)), lty = "dotted", color = mypalette[5])+
+  geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
+  geom_density(data = zmmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zmmm, aes(x=dist*sign), color = mypalette[5])+
+  geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color = mypalette[2])+
   theme_VJF
 
-pdf("000_Figure_S3def.pdf", width = 7, height =2)
-grid.arrange(p2,p1,p4, ncol = 3)
+pdf("000_Figure_S3.pdf", width = 7, height =4)
+grid.arrange(p2,p1,p4,zp2,zp1,zp4, ncol = 3)
 dev.off()
 ```
+
+
+```{R Multiple Environment Treatment Effects: Models}
+# setup ------------------------------------------------------------------------
+setwd(DIR_out)
+chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
+
+
+# among treatment effects X chemical -------------------------------------------
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+treattreatlist <- paste0("treat", treatlist)
+myres <- matrix(nrow = 7, ncol=7)
+rownames(myres) <- treattreatlist; colnames(myres) <- rownames(myres)
+for (g in 1:length(chems)){
+  myres_p_mn <- myres; myres_est_mn <- myres
+  for(i in 1:length(treatlist)){
+    m <- myrcw[myrcw$epo %in% chems[[g]] & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+    m$treat <- relevel(m$treat, ref = treatlist[i])
+    mod <- lm(dw_00_80 ~ treat, data=m) # mean
+    # print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100,
+    #                 file = paste0("000_Table_Sm_",strsplit(chems[[g]][1], "_")[[1]][1], ".html")))
+    for(j in 1:length(treattreatlist)){
+      if(treatlist[j] != treatlist[i]){
+        myres_est_mn[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
+        myres_p_mn[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Pr(>|t|)"]
+      }
+    }
+  }
+  colnames(myres_est_mn) <-  treatlist; rownames(myres_est_mn) <- treatlist
+  colnames(myres_p_mn) <-  treatlist; rownames(myres_p_mn) <- treatlist
+  assign(paste0("myres_est_mn_",strsplit(chems[[g]][1], "_")[[1]][1]), myres_est_mn)
+  assign(paste0("myres_p_mn_",strsplit(chems[[g]][1], "_")[[1]][1]), myres_p_mn)
+}; rm(m, mod, g, i, j, treattreatlist, myres_est_mn, myres_p_mn, myres)
+
+
+# treatment vs 0. X chemical ---------------------------------------------------
+for (i in 1:length(chems)){
+  m <- myrcw[myrcw$epo %in% chems[[i]] & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+  mod <- lm(dw_00_80 ~ treat + 0, data=m)
+  print(tab_model(mod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100,
+                  file = paste0("000_Table_Sm_",strsplit(chems[[i]][1], "_")[[1]][1], ".html")))
+}; rm(chems, m, mod, i)
+```
+<br/><br/>
+
+
+```{R  Multiple Environment Treatment Effects: Visualization, warning=FALSE}
+# get datasets for panels A, B, C, D -------------------------------------------
+m1 <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+m2 <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+
+# Set plotting controls --------------------------------------------------------
+fitaxdatlimMN <- c(-0.1*100, 0.31*100) #; min(myrcw$dw_00_80, na.rm = T); max(myrcw$dw_00_80, na.rm=T)
+fitaxlablimMN <- c(-0.1*100, 0.31*100) 
+boxMN <- c(0.125*100, 0.32*100) #; (boxMN[2]-boxMN[1]) / (fitaxdatlimMN[2] - fitaxdatlimMN[1])
+
+treatlabSALT <- "NaCl Evol. Treatment"
+treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
+fitnesslab1 <- "Geometric Mean Fitness Change (%)"
+treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
+
+
+# Create stats results dataframes for plotting ---------------------------------
+for (i in c("SALT", "COPR")) {
+  for (j in c("mn")) {
+    assign("myres_est_temp", get(paste0("myres_est_", j, "_", i)))
+    assign("myres_p_temp", get(paste0("myres_p_", j, "_", i)))
+    myres_est_temp[which(myres_p_temp > 0.05)] <- NA
+    myres_est_temp <- round(myres_est_temp*100, 0)
+    myres_est_temp <- get_lower_tri(myres_est_temp) # uncomment for just lower triangle
+    melt_myres_est_temp <- reshape::melt(myres_est_temp)
+    melt_myres_est_temp$X1 <- factor(melt_myres_est_temp$X1, levels = treatlist)
+    melt_myres_est_temp$X2 <- factor(melt_myres_est_temp$X2, levels = treatlist)
+    assign(paste0("melt_myres_est_", j, "_", i), melt_myres_est_temp)
+  }
+}; rm(i, j, myres_est_temp, myres_p_temp, melt_myres_est_temp, treatlist,
+      myres_est_mn_COPR, myres_est_mn_SALT,
+      myres_p_mn_COPR, myres_p_mn_SALT)
+
+
+# Visualization ----------------------------------------------------------------
+pAA <- viopanel(dwdata=m1, statsdata=melt_myres_est_mn_SALT, fitlims=fitaxdatlimMN, insetlims=boxMN, 
+                fitaxlablim=fitaxlablimMN, treatlab=treatlabSALT, fitlab=fitnesslab1, tag="A", dcol="dw_00_80")
+pAA <- pAA  + 
+  annotate("text", x=3,y=11,label = "*", size = 6, fontface = "bold") +
+  annotate("text", x=4,y=12,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=5,y=20,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=6,y=21,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=7,y=18,label = "***", size = 6, fontface = "bold")
+pAA
+
+pBB <- viopanel(dwdata=m2, statsdata=melt_myres_est_mn_COPR, fitlims=fitaxdatlimMN, insetlims=boxMN,
+                fitaxlablim=fitaxlablimMN, treatlab=treatlabCOPR, fitlab=fitnesslab1, tag="B", dcol="dw_00_80")
+pBB <- pBB  + 
+  annotate("text", x=1,y=12.25,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=2,y=10,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=3,y=15,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=4,y=17,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=5,y=25,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=6,y=19,label = "***", size = 6, fontface = "bold") +
+  annotate("text", x=7,y=31,label = "***", size = 6, fontface = "bold")
+pBB
+
+
+# Save outputs to file ---------------------------------------------------------
+setwd(DIR_out); pdf(file = "000_Figure_S4.pdf", width = 11/2, height = 8.5)
+cowplot::plot_grid(pAA, pBB, nrow = 2); dev.off()
+rm(pAA, pBB, melt_myres_backer, melt_myres_est_mn_COPR, melt_myres_est_mn_SALT,
+    treatlabCOPR, treatlabSALT,
+   fitnesslab1, fitnesslab2, boxMN,  fitaxlablimMN)
+```
+<br/><br/>
+
+
+
+
+```{r}
+# calculate change in variance in fitness
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+m$var_00_80_g0 <- apply(cbind(m$fit_a_00, m$fit_a_80), 1, var)
+m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
+m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
+m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
+
+# car::vif(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
+mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
+summary(mymod)
+getwd()
+tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_2.html")
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
+# 
+# mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
+# mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
+# 
+# cor.test(m$dw_00_80 , m$darith_00_80)
+# cor.test(m$dw_00_80 , m$dvar_00_80)
+# 
+# ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
+#   geom_point() +
+#   scale_color_manual(values=mypalette)
+
+
+
+# calculate change in variance in fitness
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+m$var_00_80_g0 <- apply(cbind(m$fit_a_00, m$fit_a_80), 1, var)
+m$var_00_80_g500 <- apply(cbind(m$fit_e_00, m$fit_e_80), 1, var)
+m$dvar_00_80 <- m$var_00_80_g500 - m$var_00_80_g0
+m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
+
+# car::vif(glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m))
+mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
+summary(mymod)
+getwd()
+tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_3.html")
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH20_60"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40_80"),]); summary(mod)
+# mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH80"),]); summary(mod)
+# 
+# mod <- glm(dw_00_80 ~ treat + 0, data = m); summary(mod)
+# mod <- glm(dvar_00_80 ~ treat + 0, data = m); summary(mod)
+#
+# cor.test(m$dw_00_80 , m$darith_00_80)
+# cor.test(m$dw_00_80 , m$dvar_00_80)
+#
+# ggplot(m, aes(x=dw_00_80, y=dvar_00_80, color = treat))+
+#   geom_point() +
+#   scale_color_manual(values=mypalette)
+```
+
+```{R Survival, warning=FALSE}
+# calculate extinct/extirpated and surviving lineages in each treatment X assay environment and
+# create formatted tables for output indicating n and proportion of treatment total n in each category.
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH20_60",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH0_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("SALT_Ad1C9d2C9", "SALT_Bd1C9d2C9"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH40_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat == "EH80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("SALT_Ad1C5d2C5", "SALT_Bd1C5d2C5"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+# ----------------
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH20_60",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH0_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("COPR_Ad1C9d2C9", "COPR_Bd1C9d2C9"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH40_80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat == "EH80",]
+m$uni <- paste0(m$epo, m$well); length(unique(m$uni))
+# m <- m[order(m$uni),]
+# m$uni
+m <- m[m$uni %ni% c("COPR_Ad1C5d2C5", "COPR_Bd1C5d2C5"),]
+x <- as.data.frame(cbind(m$dw_00, m$dw_80, m$uni))
+x$V3[1:(nrow(x)/2)] == x$V3[((nrow(x)/2)+1):nrow(x)]
+x <- cbind(x[1:(nrow(x)/2),], x[((nrow(x)/2)+1):nrow(x),])[,c(1,2,4,5)];x
+```
+<br/><br/>
