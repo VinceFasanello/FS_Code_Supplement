@@ -219,7 +219,7 @@ reportvals[11] <- paste0("Mean Total ALL CC = ", round(mean(mycc[mycc$group %in%
 reportvals[12] <- paste0("SD Total ALL CC = ", round(sd(mycc[mycc$group %in% c("SALT","COPR", "ancestral"),]$ccpt_mean)*100, 5), "%")
 
 # # Save outputs to file ---------------------------------------------------------
-# setwd(DIR_out); write.csv(mycc, file = "000_Table_Sn.csv")
+# setwd(DIR_out); write.csv(mycc, file = "000_Table_Sx.csv")
 
 # report -----------------------------------------------------------------------
 for (i in 1:12){print(reportvals[i])}
@@ -313,7 +313,7 @@ pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   geom_text(x=0.19, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
   geom_text(x=0.75, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
   geom_line(aes(lty=n))+
-  scale_x_continuous(name="Fitness Difference (%)\n (Between Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
+  scale_x_continuous(name="Fitness Change (%)", breaks=seq(0.0,1.5,by=0.25),
                      labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
   theme_VJF + theme(legend.position=c(0.9,0.3)) #+ labs(tag="B")
@@ -370,7 +370,7 @@ for (g in 1:length(chems)){
     assign(paste0("myres_est_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_est)
     assign(paste0("myres_p_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h]), myres_p)
     }
-}; rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, weights, myres)
+}; rm(m, mod, g, h, i, j, treatlist, treattreatlist, myres_est, myres_p, myres)
 
 
 # treatment vs 0. X chemical X environment -------------------------------------
@@ -403,9 +403,9 @@ boxCOPR <- c(0.275*100, 0.59*100) #; (boxCOPR[2]-boxCOPR[1]) / (fitaxdatlimCOPR[
 
 treatlabSALT <- "NaCl Evol. Treatment"
 treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
-fitnesslabCM <- "Fitness Change in CM (%)"
-fitnesslabSALT <- "Fitness Change in CM + NaCl (%)"
-fitnesslabCOPR <- expression(bold("Fitness Change in CM + "*CuSO["4"]* " (%)"))
+fitnesslabCM <- "Fitness Change (%) in 0% Stress"
+fitnesslabSALT <- "Fitness Change (%) in 80% NaCl"
+fitnesslabCOPR <- expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*""))
 treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
 
 
@@ -630,10 +630,10 @@ p1 <- ggplot()+
   geom_point(aes(x = bb[1], y = bb[2]), color = "blue", size = 5)+
   geom_point(aes(x = zb[1], y = zb[2]), color = "blue", size = 5, pch = 17)+
   geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change: 0%")+ylab("Fitness Change: 40%") + labs(tag="A")
+  theme_VJF+xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 40% Chemical Stress") + labs(tag="A")
 p1 <- p1 + annotate("text", x=0.015,y=0.38,label = "Chemical Identity", size = 3, fontface = "bold")
 p1 <- p1 + annotate("text", x=0.01,y=0.33,label = "NaCl", size = 3, fontface = "bold")
-p1 <- p1 + annotate("text", x=0.012,y=0.35,label = "CuSO4", size = 3, fontface = "bold")
+p1 <- p1 + annotate("text", x=0.012,y=0.35,label = expression(bold(""*CuSO["4"]*"")), size = 3, fontface = "bold")
 p1 <- p1 + geom_point(aes(x = -0.005, y = 0.33), size = 5, color = "black")
 p1 <- p1 + geom_point(aes(x = -0.005, y = 0.35), size = 5, color = "black", pch = 17)
 p1
@@ -654,7 +654,7 @@ p2 <- ggplot()+
   geom_point(aes(x = aa[1], y = aa[2]), color = "purple", size = 5)+
   geom_point(aes(x = za[1], y = za[2]), color = "purple", size = 5, pch = 17)+
   geom_point(aes(x = zaa[1], y = zaa[2]), color = "purple", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change: 0%")+ylab("Fitness Change: 80%")+ labs(tag="B")
+  theme_VJF+xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="B")
 p2
 
 p3 <- ggplot()+
@@ -670,7 +670,7 @@ p3 <- ggplot()+
   geom_point(aes(x = cc[1], y = cc[2]), color = "red", size = 5)+
   geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
   geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change: 40%")+ylab("Fitness Change: 80%")+ labs(tag="C")
+  theme_VJF+xlab("Fitness Change (%) in \n 40% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="C")
 p3
 
 setwd(DIR_out); pdf(file="000_Figure_2.pdf", width=8.5, height=5)
@@ -705,6 +705,16 @@ table(sign(m$dw_120))
 m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
 m <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
 m <- m[m$dw_00_40 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
+table(sign(m$dw_80))
+table(sign(m$dw_120))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
+m <- m[m$dw_00_80 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
 table(sign(m$dw_80))
 table(sign(m$dw_120))
 
@@ -712,6 +722,8 @@ m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),
 m <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
 m <- m[m$dw_40_80 >0,]
 table(sign(m$dw_00))
+table(sign(m$dw_40))
+table(sign(m$dw_80))
 table(sign(m$dw_120))
 
 
@@ -739,6 +751,16 @@ table(sign(m$dw_120))
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_40"),]
 m <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
 m <- m[m$dw_00_40 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
+table(sign(m$dw_80))
+table(sign(m$dw_120))
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
+m <- m[m$dw_00_80 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
 table(sign(m$dw_80))
 table(sign(m$dw_120))
 
@@ -746,6 +768,8 @@ m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH40_80"),
 m <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
 m <- m[m$dw_40_80 >0,]
 table(sign(m$dw_00))
+table(sign(m$dw_40))
+table(sign(m$dw_80))
 table(sign(m$dw_120))
 ```
 
@@ -852,17 +876,17 @@ nrow(qqq[qqq$sign < 0,])/nrow(qqq) # prop on side 1
 nrow(qqq[qqq$sign > 0,])/nrow(qqq) # prop on side 2
 
 
-p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+
+p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+ geom_rug(data=aaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
   xlim(min(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10,
        max(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10) +
   ylim(min(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_00, ppp$dw_00, qqq$dw_80)*1.10,
        max(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_80, ppp$dw_80, qqq$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
-  geom_point(data =zzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+
-  geom_point(data =nnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+
-  geom_point(data =ppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+
-  geom_point(data =qqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+
+  geom_point(data =zzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+ geom_rug(data=zzz, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[4], 0.5))+
+  geom_point(data =nnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+ geom_rug(data=nnn, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[2], 0.5))+
+  geom_point(data =ppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+ geom_rug(data=ppp, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[6], 0.5))+
+  geom_point(data =qqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+ geom_rug(data=qqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
   geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
@@ -870,8 +894,8 @@ p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+
   geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+80%")
-
+  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="A")
+p1
 
 p2 <- ggplot()+
   geom_vline(aes(xintercept = 0), color = "black", lty = "dotdash")+
@@ -885,7 +909,8 @@ p2 <- ggplot()+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF
+  theme_VJF+ xlab("Distance * Sign") + ylab("Density")+ labs(tag="C")
+  
 ```
 ```{r}
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
@@ -977,17 +1002,17 @@ nrow(zqqq[zqqq$sign < 0,])/nrow(zqqq) # prop on side 1
 nrow(zqqq[zqqq$sign > 0,])/nrow(zqqq) # prop on side 2
 
 
-p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+
+p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+geom_rug(data=zaaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
   xlim(min(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10,
        max(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10) +
   ylim(min(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_00, zppp$dw_00, zqqq$dw_80)*1.10,
        max(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_80, zppp$dw_80, zqqq$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
-  geom_point(data =zzzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+
-  geom_point(data =znnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+
-  geom_point(data =zppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+
-  geom_point(data =zqqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+
+  geom_point(data =zzzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+geom_rug(data=zzzz, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[4], 0.5))+
+  geom_point(data =znnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+geom_rug(data=znnn, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[2], 0.5))+
+  geom_point(data =zppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+geom_rug(data=zppp, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[6], 0.5))+
+  geom_point(data =zqqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+geom_rug(data=zqqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
   geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
@@ -995,8 +1020,8 @@ p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+
   geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+80%")
-p3 <- p3 + annotation_custom(legp, xmin = 0.075, ymin = 0.3)
+  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="B")
+p3 <- p3 + annotation_custom(legp, xmin = 0.06, ymin = 0.35)
 
 
 p4 <- ggplot()+
@@ -1011,7 +1036,7 @@ p4 <- ggplot()+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = zppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=zppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF
+  theme_VJF + xlab("Distance * Sign")+ labs(tag="D")
 
 
 lay<- as.matrix(cbind(c(1,1,2), c(3,3,4)))
@@ -1074,14 +1099,14 @@ dist2d(a, b, c) # distance to line for generalist
 nrow(mmm[mmm$sign < 0,])/nrow(mmm) # prop on side 1
 nrow(mmm[mmm$sign > 0,])/nrow(mmm) # prop on side 2
 
-p1 <- ggplot(data = mmm, aes(x = dw_00, y = dw_80))+
+p1 <- ggplot(data = mmm, aes(x = dw_00, y = dw_80))+ geom_rug(data=mmm, aes(x = dw_00, y = dw_80), color = mypalette[5])+
   xlim(min(b[1], c[1], mmm$dw_00)*1.10,max(b[1], c[1], mmm$dw_00)*1.10) + ylim(min(b[2], c[2], mmm$dw_80)*1.10,max(b[2], c[2], mmm$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+80%")
+  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="B")
 
 # 00_40 ------------------------------------------------------------------------
 a <- c(EH0_40in00, EH0_40in40)
@@ -1099,14 +1124,14 @@ dist2d(a, b, c) # distance to line for generalist
 nrow(nnn[nnn$sign < 0,])/nrow(nnn) # prop on side 1
 nrow(nnn[nnn$sign > 0,])/nrow(nnn) # prop on side 2
 
-p2 <- ggplot(data = nnn, aes(x = dw_00, y = dw_40))+
+p2 <- ggplot(data = nnn, aes(x = dw_00, y = dw_40))+ geom_rug(data=nnn, aes(dw_00, y = dw_40), color = mypalette[2])+
   xlim(min(b[1], c[1], nnn$dw_00)*1.10,max(b[1], c[1], nnn$dw_00)*1.10) + ylim(min(b[2], c[2], nnn$dw_40)*1.10,max(b[2], c[2], nnn$dw_40)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[2], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+40%")
+  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 40% NaCl")+ labs(tag="A")
 
 p4 <- ggplot()+
   geom_vline(aes(xintercept = 0), color = "black", lty = "dotdash")+
@@ -1114,7 +1139,9 @@ p4 <- ggplot()+
   geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = mmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=mmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color = mypalette[2])+
-  theme_VJF + annotation_custom(legp, xmin = 0.025, ymin = 10)
+  theme_VJF + annotation_custom(legp, xmin = 0.025, ymin = 10)+
+  xlab("Distance * Sign") + ylab("Density")+ labs(tag="C")
+
 ```
 <br/><br/>
 
@@ -1161,14 +1188,14 @@ dist2d(a, b, c) # distance to line for generalist
 nrow(zmmm[zmmm$sign < 0,])/nrow(zmmm) # prop on side 1
 nrow(zmmm[zmmm$sign > 0,])/nrow(zmmm) # prop on side 2
 
-zp1 <- ggplot(data = zmmm, aes(x = dw_00, y = dw_80))+
+zp1 <- ggplot(data = zmmm, aes(x = dw_00, y = dw_80))+ geom_rug(data=zmmm, aes(x = dw_00, y = dw_80), color = mypalette[5])+
   xlim(min(b[1], c[1], zmmm$dw_00)*1.10,max(b[1], c[1], zmmm$dw_00)*1.10) + ylim(min(b[2], c[2], zmmm$dw_80)*1.10,max(b[2], c[2], zmmm$dw_80)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[5], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+80%")
+  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="E")
 
 # 00_40 ------------------------------------------------------------------------
 a <- c(EH0_40in00, EH0_40in40)
@@ -1186,14 +1213,14 @@ dist2d(a, b, c) # distance to line for generalist
 nrow(znnn[znnn$sign < 0,])/nrow(znnn) # prop on side 1
 nrow(znnn[znnn$sign > 0,])/nrow(znnn) # prop on side 2
 
-zp2 <- ggplot(data = znnn, aes(x = dw_00, y = dw_40))+
+zp2 <- ggplot(data = znnn, aes(x = dw_00, y = dw_40))+ geom_rug(data=znnn, aes(dw_00, y = dw_40), color = mypalette[2])+
   xlim(min(b[1], c[1], znnn$dw_00)*1.10,max(b[1], c[1], znnn$dw_00)*1.10) + ylim(min(b[2], c[2], znnn$dw_40)*1.10,max(b[2], c[2], znnn$dw_40)*1.10)+
   geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
   geom_point(pch = 1, color = mypalette[2], size = 0.75)+
   geom_point(x=a[1], y=a[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change: CM")+ylab("Fitness Change CM+40%")
+  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 40% "*CuSO["4"]*"")))+ labs(tag="D")
 
 
 zp4 <- ggplot()+
@@ -1202,9 +1229,9 @@ zp4 <- ggplot()+
   geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = zmmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zmmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color = mypalette[2])+
-  theme_VJF
+  theme_VJF+xlab("Distance * Sign") + ylab("Density")+ labs(tag="F")
 
-pdf("000_Figure_S3.pdf", width = 7, height =4)
+pdf("000_Figure_S3.pdf", width = 11/1.25, height =8.5/1.25)
 grid.arrange(p2,p1,p4,zp2,zp1,zp4, ncol = 3)
 dev.off()
 ```
@@ -1266,7 +1293,8 @@ boxMN <- c(0.125*100, 0.32*100) #; (boxMN[2]-boxMN[1]) / (fitaxdatlimMN[2] - fit
 
 treatlabSALT <- "NaCl Evol. Treatment"
 treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
-fitnesslab1 <- "Geometric Mean Fitness Change (%)"
+fitnesslab1 <- "Geometric Mean Fitness Change (%) in NaCl"
+fitnesslab2 <- expression(bold("Geometric Mean Fitness Change (%) in "*CuSO["4"]*""))
 treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
 
 
@@ -1300,7 +1328,7 @@ pAA <- pAA  +
 pAA
 
 pBB <- viopanel(dwdata=m2, statsdata=melt_myres_est_mn_COPR, fitlims=fitaxdatlimMN, insetlims=boxMN,
-                fitaxlablim=fitaxlablimMN, treatlab=treatlabCOPR, fitlab=fitnesslab1, tag="B", dcol="dw_00_80")
+                fitaxlablim=fitaxlablimMN, treatlab=treatlabCOPR, fitlab=fitnesslab2, tag="B", dcol="dw_00_80")
 pBB <- pBB  + 
   annotate("text", x=1,y=12.25,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=2,y=10,label = "***", size = 6, fontface = "bold") +
