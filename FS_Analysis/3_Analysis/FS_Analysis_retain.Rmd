@@ -527,6 +527,89 @@ rm(mAA, mBB, mCC, mDD, melt_myres_est_AA, melt_myres_est_BB, melt_myres_est_CC, 
 ```
 <br/><br/>
 
+NEW NEW NEW COST EXPLORE
+```{r}
+m1 <- myrcw[myrcw$dw_00 > 0 & myrcw$dw_80 < 0,]
+m1 <- m1[m1$treat == "EH0",]
+m2 <- myrcw[myrcw$dw_00 < 0 & myrcw$dw_80 > 0,]
+m2 <- m2[m2$treat == "EH80",]
+m12 <- rbind(m1, m2)
+
+m <- m12[m12$treat %in%c( "EH0", "EH80") & m12$epo %in% c("SALT_A", "SALT_B"),]
+ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
+  geom_point() + 
+  scale_color_manual(values = mypalette[c(1,7)])+ 
+  scale_fill_manual(values = mypalette[c(1,7)])+ 
+  theme_VJF + 
+  geom_hline(yintercept = 0, lty = 2) + 
+  geom_vline(xintercept = 0, lty = 2) + 
+  geom_smooth(method='lm')
+
+ms <- m[m$epo %in% c("SALT_A", "SALT_B"),]
+ms0 <- ms[ms$treat == "EH0",]
+cor.test(ms0$dw_00, ms0$dw_80, na.action(na.omit))
+ms80 <- ms[ms$treat == "EH80",]
+cor.test(ms80$dw_00, ms80$dw_80, na.action(na.omit))
+
+
+m <- m12[m12$treat %in%c( "EH0", "EH80") & m12$epo %in% c("COPR_A", "COPR_B"),]
+ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
+  geom_point() + 
+  scale_color_manual(values = mypalette[c(1,7)])+ 
+  scale_fill_manual(values = mypalette[c(1,7)])+ 
+  theme_VJF + 
+  geom_hline(yintercept = 0, lty = 2) + 
+  geom_vline(xintercept = 0, lty = 2) + 
+  geom_smooth(method='lm')
+
+mc <- m[m$epo %in% c("COPR_A", "COPR_B"),]
+# mc0 <- mc[mc$treat == "EH0",]
+# cor.test(mc0$dw_00, mc0$dw_80, na.action(na.omit)) # only one observation. 
+mc80 <- mc[mc$treat == "EH80",]
+cor.test(mc80$dw_00, mc80$dw_80, na.action(na.omit))
+
+
+
+
+
+
+# version including EH0_80 (THERE ARE NO CASES OF INC IN 0 and DEC in 80 for EH0_80)!!!
+m <- myrcw[myrcw$dw_00 > 0 & myrcw$dw_80 < 0,]
+m1 <- m[which(m$treat == "EH0"),]
+m31 <- m[which(m$treat == "EH0_80"),]
+# m31$treat <- "EH0_80_i0"
+
+m <- myrcw[myrcw$dw_00 < 0 & myrcw$dw_80 > 0,]
+m2 <- m[which(m$treat == "EH80"),]
+m32 <- m[which(m$treat == "EH0_80"),]
+m32$treat <- "EH0_80_i80"
+
+m <- rbind(m1, m2, m31, m32)
+m <- m[m$treat %in%c( "EH0", "EH80", "EH0_80_i0", "EH0_80_i80") & m$epo %in% c("SALT_A", "SALT_B"),]
+
+
+ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
+  geom_point() + 
+  # scale_color_manual(values = mypalette[c(1,7)])+ 
+  # scale_fill_manual(values = mypalette[c(1,7)])+ 
+  theme_VJF + 
+  geom_hline(yintercept = 0, lty = 2) + 
+  geom_vline(xintercept = 0, lty = 2) + 
+  geom_smooth(method='lm')
+
+m <- rbind(m1, m2, m31, m32)
+m <- m[m$treat %in%c( "EH0", "EH80", "EH0_80_i0", "EH0_80_i80") & m$epo %in% c("COPR_A", "COPR_B"),]
+
+ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
+  geom_point() + 
+  # scale_color_manual(values = mypalette[c(1,7)])+ 
+  # scale_fill_manual(values = mypalette[c(1,7)])+ 
+  theme_VJF + 
+  geom_hline(yintercept = 0, lty = 2) + 
+  geom_vline(xintercept = 0, lty = 2) + 
+  geom_smooth(method='lm')
+
+```
 
 
 
@@ -773,6 +856,66 @@ table(sign(m$dw_80))
 table(sign(m$dw_120))
 ```
 
+
+Table s4 v2
+```{r}
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 > 0,]
+table(sign(m$dw_40))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 > 0,]
+table(sign(m$dw_40))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 > 0,]
+table(sign(m$dw_40))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 > 0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 >0,]
+table(sign(m$dw_00))
+table(sign(m$dw_80))
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >0,]
+table(sign(m$dw_00))
+table(sign(m$dw_40))
+```
+
+
+
 ```{r}
 m <- myrcw
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
@@ -910,8 +1053,52 @@ p2 <- ggplot()+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   theme_VJF+ xlab("Distance * Sign") + ylab("Density")+ labs(tag="C")
-  
+
+# model
+aaa$treat <- "EH0_80"
+zzz$treat <- "EH20_60"
+nnn$treat <- "EH0_40"
+ppp$treat <- "EH40_80"
+qqq$treat <- "EH40"
+tempdata <- rbind(aaa, zzz, nnn, ppp, qqq)
+tempdata$cost <- tempdata$dist*tempdata$sign
+tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80"))
+hist(tempdata$cost)
+mymod <- lm(cost ~ treat + 0, data = tempdata)
+summary(mymod)
+
+# significant individuals
+print("total")
+table(tempdata$treat)
+print("n with cost")
+table(tempdata[tempdata$cost < -0.0217,]$treat)
+print("p with cost")
+table(tempdata[tempdata$cost < -0.0217,]$treat)/table(tempdata$treat)
+print("n neutral")
+table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)
+print("p neutral")
+table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)/table(tempdata$treat)
+print("n with benefit")
+table(tempdata[tempdata$cost > 0.0217,]$treat)  
+print("p with benefit")
+table(tempdata[tempdata$cost > 0.0217,]$treat)/table(tempdata$treat)
+
+# sign individuals
+print("total")
+table(tempdata$treat)
+print("n with cost")
+table(tempdata[tempdata$cost < -0,]$treat)
+print("p with cost")
+table(tempdata[tempdata$cost < -0,]$treat)/table(tempdata$treat)
+print("n with benefit")
+table(tempdata[tempdata$cost > 0,]$treat)  
+print("p with benefit")
+table(tempdata[tempdata$cost > 0,]$treat)/table(tempdata$treat)
 ```
+
+
+
+
 ```{r}
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
@@ -1043,6 +1230,48 @@ lay<- as.matrix(cbind(c(1,1,2), c(3,3,4)))
 pdf("000_Figure_3.pdf", width = 6, height = 6)
 grid::grid.draw(grid.arrange(p1,p2,p3,p4, layout_matrix =lay))
 dev.off()
+
+
+# model
+zaaa$treat <- "EH0_80"
+zzzz$treat <- "EH20_60"
+znnn$treat <- "EH0_40"
+zppp$treat <- "EH40_80"
+zqqq$treat <- "EH40"
+tempdata <- rbind(zaaa, zzzz, znnn, zppp, zqqq)
+tempdata$cost <- tempdata$dist*tempdata$sign
+tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80"))
+hist(tempdata$cost)
+mymod <- lm(cost ~ treat + 0, data = tempdata)
+summary(mymod)
+
+# significant individuals
+print("total")
+table(tempdata$treat)
+print("n with cost")
+table(tempdata[tempdata$cost < -0.0217,]$treat)
+print("p with cost")
+table(tempdata[tempdata$cost < -0.0217,]$treat)/table(tempdata$treat)
+print("n neutral")
+table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)
+print("p neutral")
+table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)/table(tempdata$treat)
+print("n with benefit")
+table(tempdata[tempdata$cost > 0.0217,]$treat)  
+print("p with benefit")
+table(tempdata[tempdata$cost > 0.0217,]$treat)/table(tempdata$treat)
+
+# sign individuals
+print("total")
+table(tempdata$treat)
+print("n with cost")
+table(tempdata[tempdata$cost < -0,]$treat)
+print("p with cost")
+table(tempdata[tempdata$cost < -0,]$treat)/table(tempdata$treat)
+print("n with benefit")
+table(tempdata[tempdata$cost > 0,]$treat)  
+print("p with benefit")
+table(tempdata[tempdata$cost > 0,]$treat)/table(tempdata$treat)
 ```
 
 
