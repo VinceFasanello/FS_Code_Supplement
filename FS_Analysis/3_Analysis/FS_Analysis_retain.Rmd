@@ -914,6 +914,34 @@ table(sign(m$dw_00))
 table(sign(m$dw_40))
 ```
 
+Table s1 v2
+```{r}
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 > 0.0217,]
+m[which(m$dw_80 < -0.0217),]
+
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 > 0.0217,]
+m[which(m$dw_00 < -0.0217),]
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 > 0.0217,]
+m[which(m$dw_80 < -0.0217),]
+
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 > 0.0217,]
+m[which(m$dw_00 < -0.0217),]
+
+
+```
+
 
 
 ```{r}
@@ -1513,7 +1541,18 @@ for (i in 1:length(chems)){
 ```{R  Multiple Environment Treatment Effects: Visualization, warning=FALSE}
 # get datasets for panels A, B, C, D -------------------------------------------
 m1 <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+m1 %>%
+  group_by(treat) %>%
+  summarise(inc = sum(dw_00_80 > 0.0217),
+            incp = sum(dw_00_80 > 0.0217)/length(dw_00_80),
+            tot = length(dw_00_80))
+
 m2 <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
+m2 %>%
+  group_by(treat) %>%
+  summarise(inc = sum(dw_00_80 > 0.0217),
+            incp = sum(dw_00_80 > 0.0217)/length(dw_00_80),
+            tot = length(dw_00_80))
 
 # Set plotting controls --------------------------------------------------------
 fitaxdatlimMN <- c(-0.1*100, 0.31*100) #; min(myrcw$dw_00_80, na.rm = T); max(myrcw$dw_00_80, na.rm=T)
@@ -1782,3 +1821,106 @@ mymod
 mymod$expected
 ```
 <br/><br/>
+
+
+clonal interference
+```{r}
+m <- myrcw[myrcw$treat %in% c("EH0_80", "EH0_40", "EH40_80", "EH20_60"),]
+legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
+  geom_point(size = 2) + theme_VJF + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  theme(legend.title = element_text(size = 8), 
+          legend.text = element_text(size = 8))
+legp <- get_legend(legp)
+
+
+
+m <- myrcw[myrcw$treat %in% c("EH0_80", "EH0_40", "EH40_80", "EH20_60") & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+m$platewell <- paste0(m$epo, m$well)
+m <- m[m$platewell %ni% c("SALT_Ad1C9d2C9", "SALT_Bd1C9d2C9"),]
+m <- m[order(m$platewell),]
+length(unique(m$platewell))
+m1 <- m[c(seq(1, 61, 2)),]
+m2 <- m[c(seq(2, 62, 2)),]
+sum(m1$platewell != m2$platewell)
+
+mm <- as.data.frame(cbind(m1$dw_00, m2$dw_00, as.character(m1$treat))); colnames(mm) <- c("Barcode_1", "Barcode_2", "Treatment")
+mm$Treatment <- factor(mm$Treatment, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+mm$Barcode_1 <- as.numeric(mm$Barcode_1)
+mm$Barcode_2 <- as.numeric(mm$Barcode_2)
+mm <- mm[complete.cases(mm),]
+p1 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
+  geom_smooth(method='lm', color = "black")+
+  geom_point( aes(color=Treatment), size = 3)+
+  scale_color_manual(values = mypalette[c(2,4,5,6)])+
+  scale_fill_manual(values = mypalette[c(2,4,5,6)])+
+  theme_VJF + theme(legend.position="none")+
+  geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
+  geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
+  ggtitle("NaCl Dataset, Well Fitness 0% NaCl") + labs(tag="A") + xlab("")+ ylab("Barcode 1 Fitness Change")
+
+mm <- as.data.frame(cbind(m1$dw_80, m2$dw_80, as.character(m1$treat))); colnames(mm) <- c("Barcode_1", "Barcode_2", "Treatment")
+mm$Treatment <- factor(mm$Treatment, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+mm$Barcode_1 <- as.numeric(mm$Barcode_1)
+mm$Barcode_2 <- as.numeric(mm$Barcode_2)
+mm <- mm[complete.cases(mm),]
+p2 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
+  geom_smooth(method='lm', color = "black")+
+  geom_point( aes(color=Treatment), size = 3)+
+  scale_color_manual(values = mypalette[c(2,4,5,6)])+
+  scale_fill_manual(values = mypalette[c(2,4,5,6)])+
+  theme_VJF + theme(legend.position="none")+
+  geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
+  geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
+  ggtitle("NaCl Dataset, Well Fitness 80% NaCl") + labs(tag="C") + xlab("Barcode 1 Fitness Change")+ ylab("Barcode 2 Fitness Change")
+
+
+m <- myrcw[myrcw$treat %in% c("EH0_80", "EH0_40", "EH40_80", "EH20_60") & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+m$platewell <- paste0(m$epo, m$well)
+m <- m[m$platewell %ni% c("COPR_Ad1C9d2C9", "COPR_Bd1C9d2C9"),]
+m <- m[order(m$platewell),]
+length(unique(m$platewell))
+m1 <- m[c(seq(1, 61, 2)),]
+m2 <- m[c(seq(2, 62, 2)),]
+sum(m1$platewell != m2$platewell)
+
+mm <- as.data.frame(cbind(m1$dw_00, m2$dw_00, as.character(m1$treat))); colnames(mm) <- c("Barcode_1", "Barcode_2", "Treatment")
+mm$Treatment <- factor(mm$Treatment, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+mm$Barcode_1 <- as.numeric(mm$Barcode_1)
+mm$Barcode_2 <- as.numeric(mm$Barcode_2)
+mm <- mm[complete.cases(mm),]
+p3 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
+  geom_smooth(method='lm', color = "black")+
+  geom_point( aes(color=Treatment), size = 3)+
+  scale_color_manual(values = mypalette[c(2,4,5,6)])+
+  scale_fill_manual(values = mypalette[c(2,4,5,6)])+
+  theme_VJF + theme(legend.position="none")+
+  geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
+  geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
+  ggtitle("CuSO4 Dataset, Well Fitness 0% CuSO4") + labs(tag="B") + xlab("")+ ylab("")
+
+mm <- as.data.frame(cbind(m1$dw_80, m2$dw_80, as.character(m1$treat))); colnames(mm) <- c("Barcode_1", "Barcode_2", "Treatment")
+mm$Treatment <- factor(mm$Treatment, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+mm$Barcode_1 <- as.numeric(mm$Barcode_1)
+mm$Barcode_2 <- as.numeric(mm$Barcode_2)
+mm <- mm[complete.cases(mm),]
+p4 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
+  geom_smooth(method='lm', color = "black")+
+  geom_point( aes(color=Treatment), size = 3)+
+  scale_color_manual(values = mypalette[c(2,4,5,6)])+
+  scale_fill_manual(values = mypalette[c(2,4,5,6)])+
+  theme_VJF + theme(legend.position="none")+
+  geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
+  geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
+  ggtitle("CuSO4 Dataset, Well Fitness 80% CuSO4") + annotation_custom(legp, xmin = 0.2, ymin = -0.35) + labs(tag="D") + xlab("Barcode 1 Fitness Change")+ ylab("")
+
+pdf("000_Figure_test.pdf", width = 11/1.25, height =8.5/1.25)
+grid.arrange(p1,p3,p2,p4, ncol = 2)
+dev.off()
+
+png("000_Figure_test.png", width = 3300, height =2550, res = 300)
+grid.arrange(p1,p3,p2,p4, ncol = 2)
+dev.off()
+```
+
+
+
