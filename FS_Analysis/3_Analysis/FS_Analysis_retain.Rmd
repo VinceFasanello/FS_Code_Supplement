@@ -230,33 +230,33 @@ rm(mycc, reportvals, i, DIR_evo_formatted) # tidy
 
 ```{R Power}
 setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
-# # Calculate power to detect indiv BC fitness increase / decrease (t-tests) -----
-# # d=m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
-# # here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
-# # population standard deviation of the four replicate sets in each row of the dataset.
-# temp <- myrc[!is.na(myrc$fit_e_1) & !is.na(myrc$fit_e_2) & !is.na(myrc$fit_e_3) & !is.na(myrc$fit_e_4)
-#              & !is.na(myrc$fit_a) & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
-# temp$dw_1 <- temp$fit_e_1 - temp$fit_a; temp$psd_r1 <- ((temp$dw - temp$dw_1)^2)/4
-# temp$dw_2 <- temp$fit_e_2 - temp$fit_a; temp$psd_r2 <- ((temp$dw - temp$dw_2)^2)/4
-# temp$dw_3 <- temp$fit_e_3 - temp$fit_a; temp$psd_r3 <- ((temp$dw - temp$dw_3)^2)/4
-# temp$dw_4 <- temp$fit_e_4 - temp$fit_a; temp$psd_r4 <- ((temp$dw - temp$dw_4)^2)/4
-# temp$psd_m <- rowMeans(cbind(temp$psd_r1, temp$psd_r2, temp$psd_r3, temp$psd_r4), na.rm=T)
-# psd <- weighted.mean(sqrt(temp$psd_m), temp$reads_dw, na.rm=T); rm(temp)
-# 
-# powerBC <- matrix(nrow=100, ncol=5)
-# colnames(powerBC) <- c("fitchange", "psd", "n", "power", "sig.level")
-# powerBC <- as.data.frame(powerBC)
-# powerBC$fitchange <- seq(0,0.04,length.out=100) # fitness changes to calculate power for.
-# powerBC$psd <- psd # psd calculated above
-# powerBC$n <- 4 # n replicates
-# powerBC$sig.level <- 0.05 # significance level
-# for(i in 1:nrow(powerBC)){
-#   powerBC$power[i] <- pwr.t.test(d=powerBC$fitchange[i] / powerBC$psd[i],
-#                                  n=powerBC$n[i], sig.level=powerBC$sig.level[i])$power
-# }; rm(i) # calculate power
+# Calculate power to detect indiv BC fitness increase / decrease (t-tests) -----
+# d=m1 - m2 / q; m1 is mean group 1, m2 is mean group 2, q is common standard deviation in the two groups
+# here m1 is change in fitness and m2 is 0. mean q is used and is the weighted mean of all
+# population standard deviation of the four replicate sets in each row of the dataset.
+temp <- myrc[!is.na(myrc$fit_e_1) & !is.na(myrc$fit_e_2) & !is.na(myrc$fit_e_3) & !is.na(myrc$fit_e_4)
+             & !is.na(myrc$fit_a) & !is.na(myrc$dw) & !is.na(myrc$reads_dw),]
+temp$dw_1 <- temp$fit_e_1 - temp$fit_a; temp$psd_r1 <- ((temp$dw - temp$dw_1)^2)/4
+temp$dw_2 <- temp$fit_e_2 - temp$fit_a; temp$psd_r2 <- ((temp$dw - temp$dw_2)^2)/4
+temp$dw_3 <- temp$fit_e_3 - temp$fit_a; temp$psd_r3 <- ((temp$dw - temp$dw_3)^2)/4
+temp$dw_4 <- temp$fit_e_4 - temp$fit_a; temp$psd_r4 <- ((temp$dw - temp$dw_4)^2)/4
+temp$psd_m <- rowMeans(cbind(temp$psd_r1, temp$psd_r2, temp$psd_r3, temp$psd_r4), na.rm=T)
+psd <- weighted.mean(sqrt(temp$psd_m), temp$reads_dw, na.rm=T); rm(temp)
+
+powerBC <- matrix(nrow=100, ncol=5)
+colnames(powerBC) <- c("fitchange", "psd", "n", "power", "sig.level")
+powerBC <- as.data.frame(powerBC)
+powerBC$fitchange <- seq(0,0.04,length.out=100) # fitness changes to calculate power for.
+powerBC$psd <- psd # psd calculated above
+powerBC$n <- 4 # n replicates
+powerBC$sig.level <- 0.05 # significance level
+for(i in 1:nrow(powerBC)){
+  powerBC$power[i] <- pwr.t.test(d=powerBC$fitchange[i] / powerBC$psd[i],
+                                 n=powerBC$n[i], sig.level=powerBC$sig.level[i])$power
+}; rm(i) # calculate power
 reportvals <- c(NA, NA, NA, NA, NA, NA)
-# reportvals[1] <- paste0(pwr.t.test(d=0.01 / psd, n=4, sig.level=0.05)$power*100, "% power to detect a 1% fitness change for an average BC")
-# reportvals[2] <- paste0("80% power to detect a ", pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100, "% fitness change for an average BC")
+reportvals[1] <- paste0(pwr.t.test(d=0.01 / psd, n=4, sig.level=0.05)$power*100, "% power to detect a 1% fitness change for an average BC")
+reportvals[2] <- paste0("80% power to detect a ", pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100, "% fitness change for an average BC")
 
 
 # Calculate power to detect Treatment effects (lmer model) ---------------------
@@ -290,17 +290,17 @@ reportvals[6] <- paste0("80% power to detect a ", pwr.f2.test(u=1, v=((16*2) -1 
 
 
 # Visualization ----------------------------------------------------------------
-# pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
-#   geom_segment(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd,
-#                xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-#   geom_segment(x=0, xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
-#   geom_point(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, pch=19, size=3, color="darkgray")+
-#   geom_text(x=2.5/100, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100,2), ", 80"))+
-#   geom_line()+
-#   scale_x_continuous(name="Fitness Change (%)\n (for Individual Strains) \n ", breaks=seq(0.0,0.04,by=0.005),
-#                      labels=seq(0.0,0.04,by=0.005)*100, limits=c(0,0.04), expand=expansion(mult=c(0,0.02)))+
-#   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-#   theme_VJF + labs(tag="A")
+pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
+  geom_segment(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd,
+               xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_segment(x=0, xend=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, yend=0.8, lty="dotdash", color="gray", size=0.25)+
+  geom_point(x=pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd, y=0.8, pch=19, size=3, color="darkgray")+
+  geom_text(x=2.5/100, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.t.test(power=0.8, n=4, sig.level=0.05)$d*psd*100,2), ", 80"))+
+  geom_line()+
+  scale_x_continuous(name="Fitness Change (%)\n (for Individual Strains) \n ", breaks=seq(0.0,0.04,by=0.005),
+                     labels=seq(0.0,0.04,by=0.005)*100, limits=c(0,0.04), expand=expansion(mult=c(0,0.02)))+
+  scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
+  theme_VJF + labs(tag="A")
 
 pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   geom_segment(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
@@ -313,23 +313,23 @@ pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   geom_text(x=0.19, y=0.85, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
   geom_text(x=0.75, y=0.75, color="darkgray", size=2, label=paste0(round(pwr.f2.test(u=1, v=((16*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse, 2),", 80"))+
   geom_line(aes(lty=n))+
-  scale_x_continuous(name="Fitness Change (%)", breaks=seq(0.0,1.5,by=0.25),
+  scale_x_continuous(name="Fitness Change (%)\n (for Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
                      labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
   theme_VJF + theme(legend.position=c(0.9,0.3)) #+ labs(tag="B")
 
 
 # Save outputs to file ---------------------------------------------------------
-# setwd(DIR_out); write.csv(powerBC, file="000_Table_S3_indiv.csv")
+setwd(DIR_out); write.csv(powerBC, file="000_Table_S4.csv")
 setwd(DIR_out); write.csv(powerTR, file="000_Table_S3.csv")
-# setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
-# cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
-setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.5, height=3.5)
-pBB; dev.off()
+setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
+cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
+# setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.5, height=3.5)
+# pBB; dev.off()
 
 # # report -----------------------------------------------------------------------
 # for (i in 1:6){print(reportvals[i])}
-# rm(pAA, pBB, powerBC, powerTR, myeffectsize, myrmse, psd, i, reportvals) # tidy
+rm(pAA, pBB, powerBC, powerTR, myeffectsize, myrmse, psd, i, reportvals) # tidy
 ```
 <br/><br/>
 
@@ -1080,7 +1080,7 @@ p2 <- ggplot()+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF+ xlab("Distance * Sign") + ylab("Density")+ labs(tag="C")
+  theme_VJF+ xlab("Cost") + ylab("Density")+ labs(tag="C")
 
 # model
 aaa$treat <- "EH0_80"
@@ -1251,12 +1251,16 @@ p4 <- ggplot()+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = zppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=zppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF + xlab("Distance * Sign")+ labs(tag="D")
+  theme_VJF + xlab("Cost")+ labs(tag="D")
 
 
 lay<- as.matrix(cbind(c(1,1,2), c(3,3,4)))
 pdf("000_Figure_3.pdf", width = 6, height = 6)
 grid::grid.draw(grid.arrange(p1,p2,p3,p4, layout_matrix =lay))
+dev.off()
+
+png("000_Figure_3.png", width = 6, height =6, units = "in",res = 300)
+grid.arrange(p1,p2,p3,p4, layout_matrix =lay)
 dev.off()
 
 
@@ -1397,7 +1401,7 @@ p4 <- ggplot()+
   geom_density(data = mmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=mmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color = mypalette[2])+
   theme_VJF + annotation_custom(legp, xmin = 0.025, ymin = 10)+
-  xlab("Distance * Sign") + ylab("Density")+ labs(tag="C")
+  xlab("Cost") + ylab("Density")+ labs(tag="C")
 
 ```
 <br/><br/>
@@ -1486,9 +1490,13 @@ zp4 <- ggplot()+
   geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = zmmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zmmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color = mypalette[2])+
-  theme_VJF+xlab("Distance * Sign") + ylab("Density")+ labs(tag="F")
+  theme_VJF+xlab("Cost") + ylab("Density")+ labs(tag="F")
 
 pdf("000_Figure_S3.pdf", width = 11/1.25, height =8.5/1.25)
+grid.arrange(p2,p1,p4,zp2,zp1,zp4, ncol = 3)
+dev.off()
+
+png("000_Figure_S3.png", width = 11/1.25, height =8.5/1.25, units = "in",res = 300)
 grid.arrange(p2,p1,p4,zp2,zp1,zp4, ncol = 3)
 dev.off()
 ```
@@ -1632,7 +1640,7 @@ m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
 mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
 summary(mymod)
 getwd()
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_S5.html")
+tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_S10.html")
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
@@ -1664,7 +1672,7 @@ m$darith_00_80 <- rowMeans(cbind(m$dw_00, m$dw_80))
 mymod <- lmer(scale(dw_00_80) ~ scale(darith_00_80) + scale(dvar_00_80) + (1|treat), data = m)
 summary(mymod)
 getwd()
-tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_S6.html")
+tab_model(mymod, digits = 5, digits.p = 8, show.stat = T, wrap.labels = 100, show.r2 = F, file = "000_Table_S11.html")
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0"),]); summary(mod)
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH0_40"),]); summary(mod)
 # mod <- glm(dw_00_80 ~ darith_00_80 + dvar_00_80, data = m[m$treat %in% c("EH40"),]); summary(mod)
