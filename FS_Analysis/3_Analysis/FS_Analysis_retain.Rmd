@@ -316,7 +316,7 @@ pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   scale_x_continuous(name="Fitness Change (%)\n (for Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
                      labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-  theme_VJF + theme(legend.position=c(0.9,0.3)) #+ labs(tag="B")
+  theme_VJF + theme(legend.position=c(0.9,0.3)) + labs(tag="B")
 
 
 # Save outputs to file ---------------------------------------------------------
@@ -1563,14 +1563,14 @@ m2 %>%
             tot = length(dw_00_80))
 
 # Set plotting controls --------------------------------------------------------
-fitaxdatlimMN <- c(-0.1*100, 0.31*100) #; min(myrcw$dw_00_80, na.rm = T); max(myrcw$dw_00_80, na.rm=T)
-fitaxlablimMN <- c(-0.1*100, 0.31*100) 
-boxMN <- c(0.125*100, 0.32*100) #; (boxMN[2]-boxMN[1]) / (fitaxdatlimMN[2] - fitaxdatlimMN[1])
+fitaxdatlimMN <- c(-0.1*100, 0.35*100) #; min(myrcw$dw_00_80, na.rm = T); max(myrcw$dw_00_80, na.rm=T)
+fitaxlablimMN <- c(-0.1*100, 0.35*100) 
+boxMN <- c(0.165*100, 0.36*100) #; (boxMN[2]-boxMN[1]) / (fitaxdatlimMN[2] - fitaxdatlimMN[1])
 
 treatlabSALT <- "NaCl Evol. Treatment"
 treatlabCOPR <- expression(bold(CuSO["4"]*"  Evol. Treatment"))
-fitnesslab1 <- "Geometric Mean Fitness Change (%) in NaCl"
-fitnesslab2 <- expression(bold("Geometric Mean Fitness Change (%) in "*CuSO["4"]*""))
+fitnesslab1 <- "Geometric Mean Fitness Change (%); NaCl dataset"
+fitnesslab2 <- expression(bold("Geometric Mean Fitness Change (%); "*CuSO["4"]*" dataset"))
 treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
 
 
