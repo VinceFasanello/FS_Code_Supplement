@@ -762,184 +762,147 @@ cowplot::plot_grid(p1, p2, p3, nrow=1); dev.off()
 <br/><br/>
 
 
-
+Table 1, S5
 ```{r}
+# table 1
 m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
 m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0,]
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
 
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40"),]
-m <- m[!is.na(m$dw_40),]
-m <- m[m$dw_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
 
 m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
 m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_120))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
-m <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
-m <- m[m$dw_00_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
-m <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
-m <- m[m$dw_00_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
-m <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
-m <- m[m$dw_40_80 >0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
 
 
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0"),]
 m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0,]
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+
+
+
+
+# table S5 SALT HALF
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+
+
+
+
+
+# table S5 COPR HALF
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_40"),]
+m <- m[!is.na(m$dw_40),]
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
 
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH40"),]
 m <- m[!is.na(m$dw_40),]
-m <- m[m$dw_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH80"),]
-m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_120))
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_40"),]
-m <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
-m <- m[m$dw_00_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
 
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_80"),]
-m <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
-m <- m[m$dw_00_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
+m <- m[!is.na(m$dw_00),]
+m <- m[m$dw_00 >= 0.0216,]
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0_80"),]
+m <- m[!is.na(m$dw_80),]
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
 
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH40_80"),]
-m <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
-m <- m[m$dw_40_80 >0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-table(sign(m$dw_120))
-```
-
-
-Table s4 v2
-```{r}
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
-m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0,]
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40"),]
 m <- m[!is.na(m$dw_40),]
-m <- m[m$dw_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_80))
+m <- m[m$dw_40 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_80 <= -0.0216),]) + nrow(m[is.na(m$dw_80),])
 
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH40_80"),]
 m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
-m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0,]
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_40"),]
-m <- m[!is.na(m$dw_40),]
-m <- m[m$dw_40 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_80))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
-m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0,]
-table(sign(m$dw_40))
-table(sign(m$dw_80))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0_80"),]
-m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
-m <- m[!is.na(m$dw_40),]
-m <- m[m$dw_40 >0,]
-table(sign(m$dw_00))
-table(sign(m$dw_80))
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH40_80"),]
-m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 >0,]
-table(sign(m$dw_00))
-table(sign(m$dw_40))
-```
-
-Table s1 v2
-```{r}
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
-m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0.0217,]
-m[which(m$dw_80 < -0.0217),]
-
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH80"),]
-m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0.0217,]
-m[which(m$dw_00 < -0.0217),]
-
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0"),]
-m <- m[!is.na(m$dw_00),]
-m <- m[m$dw_00 > 0.0217,]
-m[which(m$dw_80 < -0.0217),]
-
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
 
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH80"),]
 m <- m[!is.na(m$dw_80),]
-m <- m[m$dw_80 > 0.0217,]
-m[which(m$dw_00 < -0.0217),]
-
-
+m <- m[m$dw_80 >= 0.0216,]
+nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
+nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
 ```
 
 
@@ -1529,15 +1492,17 @@ for (i in 1:length(chems)){
 m1 <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
 m1 %>%
   group_by(treat) %>%
-  summarise(inc = sum(dw_00_80 > 0.0217),
-            incp = sum(dw_00_80 > 0.0217)/length(dw_00_80),
+  summarise(dec = sum(dw_00_80 <= -0.0216),
+            nod = sum(dw_00_80 > -0.0216 & dw_00_80 < 0.0216),
+            inc = sum(dw_00_80 >= 0.0216),
             tot = length(dw_00_80))
 
 m2 <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$reads_dw_00_80),]
 m2 %>%
   group_by(treat) %>%
-  summarise(inc = sum(dw_00_80 > 0.0217),
-            incp = sum(dw_00_80 > 0.0217)/length(dw_00_80),
+  summarise(dec = sum(dw_00_80 <= -0.0216),
+            nod = sum(dw_00_80 > -0.0216 & dw_00_80 < 0.0216),
+            inc = sum(dw_00_80 >= 0.0216),
             tot = length(dw_00_80))
 
 # Set plotting controls --------------------------------------------------------
