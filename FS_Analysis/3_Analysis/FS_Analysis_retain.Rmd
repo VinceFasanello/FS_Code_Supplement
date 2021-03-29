@@ -945,9 +945,9 @@ m[which(m$dw_00 < -0.0217),]
 
 
 ```{r}
-m <- myrcw
+m <- myrcw[myrcw$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
-  geom_point(size = 1.5) + theme_VJF + scale_color_manual(values = mypalette) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  geom_point(size = 1.5) + theme_VJF + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
   theme(legend.title = element_text(size = 7), 
           legend.text = element_text(size = 7))
 legp
@@ -1057,12 +1057,12 @@ p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+ geom_rug(data=aaa, aes(x = 
   geom_point(data =zzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+ geom_rug(data=zzz, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[4], 0.5))+
   geom_point(data =nnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+ geom_rug(data=nnn, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_point(data =ppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+ geom_rug(data=ppp, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[6], 0.5))+
-  geom_point(data =qqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+ geom_rug(data=qqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
+  # geom_point(data =qqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+ geom_rug(data=qqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
   geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=p[1], y=p[2], fill = mypalette[6], size = 3, pch = 21)+
-  geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
+  # geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
   theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="A")
@@ -1074,12 +1074,12 @@ p2 <- ggplot()+
   geom_vline(aes(xintercept = mean(zzz$dist*zzz$sign)), lty = "dotted", color = mypalette[4])+
   geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_vline(aes(xintercept = mean(ppp$dist*ppp$sign)), lty = "dotted", color = mypalette[6])+
-  geom_vline(aes(xintercept = mean(qqq$dist*qqq$sign)), lty = "dotted", color = mypalette[3])+
+  # geom_vline(aes(xintercept = mean(qqq$dist*qqq$sign)), lty = "dotted", color = mypalette[3])+
   geom_density(data = aaa, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=aaa, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[5], 0.5))+
   geom_density(data = zzz, aes(x = dist*sign), color = mypalette[4]) + geom_rug(data=zzz, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[4], 0.5))+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
-  geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
+  # geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   theme_VJF+ xlab("Cost") + ylab("Density")+ labs(tag="C")
 
 # model
@@ -1087,41 +1087,30 @@ aaa$treat <- "EH0_80"
 zzz$treat <- "EH20_60"
 nnn$treat <- "EH0_40"
 ppp$treat <- "EH40_80"
-qqq$treat <- "EH40"
-tempdata <- rbind(aaa, zzz, nnn, ppp, qqq)
+tempdata <- rbind(aaa, zzz, nnn, ppp)
 tempdata$cost <- tempdata$dist*tempdata$sign
-tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80"))
-hist(tempdata$cost)
+tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
+# hist(tempdata$cost)
 mymod <- lm(cost ~ treat + 0, data = tempdata)
 summary(mymod)
+print(tab_model(mymod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+                      file=paste0("000_Table_S7.html")))
 
 # significant individuals
 print("total")
 table(tempdata$treat)
 print("n with cost")
-table(tempdata[tempdata$cost < -0.0217,]$treat)
+table(tempdata[tempdata$cost <= -0.0216,]$treat)
 print("p with cost")
-table(tempdata[tempdata$cost < -0.0217,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost <= -0.0216,]$treat)/table(tempdata$treat)
 print("n neutral")
-table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)
+table(tempdata[tempdata$cost > -0.0216 & tempdata$cost < 0.0216,]$treat)
 print("p neutral")
-table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost > -0.0216 & tempdata$cost < 0.0216,]$treat)/table(tempdata$treat)
 print("n with benefit")
-table(tempdata[tempdata$cost > 0.0217,]$treat)  
+table(tempdata[tempdata$cost >= 0.0216,]$treat)  
 print("p with benefit")
-table(tempdata[tempdata$cost > 0.0217,]$treat)/table(tempdata$treat)
-
-# sign individuals
-print("total")
-table(tempdata$treat)
-print("n with cost")
-table(tempdata[tempdata$cost < -0,]$treat)
-print("p with cost")
-table(tempdata[tempdata$cost < -0,]$treat)/table(tempdata$treat)
-print("n with benefit")
-table(tempdata[tempdata$cost > 0,]$treat)  
-print("p with benefit")
-table(tempdata[tempdata$cost > 0,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost >= 0.0216,]$treat)/table(tempdata$treat)
 ```
 
 
@@ -1227,12 +1216,12 @@ p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+geom_rug(data=zaaa, aes(x =
   geom_point(data =zzzz, aes(x = dw_00, y = dw_80), color = mypalette[4], pch = 1, size = 0.75)+geom_rug(data=zzzz, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[4], 0.5))+
   geom_point(data =znnn, aes(x = dw_00, y = dw_80), color = mypalette[2], pch = 1, size = 0.75)+geom_rug(data=znnn, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_point(data =zppp, aes(x = dw_00, y = dw_80), color = mypalette[6], pch = 1, size = 0.75)+geom_rug(data=zppp, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[6], 0.5))+
-  geom_point(data =zqqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+geom_rug(data=zqqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
+  # geom_point(data =zqqq, aes(x = dw_00, y = dw_80), color = mypalette[3], pch = 1, size = 0.75)+geom_rug(data=zqqq, (aes(x = dw_00, y = dw_80)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
   geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=p[1], y=p[2], fill = mypalette[6], size = 3, pch = 21)+
-  geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
+  # geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
   theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="B")
@@ -1245,12 +1234,12 @@ p4 <- ggplot()+
   geom_vline(aes(xintercept = mean(zzzz$dist*zzzz$sign)), lty = "dotted", color = mypalette[4])+
   geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_vline(aes(xintercept = mean(zppp$dist*zppp$sign)), lty = "dotted", color = mypalette[6])+
-  geom_vline(aes(xintercept = mean(zqqq$dist*zqqq$sign)), lty = "dotted", color = mypalette[3])+
+  # geom_vline(aes(xintercept = mean(zqqq$dist*zqqq$sign)), lty = "dotted", color = mypalette[3])+
   geom_density(data = zaaa, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zaaa, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[5], 0.5))+
   geom_density(data = zzzz, aes(x = dist*sign), color = mypalette[4]) + geom_rug(data=zzzz, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[4], 0.5))+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = zppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=zppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
-  geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
+  # geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
   theme_VJF + xlab("Cost")+ labs(tag="D")
 
 
@@ -1269,41 +1258,30 @@ zaaa$treat <- "EH0_80"
 zzzz$treat <- "EH20_60"
 znnn$treat <- "EH0_40"
 zppp$treat <- "EH40_80"
-zqqq$treat <- "EH40"
-tempdata <- rbind(zaaa, zzzz, znnn, zppp, zqqq)
+tempdata <- rbind(zaaa, zzzz, znnn, zppp)
 tempdata$cost <- tempdata$dist*tempdata$sign
-tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH40", "EH20_60", "EH0_80", "EH40_80"))
+tempdata$treat <- factor(tempdata$treat, levels = c("EH0_40", "EH20_60", "EH0_80", "EH40_80"))
 hist(tempdata$cost)
 mymod <- lm(cost ~ treat + 0, data = tempdata)
 summary(mymod)
+print(tab_model(mymod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+                      file=paste0("000_Table_S6.html")))
 
 # significant individuals
 print("total")
 table(tempdata$treat)
 print("n with cost")
-table(tempdata[tempdata$cost < -0.0217,]$treat)
+table(tempdata[tempdata$cost <= -0.0216,]$treat)
 print("p with cost")
-table(tempdata[tempdata$cost < -0.0217,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost <= -0.0216,]$treat)/table(tempdata$treat)
 print("n neutral")
-table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)
+table(tempdata[tempdata$cost > -0.0216 & tempdata$cost < 0.0216,]$treat)
 print("p neutral")
-table(tempdata[tempdata$cost > -0.0217 & tempdata$cost < 0.0217,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost > -0.0216 & tempdata$cost < 0.0216,]$treat)/table(tempdata$treat)
 print("n with benefit")
-table(tempdata[tempdata$cost > 0.0217,]$treat)  
+table(tempdata[tempdata$cost >= 0.0216,]$treat)  
 print("p with benefit")
-table(tempdata[tempdata$cost > 0.0217,]$treat)/table(tempdata$treat)
-
-# sign individuals
-print("total")
-table(tempdata$treat)
-print("n with cost")
-table(tempdata[tempdata$cost < -0,]$treat)
-print("p with cost")
-table(tempdata[tempdata$cost < -0,]$treat)/table(tempdata$treat)
-print("n with benefit")
-table(tempdata[tempdata$cost > 0,]$treat)  
-print("p with benefit")
-table(tempdata[tempdata$cost > 0,]$treat)/table(tempdata$treat)
+table(tempdata[tempdata$cost >= 0.0216,]$treat)/table(tempdata$treat)
 ```
 
 
