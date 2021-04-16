@@ -25,7 +25,7 @@ knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE)
 DIR_counts_in <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Counts_Data/Combined"
 DIR_evo_formatted <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Evolutionary_Dynamics/Formatted_Data"
 DIR_fit_formatted <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data"
-DIR_out <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/3_Analysis"
+DIR_out <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/3_Analysis/Fitness_Assays"
 
 
 # Load Packages ----------------------------------------------------------------
@@ -100,7 +100,8 @@ get_legend<-function(myggplot){
 mypalette <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
 
 
-theme_VJF <- theme_classic()+
+theme_VJF <- function(){
+  theme_classic()+
   theme(
     # adjust axis title, text, ticks -----------------------
     axis.title = element_text(size = 10, face = "bold", color = "black"),
@@ -112,6 +113,7 @@ theme_VJF <- theme_classic()+
     
     plot.tag = element_text(size = 20, face = "bold", color = "black")
   )
+}
 ```
 <br/><br/>
 
@@ -145,7 +147,7 @@ countshist <- function(pdata, pxlab, pylab, ptag, plog = FALSE, plims = NA){
   # shared commands --------------------
   pZZ <- pZZ + 
     scale_y_continuous(name = "Frequency", expand = expansion(mult = c(0,0.02)))+
-    theme_VJF + labs(tag = ptag)
+    theme_VJF() + labs(tag = ptag)
   return(pZZ)
 }
 
@@ -300,7 +302,7 @@ pAA<-ggplot(powerBC, aes(x=fitchange, y=power)) +
   scale_x_continuous(name="Fitness Change (%)\n (for Individual Strains) \n ", breaks=seq(0.0,0.04,by=0.005),
                      labels=seq(0.0,0.04,by=0.005)*100, limits=c(0,0.04), expand=expansion(mult=c(0,0.02)))+
   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-  theme_VJF + labs(tag="A")
+  theme_VJF() + labs(tag="A")
 
 pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   geom_segment(x=pwr.f2.test(u=1, v=((32*2) -1 - 1), power=0.8, sig.level=0.05)$f2*myrmse,
@@ -316,7 +318,7 @@ pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
   scale_x_continuous(name="Fitness Change (%)\n (for Treatments) \n ", breaks=seq(0.0,1.5,by=0.25),
                      labels=seq(0.0,1.5,by=0.25), limits=c(0,1.5), expand=expansion(mult=c(0,0.02)))+
   scale_y_continuous(name="Power (%)", breaks=seq(0.00,1.00,by=0.25), labels=seq(0.00,1.00,by=0.25)*100, limits=c(0,1), expand=expansion(mult=c(0,0.02)))+
-  theme_VJF + theme(legend.position=c(0.9,0.3)) + labs(tag="B")
+  theme_VJF() + theme(legend.position=c(0.9,0.3)) + labs(tag="B")
 
 
 # Save outputs to file ---------------------------------------------------------
@@ -454,7 +456,7 @@ viopanel <- function(dwdata, statsdata, backerdata=melt_myres_backer, dcol="dw",
     scale_color_manual(values=usepalette) + 
     coord_flip() +
     ylab(fitlab) + xlab(treatlab) +  labs(tag=tag)+
-    theme_VJF + theme(legend.position="none")
+    theme_VJF() + theme(legend.position="none")
   # stats results backer ---------------
   ppZZ <- ggplot(backerdata, aes(x=X1, y=X2, fill=value)) + 
     geom_tile(show.legend=F)+
@@ -540,7 +542,7 @@ ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
   geom_point() + 
   scale_color_manual(values = mypalette[c(1,7)])+ 
   scale_fill_manual(values = mypalette[c(1,7)])+ 
-  theme_VJF + 
+  theme_VJF() + 
   geom_hline(yintercept = 0, lty = 2) + 
   geom_vline(xintercept = 0, lty = 2) + 
   geom_smooth(method='lm')
@@ -557,7 +559,7 @@ ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
   geom_point() + 
   scale_color_manual(values = mypalette[c(1,7)])+ 
   scale_fill_manual(values = mypalette[c(1,7)])+ 
-  theme_VJF + 
+  theme_VJF() + 
   geom_hline(yintercept = 0, lty = 2) + 
   geom_vline(xintercept = 0, lty = 2) + 
   geom_smooth(method='lm')
@@ -592,7 +594,7 @@ ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
   geom_point() + 
   # scale_color_manual(values = mypalette[c(1,7)])+ 
   # scale_fill_manual(values = mypalette[c(1,7)])+ 
-  theme_VJF + 
+  theme_VJF() + 
   geom_hline(yintercept = 0, lty = 2) + 
   geom_vline(xintercept = 0, lty = 2) + 
   geom_smooth(method='lm')
@@ -604,7 +606,7 @@ ggplot(data = m, aes(x=dw_00, y = dw_80, color = treat, fill = treat))+
   geom_point() + 
   # scale_color_manual(values = mypalette[c(1,7)])+ 
   # scale_fill_manual(values = mypalette[c(1,7)])+ 
-  theme_VJF + 
+  theme_VJF() + 
   geom_hline(yintercept = 0, lty = 2) + 
   geom_vline(xintercept = 0, lty = 2) + 
   geom_smooth(method='lm')
@@ -695,7 +697,7 @@ zcc <- c(EH80in40, EH80in80)
 #   geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
 #   geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
 #   geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
-#   theme_VJF+xlab("Fitness Change: lower")+ylab("Fitness Change: higher")
+#   theme_VJF()+xlab("Fitness Change: lower")+ylab("Fitness Change: higher")
 # p1
 
 
@@ -713,7 +715,7 @@ p1 <- ggplot()+
   geom_point(aes(x = bb[1], y = bb[2]), color = "blue", size = 5)+
   geom_point(aes(x = zb[1], y = zb[2]), color = "blue", size = 5, pch = 17)+
   geom_point(aes(x = zbb[1], y = zbb[2]), color = "blue", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 40% Chemical Stress") + labs(tag="A")
+  theme_VJF() + xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 40% Chemical Stress") + labs(tag="A")
 p1 <- p1 + annotate("text", x=0.015,y=0.38,label = "Chemical Identity", size = 3, fontface = "bold")
 p1 <- p1 + annotate("text", x=0.01,y=0.33,label = "NaCl", size = 3, fontface = "bold")
 p1 <- p1 + annotate("text", x=0.012,y=0.35,label = expression(bold(""*CuSO["4"]*"")), size = 3, fontface = "bold")
@@ -737,7 +739,7 @@ p2 <- ggplot()+
   geom_point(aes(x = aa[1], y = aa[2]), color = "purple", size = 5)+
   geom_point(aes(x = za[1], y = za[2]), color = "purple", size = 5, pch = 17)+
   geom_point(aes(x = zaa[1], y = zaa[2]), color = "purple", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="B")
+  theme_VJF() + xlab("Fitness Change (%) in \n 0% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="B")
 p2
 
 p3 <- ggplot()+
@@ -753,7 +755,7 @@ p3 <- ggplot()+
   geom_point(aes(x = cc[1], y = cc[2]), color = "red", size = 5)+
   geom_point(aes(x = zc[1], y = zc[2]), color = "red", size = 5, pch = 17)+
   geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
-  theme_VJF+xlab("Fitness Change (%) in \n 40% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="C")
+  theme_VJF()+xlab("Fitness Change (%) in \n 40% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="C")
 p3
 
 setwd(DIR_out); pdf(file="000_Figure_2.pdf", width=8.5, height=5)
@@ -910,11 +912,9 @@ nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),])
 ```{r}
 m <- myrcw[myrcw$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
-  geom_point(size = 1.5) + theme_VJF + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  geom_point(size = 1.5) + theme_VJF() + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
   theme(legend.title = element_text(size = 7), 
           legend.text = element_text(size = 7))
-legp
-
 legp <- get_legend(legp)
 ```
 
@@ -1028,7 +1028,7 @@ p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+ geom_rug(data=aaa, aes(x = 
   # geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="A")
+  theme_VJF()+ xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="A")
 p1
 
 p2 <- ggplot()+
@@ -1043,7 +1043,7 @@ p2 <- ggplot()+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = ppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=ppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   # geom_density(data = qqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=qqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF+ xlab("Cost") + ylab("Density")+ labs(tag="C")
+  theme_VJF()+  xlab("Cost") + ylab("Density")+ labs(tag="C")
 
 # model
 aaa$treat <- "EH0_80"
@@ -1187,7 +1187,7 @@ p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+geom_rug(data=zaaa, aes(x =
   # geom_point(x=q[1], y=q[2], fill = mypalette[3], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="B")
+  theme_VJF()+ xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="B")
 p3 <- p3 + annotation_custom(legp, xmin = 0.06, ymin = 0.35)
 
 
@@ -1203,7 +1203,7 @@ p4 <- ggplot()+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color =  ggplot2::alpha(mypalette[2], 0.5))+
   geom_density(data = zppp, aes(x = dist*sign), color = mypalette[6]) + geom_rug(data=zppp, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[6], 0.5))+
   # geom_density(data = zqqq, aes(x = dist*sign), color = mypalette[3]) + geom_rug(data=zqqq, (aes(x=dist*sign)), color =  ggplot2::alpha(mypalette[3], 0.5))+
-  theme_VJF + xlab("Cost")+ labs(tag="D")
+  theme_VJF() + xlab("Cost")+ labs(tag="D")
 
 
 lay<- as.matrix(cbind(c(1,1,2), c(3,3,4)))
@@ -1251,11 +1251,9 @@ table(tempdata[tempdata$cost >= 0.0216,]$treat)/table(tempdata$treat)
 ```{r}
 m <- myrcw[myrcw$treat %in% c("EH0_40", "EH0_80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
-  geom_point(size = 2) + theme_VJF + scale_color_manual(values = mypalette[c(2,5)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  geom_point(size = 2) + theme_VJF() + scale_color_manual(values = mypalette[c(2,5)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
   theme(legend.title = element_text(size = 8), 
           legend.text = element_text(size = 8))
-legp
-
 legp <- get_legend(legp)
 ```
 
@@ -1308,7 +1306,7 @@ p1 <- ggplot(data = mmm, aes(x = dw_00, y = dw_80))+ geom_rug(data=mmm, aes(x = 
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="B")
+  theme_VJF()+ xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="B")
 
 # 00_40 ------------------------------------------------------------------------
 a <- c(EH0_40in00, EH0_40in40)
@@ -1333,7 +1331,7 @@ p2 <- ggplot(data = nnn, aes(x = dw_00, y = dw_40))+ geom_rug(data=nnn, aes(dw_0
   geom_point(x=a[1], y=a[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 40% NaCl")+ labs(tag="A")
+  theme_VJF()+ xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 40% NaCl")+ labs(tag="A")
 
 p4 <- ggplot()+
   geom_vline(aes(xintercept = 0), color = "black", lty = "dotdash")+
@@ -1341,7 +1339,7 @@ p4 <- ggplot()+
   geom_vline(aes(xintercept = mean(nnn$dist*nnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = mmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=mmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = nnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=nnn, aes(x=dist*sign), color = mypalette[2])+
-  theme_VJF + annotation_custom(legp, xmin = 0.025, ymin = 10)+
+  theme_VJF() + annotation_custom(legp, xmin = 0.025, ymin = 10)+
   xlab("Cost") + ylab("Density")+ labs(tag="C")
 
 ```
@@ -1397,7 +1395,7 @@ zp1 <- ggplot(data = zmmm, aes(x = dw_00, y = dw_80))+ geom_rug(data=zmmm, aes(x
   geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="E")
+  theme_VJF()+ xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="E")
 
 # 00_40 ------------------------------------------------------------------------
 a <- c(EH0_40in00, EH0_40in40)
@@ -1422,7 +1420,7 @@ zp2 <- ggplot(data = znnn, aes(x = dw_00, y = dw_40))+ geom_rug(data=znnn, aes(d
   geom_point(x=a[1], y=a[2], fill = mypalette[2], size = 3, pch = 21)+
   geom_point(x=b[1], y=b[2], color = "black", size = 2)+
   geom_point(x=c[1], y=c[2], color = "black", size = 2)+
-  theme_VJF+xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 40% "*CuSO["4"]*"")))+ labs(tag="D")
+  theme_VJF()+ xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 40% "*CuSO["4"]*"")))+ labs(tag="D")
 
 
 zp4 <- ggplot()+
@@ -1431,7 +1429,7 @@ zp4 <- ggplot()+
   geom_vline(aes(xintercept = mean(znnn$dist*znnn$sign)), lty = "dotted", color = mypalette[2])+
   geom_density(data = zmmm, aes(x = dist*sign), color = mypalette[5]) + geom_rug(data=zmmm, aes(x=dist*sign), color = mypalette[5])+
   geom_density(data = znnn, aes(x = dist*sign), color = mypalette[2]) + geom_rug(data=znnn, aes(x=dist*sign), color = mypalette[2])+
-  theme_VJF+xlab("Cost") + ylab("Density")+ labs(tag="F")
+  theme_VJF()+ xlab("Cost") + ylab("Density")+ labs(tag="F")
 
 pdf("000_Figure_S3.pdf", width = 11/1.25, height =8.5/1.25)
 grid.arrange(p2,p1,p4,zp2,zp1,zp4, ncol = 3)
@@ -1778,7 +1776,7 @@ clonal interference
 ```{r}
 m <- myrcw[myrcw$treat %in% c("EH0_80", "EH0_40", "EH40_80", "EH20_60"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
-  geom_point(size = 2) + theme_VJF + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  geom_point(size = 2) + theme_VJF() + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
   theme(legend.title = element_text(size = 8), 
           legend.text = element_text(size = 8))
 legp <- get_legend(legp)
@@ -1804,7 +1802,7 @@ p1 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
   geom_point( aes(color=Treatment), size = 3)+
   scale_color_manual(values = mypalette[c(2,4,5,6)])+
   scale_fill_manual(values = mypalette[c(2,4,5,6)])+
-  theme_VJF + theme(legend.position="none")+
+  theme_VJF() + theme(legend.position="none")+
   geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
   geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
   ggtitle("NaCl Dataset, Well Fitness 0% NaCl") + labs(tag="A") + xlab("")+ ylab("Barcode 1 Fitness Change")
@@ -1819,7 +1817,7 @@ p2 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
   geom_point( aes(color=Treatment), size = 3)+
   scale_color_manual(values = mypalette[c(2,4,5,6)])+
   scale_fill_manual(values = mypalette[c(2,4,5,6)])+
-  theme_VJF + theme(legend.position="none")+
+  theme_VJF() + theme(legend.position="none")+
   geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
   geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
   ggtitle("NaCl Dataset, Well Fitness 80% NaCl") + labs(tag="C") + xlab("Barcode 1 Fitness Change")+ ylab("Barcode 2 Fitness Change")
@@ -1844,7 +1842,7 @@ p3 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
   geom_point( aes(color=Treatment), size = 3)+
   scale_color_manual(values = mypalette[c(2,4,5,6)])+
   scale_fill_manual(values = mypalette[c(2,4,5,6)])+
-  theme_VJF + theme(legend.position="none")+
+  theme_VJF() + theme(legend.position="none")+
   geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
   geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
   ggtitle("CuSO4 Dataset, Well Fitness 0% CuSO4") + labs(tag="B") + xlab("")+ ylab("")
@@ -1859,7 +1857,7 @@ p4 <- ggplot(data=mm, aes(x=Barcode_1, y=Barcode_2))+
   geom_point( aes(color=Treatment), size = 3)+
   scale_color_manual(values = mypalette[c(2,4,5,6)])+
   scale_fill_manual(values = mypalette[c(2,4,5,6)])+
-  theme_VJF + theme(legend.position="none")+
+  theme_VJF() + theme(legend.position="none")+
   geom_hline(yintercept = 0, lty = 1) + geom_hline(yintercept = 0.0217, lty = 2) + geom_hline(yintercept = -0.0217, lty = 2) +
   geom_vline(xintercept = 0, lty = 1) + geom_vline(xintercept = 0.0217, lty = 2) + geom_vline(xintercept = -0.0217, lty = 2) +
   ggtitle("CuSO4 Dataset, Well Fitness 80% CuSO4") + annotation_custom(legp, xmin = 0.2, ymin = -0.35) + labs(tag="D") + xlab("Barcode 1 Fitness Change")+ ylab("")
