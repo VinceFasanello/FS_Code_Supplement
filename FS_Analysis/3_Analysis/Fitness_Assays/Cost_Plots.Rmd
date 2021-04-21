@@ -1,0 +1,716 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+ 
+```{R Setup}
+# Environment & Notebook Setup -------------------------------------------------
+rm(list = ls())
+options(scipen = 999)
+knitr::opts_chunk$set(tidy = TRUE, collapse = TRUE)
+
+
+# Set Working Directory Paths --------------------------------------------------
+DIR_counts_in <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Counts_Data/Combined"
+DIR_evo_formatted <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Evolutionary_Dynamics/Formatted_Data"
+DIR_fit_formatted <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data"
+DIR_out <- "C:/Users/VJF/Documents/GitHub/FS_Code_Supplement/FS_Analysis/3_Analysis/Fitness_Assays"
+
+
+# Load Packages ----------------------------------------------------------------
+require(pwr)
+require(ggplot2)
+require(grid)
+require(gridExtra)
+require(cowplot)
+require(lme4)
+require(lmerTest)
+require(ggthemes)
+require(sjPlot)
+require(weights)
+require(dplyr)
+require(car)
+require(reshape2)
+
+
+# Specify helper functions -----------------------------------------------------
+# get_lower_tri ------------------------
+#   Input: correlation or coefficient matrix (square)
+#   Output: Lower triangle of input matrix (for plotting)
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+# --------------------------------------
+
+
+# getline ------------------------------
+#   Input: points, b & c
+#   Output: Equation for a line that passes through points b & c
+getline <- function(b,c){
+  sl <- (b[2] - c[2])/(b[1] - c[1])
+  interc = b[2] - sl*b[1]
+  return(c(sl, interc))
+}
+# --------------------------------------
+
+
+# dist2d -------------------------------
+#   Input: Points a, b, c; a is target point, b & c define the line.
+#   Output: orthagonal distance from a to b----c
+dist2d <- function(a,b,c) {
+ v1 <- b - c
+ v2 <- a - b
+ m <- cbind(v1,v2)
+ d <- abs(det(m))/sqrt(sum(v1*v1))
+ return(d)
+}
+# --------------------------------------
+
+
+# lineside -----------------------------
+#   Input: points a, b, c; a is target point, b & c define the line.
+#   Ouptut: sign; + = above and to the right; - = below and to the left. 
+lineside <- function(a,b,c) {
+  sign((c[1] - b[1])*(a[2] - b[2]) - (c[2] - b[2])*(a[1] - b[1]))*-1
+}
+# --------------------------------------
+
+
+
+# get_legend ---------------------------
+#   Input: ggplot with legend
+#   Output: The legend only (for inserting in other plots with difficult to handle legends)
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+# --------------------------------------
+
+
+# %ni% ---------------------------------
+#   Negates the %in% operator.
+'%ni%' <- Negate('%in%')
+# --------------------------------------
+
+
+# Specify Palette for plotting ---------
+mypalette <- RColorBrewer::brewer.pal(n = 11, name = "BrBG")[c(11,10,9,8,3,2,1)]
+# --------------------------------------
+
+
+# define a custom theme for plots ------
+theme_VJF <- function(){
+  theme_classic()+
+  theme(
+    # adjust axis title, text, ticks ---
+    axis.title = element_text(size = 10, face = "bold", color = "black"),
+    axis.text = element_text(size = 8, face = "bold", color = "black"),
+    axis.ticks = element_line(color = "black"),
+    
+    # adjust legend viz ----------------
+    legend.background = element_rect(colour = 'black', fill = 'grey95', size = 1, linetype='solid'),
+    legend.key.size = unit(10,"pt"),
+    
+    # adjust plot label format ---------
+    plot.tag = element_text(size = 20, face = "bold", color = "black")
+  )
+}
+# --------------------------------------
+```
+
+```{r}
+setwd("~/Box Sync/CB_VF_Shared/Wet_Lab/Projects/Fluctuating_Selection_Project/FS_Code_Supplement/FS_Analysis/2_CountstoAnalysis/Fitness_Assays/Formatted_Data")
+load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
+```
+
+
+
+```{r}
+# m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH0in00 <- mean(m$dw_00, na.rm = T)
+# EH0in40 <- mean(m$dw_40, na.rm = T)
+# EH0in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH40in00 <- mean(m$dw_00, na.rm = T)
+# EH40in40 <- mean(m$dw_40, na.rm = T)
+# EH40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH80in00 <- mean(m$dw_00, na.rm = T)
+# EH80in40 <- mean(m$dw_40, na.rm = T)
+# EH80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# 
+# x <- as.data.frame(rbind(cbind(EH0in00, EH0in80),
+#            cbind(EH80in00, EH80in80)))
+# rownames(x) <- c("EH0mean", "EH80mean")
+# colnames(x) <- c("dw_00", "dw_80")
+# x$treat <- rownames(x)
+# x$indiv <- c(9998, 9999)
+# x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+# 
+# xx <- as.data.frame(rbind(cbind(EH0in00, EH0in40),
+#            cbind(EH40in00, EH40in40)))
+# rownames(xx) <- c("EH0mean", "EH40mean")
+# colnames(xx) <- c("dw_00", "dw_40")
+# xx$treat <- rownames(xx)
+# xx$indiv <- c(9998, 9999)
+# xx <- melt(xx, id = c("treat", "indiv")); colnames(xx) <- c("treat", "indiv","variable", "value")
+# 
+# xxx <- as.data.frame(rbind(cbind(EH40in40, EH40in80),
+#            cbind(EH80in40, EH80in80)))
+# rownames(xxx) <- c("EH40mean", "EH80mean")
+# colnames(xxx) <- c("dw_40", "dw_80")
+# xxx$treat <- rownames(xxx)
+# xxx$indiv <- c(9998, 9999)
+# xxx <- melt(xxx, id = c("treat", "indiv")); colnames(xxx) <- c("treat", "indiv","variable", "value")
+# 
+# 
+# 
+# 
+# m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# mm <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
+# mmm <- mm[,c("treat", "dw_00", "dw_80")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH0", "EH80"),]
+# p1 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = x, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = x, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_00[mm$dw_00 < 0] <- -1
+# mm$dw_80[mm$dw_80 < 0] <- -1
+# mm$dw_00[mm$dw_00 > 0] <- 1
+# mm$dw_80[mm$dw_80 > 0] <- 1
+# mm$signdiff <- mm$dw_00 * mm$dw_80
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# 
+# mm <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
+# mmm <- mm[,c("treat", "dw_00", "dw_40")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH0", "EH40"),]
+# p2 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = xx, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = xx, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_00[mm$dw_00 < 0] <- -1
+# mm$dw_40[mm$dw_40 < 0] <- -1
+# mm$dw_00[mm$dw_00 > 0] <- 1
+# mm$dw_40[mm$dw_40 > 0] <- 1
+# mm$signdiff <- mm$dw_00 * mm$dw_40
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# mm <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
+# mmm <- mm[,c("treat", "dw_40", "dw_80")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH40", "EH80"),]
+# p3 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = xxx, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = xxx, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_40[mm$dw_40 < 0] <- -1
+# mm$dw_80[mm$dw_80 < 0] <- -1
+# mm$dw_40[mm$dw_40 > 0] <- 1
+# mm$dw_80[mm$dw_80 > 0] <- 1
+# mm$signdiff <- mm$dw_40 * mm$dw_80
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH0in00 <- mean(m$dw_00, na.rm = T)
+# EH0in40 <- mean(m$dw_40, na.rm = T)
+# EH0in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH40in00 <- mean(m$dw_00, na.rm = T)
+# EH40in40 <- mean(m$dw_40, na.rm = T)
+# EH40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH80in00 <- mean(m$dw_00, na.rm = T)
+# EH80in40 <- mean(m$dw_40, na.rm = T)
+# EH80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# zx <- as.data.frame(rbind(cbind(EH0in00, EH0in80),
+#            cbind(EH80in00, EH80in80)))
+# rownames(zx) <- c("EH0mean", "EH80mean")
+# colnames(zx) <- c("dw_00", "dw_80")
+# zx$treat <- rownames(zx)
+# zx$indiv <- c(9998, 9999)
+# zx <- melt(zx, id = c("treat", "indiv")); colnames(zx) <- c("treat", "indiv","variable", "value")
+# 
+# zxx <- as.data.frame(rbind(cbind(EH0in00, EH0in40),
+#            cbind(EH40in00, EH40in40)))
+# rownames(zxx) <- c("EH0mean", "EH40mean")
+# colnames(zxx) <- c("dw_00", "dw_40")
+# zxx$treat <- rownames(zxx)
+# zxx$indiv <- c(9998, 9999)
+# zxx <- melt(zxx, id = c("treat", "indiv")); colnames(zxx) <- c("treat", "indiv","variable", "value")
+# 
+# zxxx <- as.data.frame(rbind(cbind(EH40in40, EH40in80),
+#            cbind(EH80in40, EH80in80)))
+# rownames(zxxx) <- c("EH40mean", "EH80mean")
+# colnames(zxxx) <- c("dw_40", "dw_80")
+# zxxx$treat <- rownames(zxxx)
+# zxxx$indiv <- c(9998, 9999)
+# zxxx <- melt(zxxx, id = c("treat", "indiv")); colnames(zxxx) <- c("treat", "indiv","variable", "value")
+# 
+# m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# mm <- m[!is.na(m$dw_00) & !is.na(m$dw_80),]
+# mmm <- mm[,c("treat", "dw_00", "dw_80")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH0", "EH80"),]
+# pz1 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = zx, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = zx, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_00[mm$dw_00 < 0] <- -1
+# mm$dw_80[mm$dw_80 < 0] <- -1
+# mm$dw_00[mm$dw_00 > 0] <- 1
+# mm$dw_80[mm$dw_80 > 0] <- 1
+# mm$signdiff <- mm$dw_00 * mm$dw_80
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# mm <- m[!is.na(m$dw_00) & !is.na(m$dw_40),]
+# mmm <- mm[,c("treat", "dw_00", "dw_40")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH0", "EH40"),]
+# pz2 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = zxx, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = zxx, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_00[mm$dw_00 < 0] <- -1
+# mm$dw_40[mm$dw_40 < 0] <- -1
+# mm$dw_00[mm$dw_00 > 0] <- 1
+# mm$dw_40[mm$dw_40 > 0] <- 1
+# mm$signdiff <- mm$dw_00 * mm$dw_40
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# mm <- m[!is.na(m$dw_40) & !is.na(m$dw_80),]
+# mmm <- mm[,c("treat", "dw_40", "dw_80")]
+# mmm$indiv <- seq(1:nrow(mmm))
+# mmm <- melt(mmm, id = c("treat", "indiv"))
+# mmm <- mmm[mmm$treat %in% c("EH40", "EH80"),]
+# pz3 <- ggplot(mmm, aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_abline(slope=0, intercept = -0.02, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.02, lty = "dotted")+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_line(data = zxxx, color = c("red", "red", "blue", "blue"))+
+#   geom_point(data = zxxx, color = c("red", "blue", "red", "blue"))+
+#   theme_VJF()
+# mm$dw_40[mm$dw_40 < 0] <- -1
+# mm$dw_80[mm$dw_80 < 0] <- -1
+# mm$dw_40[mm$dw_40 > 0] <- 1
+# mm$dw_80[mm$dw_80 > 0] <- 1
+# mm$signdiff <- mm$dw_40 * mm$dw_80
+# mm$signdiff[mm$signdiff == 1] <- 0
+# mm$signdiff[mm$signdiff == -1] <- 1
+# mm %>% group_by(mm$treat) %>%
+#   dplyr::summarize(sum = sum(signdiff)/length(signdiff),
+#             len = length(signdiff))
+# 
+# 
+# pdf("costplotpaired.pdf", width = 7, height = 7)
+# grid.arrange(p1,pz1,p2,pz2,p3,pz3,ncol = 2)
+# dev.off()
+
+```
+
+
+```{r}
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in40 <- mean(m$dw_40, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in40 <- mean(m$dw_40, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH40_80in00 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+                         cbind(EH40in00, EH40in40, EH40in80),
+                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+                         cbind(EH80in00, EH80in40, EH80in80)))
+rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+colnames(x) <- c("dw_00", "dw_40", "dw_80")
+x$treat <- rownames(x)
+x$indiv <- c(91,92,93,94,95,96,97)
+x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+
+m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+mm$indiv <- seq(1:nrow(mm))
+mm <- melt(mm, id = c("treat", "indiv"))
+lims <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+
+p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0mean",])+
+  # geom_point(data = x[x$treat == "EH0mean",])+
+  # scale_color_manual(values = c(mypalette[1], "black"))+
+  scale_color_manual(values = mypalette[1])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0_40mean",])+
+  # geom_point(data = x[x$treat == "EH0_40mean",])+
+  # scale_color_manual(values = c(mypalette[2], "black"))+
+  scale_color_manual(values = mypalette[2])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH40mean",])+
+  # geom_point(data = x[x$treat == "EH40mean",])+
+  # scale_color_manual(values = c(mypalette[3], "black"))+
+  scale_color_manual(values = mypalette[3])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH20_60mean",])+
+  # geom_point(data = x[x$treat == "EH20_60mean",])+
+  # scale_color_manual(values = c(mypalette[4], "black"))+
+  scale_color_manual(values = mypalette[4])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0_80mean",])+
+  # geom_point(data = x[x$treat == "EH0_80mean",])+
+  # scale_color_manual(values = c(mypalette[5], "black"))+
+  scale_color_manual(values = mypalette[5])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH40_80mean",])+
+  # geom_point(data = x[x$treat == "EH40_80mean",])+
+  # scale_color_manual(values = c(mypalette[6], "black"))+
+  scale_color_manual(values = mypalette[6])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
+  # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
+  # scale_color_manual(values = c(mypalette[7], "black"))+
+  scale_color_manual(values = mypalette[7])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+
+
+png("CostPlotSALT.png", width = 10, height = 5, units = "in", res = 300)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+dev.off()
+
+png("CostPlotSALTtrunc.png", width = 6, height = 4, units = "in", res = 300)
+grid.arrange(p1,p3,p7,ncol = 3)
+dev.off()
+```
+
+
+```{r}
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in40 <- mean(m$dw_40, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in40 <- mean(m$dw_40, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH40_80in00 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+                         cbind(EH40in00, EH40in40, EH40in80),
+                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+                         cbind(EH80in00, EH80in40, EH80in80)))
+rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+colnames(x) <- c("dw_00", "dw_40", "dw_80")
+x$treat <- rownames(x)
+x$indiv <- c(91,92,93,94,95,96,97)
+x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+
+m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+mm$indiv <- seq(1:nrow(mm))
+mm <- melt(mm, id = c("treat", "indiv"))
+lims <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+
+p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0mean",])+
+  # geom_point(data = x[x$treat == "EH0mean",])+
+  # scale_color_manual(values = c(mypalette[1], "black"))+
+  scale_color_manual(values = mypalette[1])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0_40mean",])+
+  # geom_point(data = x[x$treat == "EH0_40mean",])+
+  # scale_color_manual(values = c(mypalette[2], "black"))+
+  scale_color_manual(values = mypalette[2])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH40mean",])+
+  # geom_point(data = x[x$treat == "EH40mean",])+
+  # scale_color_manual(values = c(mypalette[3], "black"))+
+  scale_color_manual(values = mypalette[3])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH20_60mean",])+
+  # geom_point(data = x[x$treat == "EH20_60mean",])+
+  # scale_color_manual(values = c(mypalette[4], "black"))+
+  scale_color_manual(values = mypalette[4])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH0_80mean",])+
+  # geom_point(data = x[x$treat == "EH0_80mean",])+
+  # scale_color_manual(values = c(mypalette[5], "black"))+
+  scale_color_manual(values = mypalette[5])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH40_80mean",])+
+  # geom_point(data = x[x$treat == "EH40_80mean",])+
+  # scale_color_manual(values = c(mypalette[6], "black"))+
+  scale_color_manual(values = mypalette[6])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+  geom_abline(slope=0)+
+  geom_point(alpha = 0.35)+
+  geom_line(alpha = 0.35)+
+  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
+  # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
+  # scale_color_manual(values = c(mypalette[7], "black"))+
+  scale_color_manual(values = mypalette[7])+
+  ylim(c(limmin, limmax))+
+  theme_VJF()+
+  theme(legend.position = "none")+
+  xlab("Environment") + ylab("Fitness Change")
+
+
+png("CostPlotCOPR.png", width = 10, height = 5, units = "in", res = 300)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+dev.off()
+
+png("CostPlotCOPRtrunc.png", width = 6, height = 4, units = "in", res = 300)
+grid.arrange(p1,p3,p7,ncol = 3)
+dev.off()
+```
