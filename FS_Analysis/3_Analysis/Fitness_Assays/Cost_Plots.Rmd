@@ -758,7 +758,7 @@ p2 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat
   ylim(c(limmin, limmax))+
   theme_VJF()+
   theme(legend.position = "none")+
-  xlab("NaCl Stress Percent") + ylab("") + labs(tag = "B")
+  xlab("NaCl Percent") + ylab("") + labs(tag = "B")
 p3 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
@@ -805,7 +805,7 @@ p5 <- ggplot(zmm[zmm$treat == "EH40",], aes(x = variable, y = value, color = tre
   ylim(c(lizmmin, lizmmax))+
   theme_VJF()+
   theme(legend.position = "none")+
-  xlab(expression(bold(CuSO["4"]*"  Stress Percent"))) + ylab("") + labs(tag = "E")
+  xlab(expression(bold(CuSO["4"]*" Percent"))) + ylab("") + labs(tag = "E")
 p6 <- ggplot(zmm[zmm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
@@ -818,13 +818,13 @@ p6 <- ggplot(zmm[zmm$treat == "EH80",], aes(x = variable, y = value, color = tre
   theme(legend.position = "none")+
   xlab("") + ylab("") + labs(tag = "F")
 
-png("000_Figure_X.png", width = 7, height = 8, units = "in", res = 300)
+png("000_Figure_X.png", width = 6*1.25, height = 5*1.25, units = "in", res = 300)
 grid.arrange(p1,p2,p3, 
              p4,p5,p6,
              ncol = 3)
 dev.off()
 
-pdf("000_Figure_X.pdf", width = 7, height = 8)
+pdf("000_Figure_X.pdf", width = 6*1.25, height = 5*1.25)
 grid.arrange(p1,p2,p3, 
              p4,p5,p6,
              ncol = 3)
