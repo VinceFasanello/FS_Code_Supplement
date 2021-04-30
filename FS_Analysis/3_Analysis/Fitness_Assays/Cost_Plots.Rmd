@@ -381,338 +381,338 @@ load("FitAssayData.rdata") # load fitness assay data, we will use it from here f
 
 
 ```{r}
-m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH0in00 <- mean(m$dw_00, na.rm = T)
-EH0in40 <- mean(m$dw_40, na.rm = T)
-EH0in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH0_40in00 <- mean(m$dw_00, na.rm = T)
-EH0_40in40 <- mean(m$dw_40, na.rm = T)
-EH0_40in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH40in00 <- mean(m$dw_00, na.rm = T)
-EH40in40 <- mean(m$dw_40, na.rm = T)
-EH40in80 <- mean(m$dw_80, na.rm = T)
-
-
-m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH20_60in00 <- mean(m$dw_00, na.rm = T)
-EH20_60in40 <- mean(m$dw_40, na.rm = T)
-EH20_60in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH0_80in00 <- mean(m$dw_00, na.rm = T)
-EH0_80in40 <- mean(m$dw_40, na.rm = T)
-EH0_80in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH40_80in00 <- mean(m$dw_00, na.rm = T)
-EH40_80in40 <- mean(m$dw_40, na.rm = T)
-EH40_80in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
-EH80in00 <- mean(m$dw_00, na.rm = T)
-EH80in40 <- mean(m$dw_40, na.rm = T)
-EH80in80 <- mean(m$dw_80, na.rm = T)
-
-x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
-                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
-                         cbind(EH40in00, EH40in40, EH40in80),
-                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
-                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
-                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
-                         cbind(EH80in00, EH80in40, EH80in80)))
-rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
-colnames(x) <- c("dw_00", "dw_40", "dw_80")
-x$treat <- rownames(x)
-x$indiv <- c(91,92,93,94,95,96,97)
-x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
-
-m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
-mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
-mm$indiv <- seq(1:nrow(mm))
-mm <- melt(mm, id = c("treat", "indiv"))
-lims <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
-limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
-limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
-
-p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0mean",])+
-  # geom_point(data = x[x$treat == "EH0mean",])+
-  # scale_color_manual(values = c(mypalette[1], "black"))+
-  scale_color_manual(values = mypalette[1])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0_40mean",])+
-  # geom_point(data = x[x$treat == "EH0_40mean",])+
-  # scale_color_manual(values = c(mypalette[2], "black"))+
-  scale_color_manual(values = mypalette[2])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH40mean",])+
-  # geom_point(data = x[x$treat == "EH40mean",])+
-  # scale_color_manual(values = c(mypalette[3], "black"))+
-  scale_color_manual(values = mypalette[3])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH20_60mean",])+
-  # geom_point(data = x[x$treat == "EH20_60mean",])+
-  # scale_color_manual(values = c(mypalette[4], "black"))+
-  scale_color_manual(values = mypalette[4])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0_80mean",])+
-  # geom_point(data = x[x$treat == "EH0_80mean",])+
-  # scale_color_manual(values = c(mypalette[5], "black"))+
-  scale_color_manual(values = mypalette[5])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH40_80mean",])+
-  # geom_point(data = x[x$treat == "EH40_80mean",])+
-  # scale_color_manual(values = c(mypalette[6], "black"))+
-  scale_color_manual(values = mypalette[6])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
-  # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
-  # scale_color_manual(values = c(mypalette[7], "black"))+
-  scale_color_manual(values = mypalette[7])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-
-
-png("CostPlotSALT.png", width = 10, height = 5, units = "in", res = 300)
-grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
-dev.off()
-
-png("CostPlotSALTtrunc.png", width = 6, height = 4, units = "in", res = 300)
-grid.arrange(p1,p3,p7,ncol = 3)
-dev.off()
+# m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH0in00 <- mean(m$dw_00, na.rm = T)
+# EH0in40 <- mean(m$dw_40, na.rm = T)
+# EH0in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH0_40in00 <- mean(m$dw_00, na.rm = T)
+# EH0_40in40 <- mean(m$dw_40, na.rm = T)
+# EH0_40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH40in00 <- mean(m$dw_00, na.rm = T)
+# EH40in40 <- mean(m$dw_40, na.rm = T)
+# EH40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# 
+# m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH20_60in00 <- mean(m$dw_00, na.rm = T)
+# EH20_60in40 <- mean(m$dw_40, na.rm = T)
+# EH20_60in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH0_80in00 <- mean(m$dw_00, na.rm = T)
+# EH0_80in40 <- mean(m$dw_40, na.rm = T)
+# EH0_80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH40_80in00 <- mean(m$dw_00, na.rm = T)
+# EH40_80in40 <- mean(m$dw_40, na.rm = T)
+# EH40_80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# EH80in00 <- mean(m$dw_00, na.rm = T)
+# EH80in40 <- mean(m$dw_40, na.rm = T)
+# EH80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+#                          cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+#                          cbind(EH40in00, EH40in40, EH40in80),
+#                          cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+#                          cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+#                          cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+#                          cbind(EH80in00, EH80in40, EH80in80)))
+# rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+# colnames(x) <- c("dw_00", "dw_40", "dw_80")
+# x$treat <- rownames(x)
+# x$indiv <- c(91,92,93,94,95,96,97)
+# x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+# 
+# m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+# mm$indiv <- seq(1:nrow(mm))
+# mm <- melt(mm, id = c("treat", "indiv"))
+# lims <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B"),]
+# limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+# limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+# 
+# p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0mean",])+
+#   # geom_point(data = x[x$treat == "EH0mean",])+
+#   # scale_color_manual(values = c(mypalette[1], "black"))+
+#   scale_color_manual(values = mypalette[1])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0_40mean",])+
+#   # geom_point(data = x[x$treat == "EH0_40mean",])+
+#   # scale_color_manual(values = c(mypalette[2], "black"))+
+#   scale_color_manual(values = mypalette[2])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH40mean",])+
+#   # geom_point(data = x[x$treat == "EH40mean",])+
+#   # scale_color_manual(values = c(mypalette[3], "black"))+
+#   scale_color_manual(values = mypalette[3])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH20_60mean",])+
+#   # geom_point(data = x[x$treat == "EH20_60mean",])+
+#   # scale_color_manual(values = c(mypalette[4], "black"))+
+#   scale_color_manual(values = mypalette[4])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0_80mean",])+
+#   # geom_point(data = x[x$treat == "EH0_80mean",])+
+#   # scale_color_manual(values = c(mypalette[5], "black"))+
+#   scale_color_manual(values = mypalette[5])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH40_80mean",])+
+#   # geom_point(data = x[x$treat == "EH40_80mean",])+
+#   # scale_color_manual(values = c(mypalette[6], "black"))+
+#   scale_color_manual(values = mypalette[6])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
+#   # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
+#   # scale_color_manual(values = c(mypalette[7], "black"))+
+#   scale_color_manual(values = mypalette[7])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# 
+# 
+# png("CostPlotSALT.png", width = 10, height = 5, units = "in", res = 300)
+# grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+# dev.off()
+# 
+# png("CostPlotSALTtrunc.png", width = 6, height = 4, units = "in", res = 300)
+# grid.arrange(p1,p3,p7,ncol = 3)
+# dev.off()
 ```
 
 
 ```{r}
-m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH0in00 <- mean(m$dw_00, na.rm = T)
-EH0in40 <- mean(m$dw_40, na.rm = T)
-EH0in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH0_40in00 <- mean(m$dw_00, na.rm = T)
-EH0_40in40 <- mean(m$dw_40, na.rm = T)
-EH0_40in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH40in00 <- mean(m$dw_00, na.rm = T)
-EH40in40 <- mean(m$dw_40, na.rm = T)
-EH40in80 <- mean(m$dw_80, na.rm = T)
-
-
-m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH20_60in00 <- mean(m$dw_00, na.rm = T)
-EH20_60in40 <- mean(m$dw_40, na.rm = T)
-EH20_60in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH0_80in00 <- mean(m$dw_00, na.rm = T)
-EH0_80in40 <- mean(m$dw_40, na.rm = T)
-EH0_80in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH40_80in00 <- mean(m$dw_00, na.rm = T)
-EH40_80in40 <- mean(m$dw_40, na.rm = T)
-EH40_80in80 <- mean(m$dw_80, na.rm = T)
-
-m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
-EH80in00 <- mean(m$dw_00, na.rm = T)
-EH80in40 <- mean(m$dw_40, na.rm = T)
-EH80in80 <- mean(m$dw_80, na.rm = T)
-
-x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
-                         cbind(EH0_40in00, EH0_40in40, EH0_40in80),
-                         cbind(EH40in00, EH40in40, EH40in80),
-                         cbind(EH20_60in00, EH20_60in40, EH20_60in80),
-                         cbind(EH0_80in00, EH0_80in40, EH0_80in80),
-                         cbind(EH40_80in00, EH40_80in40, EH40_80in80),
-                         cbind(EH80in00, EH80in40, EH80in80)))
-rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
-colnames(x) <- c("dw_00", "dw_40", "dw_80")
-x$treat <- rownames(x)
-x$indiv <- c(91,92,93,94,95,96,97)
-x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
-
-m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
-mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
-mm$indiv <- seq(1:nrow(mm))
-mm <- melt(mm, id = c("treat", "indiv"))
-lims <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
-limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
-limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
-
-p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0mean",])+
-  # geom_point(data = x[x$treat == "EH0mean",])+
-  # scale_color_manual(values = c(mypalette[1], "black"))+
-  scale_color_manual(values = mypalette[1])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0_40mean",])+
-  # geom_point(data = x[x$treat == "EH0_40mean",])+
-  # scale_color_manual(values = c(mypalette[2], "black"))+
-  scale_color_manual(values = mypalette[2])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH40mean",])+
-  # geom_point(data = x[x$treat == "EH40mean",])+
-  # scale_color_manual(values = c(mypalette[3], "black"))+
-  scale_color_manual(values = mypalette[3])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH20_60mean",])+
-  # geom_point(data = x[x$treat == "EH20_60mean",])+
-  # scale_color_manual(values = c(mypalette[4], "black"))+
-  scale_color_manual(values = mypalette[4])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH0_80mean",])+
-  # geom_point(data = x[x$treat == "EH0_80mean",])+
-  # scale_color_manual(values = c(mypalette[5], "black"))+
-  scale_color_manual(values = mypalette[5])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH40_80mean",])+
-  # geom_point(data = x[x$treat == "EH40_80mean",])+
-  # scale_color_manual(values = c(mypalette[6], "black"))+
-  scale_color_manual(values = mypalette[6])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
-  geom_abline(slope=0)+
-  geom_point(alpha = 0.35)+
-  geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
-  # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
-  # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
-  # scale_color_manual(values = c(mypalette[7], "black"))+
-  scale_color_manual(values = mypalette[7])+
-  ylim(c(limmin, limmax))+
-  theme_VJF()+
-  theme(legend.position = "none")+
-  xlab("Environment") + ylab("Fitness Change")
-
-
-png("CostPlotCOPR.png", width = 10, height = 5, units = "in", res = 300)
-grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
-dev.off()
-
-png("CostPlotCOPRtrunc.png", width = 6, height = 4, units = "in", res = 300)
-grid.arrange(p1,p3,p7,ncol = 3)
-dev.off()
+# m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH0in00 <- mean(m$dw_00, na.rm = T)
+# EH0in40 <- mean(m$dw_40, na.rm = T)
+# EH0in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH0_40in00 <- mean(m$dw_00, na.rm = T)
+# EH0_40in40 <- mean(m$dw_40, na.rm = T)
+# EH0_40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH40in00 <- mean(m$dw_00, na.rm = T)
+# EH40in40 <- mean(m$dw_40, na.rm = T)
+# EH40in80 <- mean(m$dw_80, na.rm = T)
+# 
+# 
+# m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH20_60in00 <- mean(m$dw_00, na.rm = T)
+# EH20_60in40 <- mean(m$dw_40, na.rm = T)
+# EH20_60in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH0_80in00 <- mean(m$dw_00, na.rm = T)
+# EH0_80in40 <- mean(m$dw_40, na.rm = T)
+# EH0_80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH40_80in00 <- mean(m$dw_00, na.rm = T)
+# EH40_80in40 <- mean(m$dw_40, na.rm = T)
+# EH40_80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# EH80in00 <- mean(m$dw_00, na.rm = T)
+# EH80in40 <- mean(m$dw_40, na.rm = T)
+# EH80in80 <- mean(m$dw_80, na.rm = T)
+# 
+# x <- as.data.frame(rbind(cbind(EH0in00, EH0in40, EH0in80),
+#                          cbind(EH0_40in00, EH0_40in40, EH0_40in80),
+#                          cbind(EH40in00, EH40in40, EH40in80),
+#                          cbind(EH20_60in00, EH20_60in40, EH20_60in80),
+#                          cbind(EH0_80in00, EH0_80in40, EH0_80in80),
+#                          cbind(EH40_80in00, EH40_80in40, EH40_80in80),
+#                          cbind(EH80in00, EH80in40, EH80in80)))
+# rownames(x) <- c("EH0mean", "EH0_40mean", "EH40mean","EH20_60mean","EH0_80mean","EH40_80mean","EH80mean")
+# colnames(x) <- c("dw_00", "dw_40", "dw_80")
+# x$treat <- rownames(x)
+# x$indiv <- c(91,92,93,94,95,96,97)
+# x <- melt(x, id = c("treat", "indiv")); colnames(x) <- c("treat", "indiv","variable", "value")
+# 
+# m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
+# mm$indiv <- seq(1:nrow(mm))
+# mm <- melt(mm, id = c("treat", "indiv"))
+# lims <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B"),]
+# limmin <- min(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+# limmax <- max(c(lims$dw_00, lims$dw_40, lims$dw_80), na.rm = T)
+# 
+# p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0mean",])+
+#   # geom_point(data = x[x$treat == "EH0mean",])+
+#   # scale_color_manual(values = c(mypalette[1], "black"))+
+#   scale_color_manual(values = mypalette[1])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p2 <- ggplot(mm[mm$treat == "EH0_40",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0_40mean",])+
+#   # geom_point(data = x[x$treat == "EH0_40mean",])+
+#   # scale_color_manual(values = c(mypalette[2], "black"))+
+#   scale_color_manual(values = mypalette[2])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p3 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH40mean",])+
+#   # geom_point(data = x[x$treat == "EH40mean",])+
+#   # scale_color_manual(values = c(mypalette[3], "black"))+
+#   scale_color_manual(values = mypalette[3])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p4 <- ggplot(mm[mm$treat == "EH20_60",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH20_60mean",])+
+#   # geom_point(data = x[x$treat == "EH20_60mean",])+
+#   # scale_color_manual(values = c(mypalette[4], "black"))+
+#   scale_color_manual(values = mypalette[4])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p5 <- ggplot(mm[mm$treat == "EH0_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH0_80mean",])+
+#   # geom_point(data = x[x$treat == "EH0_80mean",])+
+#   # scale_color_manual(values = c(mypalette[5], "black"))+
+#   scale_color_manual(values = mypalette[5])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p6 <- ggplot(mm[mm$treat == "EH40_80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH40_80mean",])+
+#   # geom_point(data = x[x$treat == "EH40_80mean",])+
+#   # scale_color_manual(values = c(mypalette[6], "black"))+
+#   scale_color_manual(values = mypalette[6])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# p7 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat, group = indiv))+
+#   geom_abline(slope=0)+
+#   geom_point(alpha = 0.35)+
+#   geom_line(alpha = 0.35)+
+#   geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+#   geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+#   # geom_line(data = x[x$treat == "EH80mean",], lwd = 1)+
+#   # geom_point(data = x[x$treat == "EH80mean",], size = 2)+
+#   # scale_color_manual(values = c(mypalette[7], "black"))+
+#   scale_color_manual(values = mypalette[7])+
+#   ylim(c(limmin, limmax))+
+#   theme_VJF()+
+#   theme(legend.position = "none")+
+#   xlab("Environment") + ylab("Fitness Change")
+# 
+# 
+# png("CostPlotCOPR.png", width = 10, height = 5, units = "in", res = 300)
+# grid.arrange(p1,p2,p3,p4,p5,p6,p7,ncol = 7)
+# dev.off()
+# 
+# png("CostPlotCOPRtrunc.png", width = 6, height = 4, units = "in", res = 300)
+# grid.arrange(p1,p3,p7,ncol = 3)
+# dev.off()
 ```
 
 
@@ -741,8 +741,8 @@ p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat,
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[1])+
   ylim(c(limmin, limmax))+
   theme_VJF()+
@@ -752,8 +752,8 @@ p2 <- ggplot(mm[mm$treat == "EH40",], aes(x = variable, y = value, color = treat
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[3])+
   ylim(c(limmin, limmax))+
   theme_VJF()+
@@ -763,8 +763,8 @@ p3 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[7])+
   ylim(c(limmin, limmax))+
   theme_VJF()+
@@ -788,8 +788,8 @@ p4 <- ggplot(zmm[zmm$treat == "EH0",], aes(x = variable, y = value, color = trea
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[1])+
   ylim(c(lizmmin, lizmmax))+
   theme_VJF()+
@@ -799,8 +799,8 @@ p5 <- ggplot(zmm[zmm$treat == "EH40",], aes(x = variable, y = value, color = tre
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[3])+
   ylim(c(lizmmin, lizmmax))+
   theme_VJF()+
@@ -810,8 +810,8 @@ p6 <- ggplot(zmm[zmm$treat == "EH80",], aes(x = variable, y = value, color = tre
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
   geom_line(alpha = 0.35)+
-  geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
-  geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = -0.0216, lty = "dotted")+
+  # geom_abline(slope=0, intercept = 0.0216, lty = "dotted")+
   scale_color_manual(values = mypalette[7])+
   ylim(c(lizmmin, lizmmax))+
   theme_VJF()+
