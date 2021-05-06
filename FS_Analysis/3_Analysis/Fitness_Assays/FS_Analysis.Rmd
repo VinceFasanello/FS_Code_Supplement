@@ -176,6 +176,8 @@ pDD <- countshist(log(unlist(temp2)), "Log Barcode Mean Counts", "Frequency", "D
 setwd(DIR_out); pdf("000_Figure_S1.pdf", height = 7, width = 7)
 cowplot::plot_grid(pAA,pBB,pCC,pDD, nrow=2, align = "v"); dev.off()
 
+png("000_Figure_S1.png", width = 7, height = 7, units = "in", res = 300)
+cowplot::plot_grid(pAA,pBB,pCC,pDD, nrow=2, align = "v"); dev.off()
 
 # report -----------------------------------------------------------------------
 for (i in 1:2){print(reportvals[i])}
@@ -352,6 +354,9 @@ setwd(DIR_out); write.csv(powerTR, file="000_Table_S3.csv")
 setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
 cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
 
+
+png("000_Figure_S2.png", width=3.345, height=6.69, units = "in", res = 300)
+cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
 
 # # report -----------------------------------------------------------------------
 for (i in 1:6){print(reportvals[i])}
