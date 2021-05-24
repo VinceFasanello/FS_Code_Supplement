@@ -1,0 +1,204 @@
+---
+title: "Figure 3 no points"
+output: html_notebook
+---
+
+
+
+```{R Figure 3 legend}
+m <- myrcw[myrcw$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80"),]
+legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
+  geom_point(size = 1.5) + theme_VJF() + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
+  theme(legend.title = element_text(size = 7), 
+          legend.text = element_text(size = 7))
+legp <- get_legend(legp); rm(m)
+```
+<br/><br/>
+
+
+```{R Figure 3 panel A and C}
+# get value data ---------------------------------------------------------------
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH40_80in0 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+# get point data ---------------------------------------------------------------
+a <- c(EH0_80in00, EH0_80in80)
+z <- c(EH20_60in00, EH20_60in80)
+n <- c(EH0_40in00, EH0_40in80)
+p <- c(EH40_80in0, EH40_80in80)
+q <- c(EH40in00, EH40in80)
+b <- c(EH0in00, EH0in80)
+c <- c(EH80in00, EH80in80)
+rm(EH0in00, EH0in40, EH0in80,
+   EH40in00, EH40in40, EH40in80,
+   EH80in00, EH80in40, EH80in80,
+   EH0_80in00, EH0_0in80,
+   EH0_40in00, EH0_40in40, EH0_40in80,
+   EH40_80in0, EH40_80in40, EH40_80in80,
+   EH20_60in00, EH20_60in80, m)
+
+# get sign and dist ------------------------------------------------------------
+aaa <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw_00", "dw_80")]
+aaa <- aaa[!is.na(aaa$dw_00) & !is.na(aaa$dw_80),]
+
+zzz <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw_00", "dw_80")]
+zzz <- zzz[!is.na(zzz$dw_00) & !is.na(zzz$dw_80),]
+
+nnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw_00", "dw_80")]
+nnn <- nnn[!is.na(nnn$dw_00) & !is.na(nnn$dw_80),]
+
+ppp <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw_00", "dw_80")]
+ppp <- ppp[!is.na(ppp$dw_00) & !is.na(ppp$dw_80),]
+
+qqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw_00", "dw_80")]
+qqq <- qqq[!is.na(qqq$dw_00) & !is.na(qqq$dw_80),]
+
+# panel a ----------------------------------------------------------------------
+p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+ geom_rug(data=aaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
+  xlim(min(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10,
+       max(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10) +
+  ylim(min(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_00, ppp$dw_00, qqq$dw_80)*1.10,
+       max(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_80, ppp$dw_80, qqq$dw_80)*1.10)+
+  geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
+  geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
+  geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
+  geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
+  geom_point(x=p[1], y=p[2], fill = mypalette[6], size = 3, pch = 21)+
+  geom_point(x=b[1], y=b[2], color = "black", size = 2)+
+  geom_point(x=c[1], y=c[2], color = "black", size = 2)+
+  theme_VJF()+ xlab("Fitness Change (%) in 0% NaCl")+ylab("Fitness Change (%) in 80% NaCl")+ labs(tag="A")
+rm(a,z,n,p,q,b,c)
+rm(tempdata)
+```
+<br/><br/>
+
+
+```{R Figure 3 panel B and D}
+# get value data ---------------------------------------------------------------
+m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0in00 <- mean(m$dw_00, na.rm = T)
+EH0in40 <- mean(m$dw_40, na.rm = T)
+EH0in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH40in00 <- mean(m$dw_00, na.rm = T)
+EH40in40 <- mean(m$dw_40, na.rm = T)
+EH40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH80in00 <- mean(m$dw_00, na.rm = T)
+EH80in40 <- mean(m$dw_40, na.rm = T)
+EH80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0_80in00 <- mean(m$dw_00, na.rm = T)
+EH0_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH0_40in00 <- mean(m$dw_00, na.rm = T)
+EH0_40in40 <- mean(m$dw_40, na.rm = T)
+EH0_40in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH40_80in0 <- mean(m$dw_00, na.rm = T)
+EH40_80in40 <- mean(m$dw_40, na.rm = T)
+EH40_80in80 <- mean(m$dw_80, na.rm = T)
+
+m <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
+EH20_60in00 <- mean(m$dw_00, na.rm = T)
+EH20_60in80 <- mean(m$dw_80, na.rm = T)
+
+
+# get point data ---------------------------------------------------------------
+a <- c(EH0_80in00, EH0_80in80)
+z <- c(EH20_60in00, EH20_60in80)
+n <- c(EH0_40in00, EH0_40in80)
+p <- c(EH40_80in0, EH40_80in80)
+q <- c(EH40in00, EH40in80)
+b <- c(EH0in00, EH0in80)
+c <- c(EH80in00, EH80in80)
+rm(EH0in00, EH0in40, EH0in80,
+   EH40in00, EH40in40, EH40in80,
+   EH80in00, EH80in40, EH80in80,
+   EH0_80in00, EH0_80in80,
+   EH0_40in00, EH0_40in40, EH0_40in80,
+   EH40_80in0, EH40_80in40, EH40_80in80,
+   EH20_60in00, EH20_60in80, m)
+
+# get sign and dist ------------------------------------------------------------
+zaaa <- myrcw[myrcw$treat == "EH0_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zaaa <- zaaa[!is.na(zaaa$dw_00) & !is.na(zaaa$dw_80),]
+
+zzzz <- myrcw[myrcw$treat == "EH20_60" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zzzz <- zzzz[!is.na(zzzz$dw_00) & !is.na(zzzz$dw_80),]
+
+znnn <- myrcw[myrcw$treat == "EH0_40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+znnn <- znnn[!is.na(znnn$dw_00) & !is.na(znnn$dw_80),]
+
+zppp <- myrcw[myrcw$treat == "EH40_80" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zppp <- zppp[!is.na(zppp$dw_00) & !is.na(zppp$dw_80),]
+
+zqqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("dw_00", "dw_80")]
+zqqq <- zqqq[!is.na(zqqq$dw_00) & !is.na(zqqq$dw_80),]
+
+# panel B ----------------------------------------------------------------------
+p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+geom_rug(data=zaaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
+  xlim(min(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10,
+       max(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10) +
+  ylim(min(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_00, zppp$dw_00, zqqq$dw_80)*1.10,
+       max(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_80, zppp$dw_80, zqqq$dw_80)*1.10)+
+  geom_abline(slope = getline(b, c)[1], intercept = getline(b, c)[2], lty = "dotdash") +
+  geom_point(x=a[1], y=a[2], fill = mypalette[5], size = 3, pch = 21)+
+  geom_point(x=z[1], y=z[2], fill = mypalette[4], size = 3, pch = 21)+
+  geom_point(x=n[1], y=n[2], fill = mypalette[2], size = 3, pch = 21)+
+  geom_point(x=p[1], y=p[2], fill = mypalette[6], size = 3, pch = 21)+
+  geom_point(x=b[1], y=b[2], color = "black", size = 2)+
+  geom_point(x=c[1], y=c[2], color = "black", size = 2)+
+  theme_VJF()+ xlab(expression(bold("Fitness Change (%) in 0% "*CuSO["4"]*"")))+ylab(expression(bold("Fitness Change (%) in 80% "*CuSO["4"]*"")))+ labs(tag="B")
+p3 <- p3 + annotation_custom(legp, xmin = 0.06, ymin = 0.35)
+rm(a,z,n,p,q,b,c)
+
+# create full figure 3 ---------------------------------------------------------
+lay<- as.matrix(cbind(1,2))
+pdf("000_Figure_3_noindivs.pdf", width = 6, height = 4)
+grid::grid.draw(grid.arrange(p1,p3, layout_matrix =lay))
+dev.off()
+
+png("000_Figure_3_noindivs.png", width = 6, height =4, units = "in",res = 300)
+grid::grid.draw(grid.arrange(p1,p3, layout_matrix =lay))
+dev.off()
+
+rm(tempdata, aaa, zaaa, nnn, znnn, ppp, zppp, qqq, zqqq, zzz, zzzz,
+   p1, p2, p3, p4, lay, legp)
+```
+<br/><br/>
