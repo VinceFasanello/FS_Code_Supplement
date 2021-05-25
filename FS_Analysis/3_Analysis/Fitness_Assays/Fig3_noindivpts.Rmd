@@ -84,7 +84,7 @@ qqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("SALT_A", "SALT_B"), c("dw
 qqq <- qqq[!is.na(qqq$dw_00) & !is.na(qqq$dw_80),]
 
 # panel a ----------------------------------------------------------------------
-p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+ geom_rug(data=aaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
+p1 <- ggplot(data = aaa, aes(x = dw_00, y = dw_80))+
   xlim(min(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10,
        max(b[1], c[1], aaa$dw_00, zzz$dw_00, nnn$dw_00, ppp$dw_00, qqq$dw_00)*1.10) +
   ylim(min(b[2], c[2], aaa$dw_80, zzz$dw_80, nnn$dw_00, ppp$dw_00, qqq$dw_80)*1.10,
@@ -172,7 +172,7 @@ zqqq <- myrcw[myrcw$treat == "EH40" & myrcw$epo %in% c("COPR_A", "COPR_B"), c("d
 zqqq <- zqqq[!is.na(zqqq$dw_00) & !is.na(zqqq$dw_80),]
 
 # panel B ----------------------------------------------------------------------
-p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+geom_rug(data=zaaa, aes(x = dw_00, y = dw_80), color =  ggplot2::alpha(mypalette[5], 0.5))+
+p3 <- ggplot(data = zaaa, aes(x = dw_00, y = dw_80))+
   xlim(min(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10,
        max(b[1], c[1], zaaa$dw_00, zzzz$dw_00, znnn$dw_00, zppp$dw_00, zqqq$dw_00)*1.10) +
   ylim(min(b[2], c[2], zaaa$dw_80, zzzz$dw_80, znnn$dw_00, zppp$dw_00, zqqq$dw_80)*1.10,
