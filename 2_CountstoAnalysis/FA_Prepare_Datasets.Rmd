@@ -2,6 +2,74 @@
 title: "FA_Prepare_Datasets"
 output: html_notebook
 ---
+# Author: Vince Fasanello
+# Date: June 2021
+# Project: Fluctuating selection project, Fitness Assays
+
+
+# File Description:-------------------------------------------------------------
+#   
+#   |-----------------------------------------------------------------------|
+#   | This script, run in it's entirety, converts the raw counts data       |
+#   | generated in step: 1_FastQtoCounts to as set of dataframes formatted  |
+#   | for analysis in step: 3_Analysis                                      | 
+#   |-----------------------------------------------------------------------|
+# 
+# Inputs-&-Outputs: -------------------
+# 	Inputs:
+# 		[1] A layout file specifying important aspects of the project design.
+#         * LAYOUT FILE IS IDENTICAL TO LAYOUT FILE IN 1_FastQtoCounts DIRECTORY *
+#         
+# 		[2a] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.expected" countaining counts mapping to expected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created by FA_Lib1_FastQtoCounts.R in step: 1_FastQtoCounts. *
+#         
+# 		[2b] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.expected" countaining counts mapping to expected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created by FA_Lib2_FastQtoCounts.R in step: 1_FastQtoCounts. *
+#
+# 		[3a] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.unexpected" countaining counts mapping to unexpected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created by FA_Lib1_FastQtoCounts.R in step: 1_FastQtoCounts. *
+#
+# 		[3b] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.unexpected" countaining counts mapping to unexpected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created by FA_Lib2_FastQtoCounts.R in step: 1_FastQtoCounts. *
+# 			
+# 	Outputs:
+# 		[1] "ec.combined.rdata" : A ".Rdata" type file containing the combined data from the 
+#                               counts.expected dataframes form library 1 and library 2.
+#
+# 		[2] "ec.combined.rdata" : A ".Rdata" type file containing the combined data from the 
+#                               counts.unexpected dataframes form library 1 and library 2.
+#
+# 		[3] "metadatapluscounts.rdata" : A ".Rdata" type file containing the combined data from the 
+#                                      counts.expected dataframes form library 1 and library 2 and
+#                                      appended metadata information.
+#
+# 		[4] "swref.rdata" : A ".Rdata" type file containing data for single-well reference samples
+#                          used  downstream to assess barcode contamination during evolution.
+#
+# 		[5] "growblnk.rdata" : A ".Rdata" type file containing data for growth blank samples
+#                            used downstream to assess barcode contamination during evolution.
+#
+# 		[6] "dnablnk.rdata" : A ".Rdata" type file containing data for dna blank samples
+#                           used downstream to assess barcode contamination during dna sample prep.
+#
+# 		[7] "pcrblnk.rdata" : A ".Rdata" type file containing data for dna blank samples
+#                           used downstream to assess barcode contamination during pcr.
+#
+# 		[8] "swsearch.rdata" : A ".Rdata" type file containing data for barcode searches
+#                            for internal use only.
+#
+# 		[9] "FitAssayData.rdata" : A set of ".Rdata" type files containing formatted 
+#                                dataframes for analysis in step: 3_Analysis.
+# ------------------------------------------------------------------------------ 		    
+
 
 Prepare the fitness assay datasets from raw counts data from 500-generation flux exp evo project fitness assays (gen-0 and gen-500)
 
@@ -18,7 +86,6 @@ dir_in_2 <- paste0(getwd(),"/Counts_Data/Library_2") # input: library 2 data
 dir_out_c <- paste0(getwd(),"/Counts_Data/Combined") # output: compbined library 1 and 2 data
 dir_in_m <- paste0(getwd(),"/Metadata") # input: metadata
 dir_out_f <- paste0(getwd(),"/Formatted_Data") # output: dataframe formatted for analysis
-
 '%ni%' <- Negate('%in%')
 ```
 <br/><br/>
@@ -107,7 +174,7 @@ save(dnablnk, file = "dnablnk.Rdata")
 pcrblnk <- myd[myd$sample.type == "PCR_Blank",] # pcr blanks -- samples from every round of pcr -- included all components necessary for replication other than yeast DNA 
 save(pcrblnk, file = "pcrblnk.Rdata")
 
-# sw search for admin use.
+# sw search for internal use.
 swsearch <- myd[myd$sample.type == "SW_Search",] # Check samples run to hunt down the genetic barcode sequence in a few strains with incorrect sequences inserted. 
 save(swsearch, file = "swsearch.Rdata")
 
@@ -587,9 +654,6 @@ min(my$re_fit_e, na.rm = T) # okay with filtering @ gen 500, removed all unsuppo
 my$dw <- my$fit_e - my$fit_a
 my$re_dw <- 2/((1/my$re_fit_e)+(1/my$re_fit_a))
 min(my$re_dw, na.rm = T) # double check passes, all dw data are as expected.
-
-
-
 
 myd <- my
 ```

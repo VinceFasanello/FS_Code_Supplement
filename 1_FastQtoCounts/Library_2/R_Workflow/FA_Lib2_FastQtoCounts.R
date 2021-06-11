@@ -1,6 +1,6 @@
 # Author: Vince Fasanello
-# Date: September 2019
-# ProjectID: 500-gen exp longitudinal data
+# Date: June 2021
+# Project: Fluctuating selection project, Fitness Assays, Library 2 
 
 
 # File Description:-------------------------------------------------------------
@@ -12,15 +12,21 @@
 # 
 # Inputs-&-Outputs: -------------------
 # 	Inputs:
-# 		[1] A batch of unzipped ".fastq" type files. Place in the dir_it_fastq directory location. 
+# 		[1] A batch of unzipped ".fastq" type files. Place in the "IonTorrent_FastQ" directory location. 
+#
 # 		[2] A layout file specifying important aspects of the project design
-# 		    (see "Metadata-specifications" section, layout.csv formatting specifications).
-# 		[3] A mobyBC file specifying moby barcode identifiers, uptag barcode
-# 		    sequences, and dntag barcode sequences (see 
-# 		    "Metadata-specifications" section, mobyBC.csv formatting specifications).
-# 		[4] A primers file specifying primer identifiers and sequences (see 
-# 		    "Metadata-specifications" section, primers.csv formatting specifications).
-# 		[5] An R source file associated with this script.
+# 		    (see "Metadata-specifications" section, layout.csv formatting specifications). 
+#         Place in the "Metadata" directory location. 
+#
+# 		[3] A mobyBC file specifying moby barcode identifiers, uptag barcode sequences, and dntag barcode sequences 
+# 		    (see"Metadata-specifications" section, mobyBC.csv formatting specifications).
+#         Place in the "Metadata" directory location. 
+#-
+# 		[4] A primers file specifying primer identifiers and sequences 
+# 		    (see "Metadata-specifications" section, primers.csv formatting specifications).
+#         Place in the "Metadata" directory location. 
+#
+# 		[5] The R source file associated with this script (placed in the "R_source" directory).
 # 			
 # 	Outputs*:
 # 		[1] A ".Rdata" type file containing a counts matrix named "counts." 
@@ -31,14 +37,14 @@
 # 		    experiment id based on recovered a.primer and p1.primer barcode
 # 		    sequences. Exact matches only for this output and all others! 
 # 		[2] A ".Rdata" type file containing a counts matrix named
-# 		    "expected.counts." This matrix is identical to "counts" except all
+# 		    "counts.expected" This matrix is identical to "counts" except all
 # 		    cells that WERE NOT expected to return counts based on the
-# 		    experimental design (layout.csv) are set to NA regardless of
+# 		    experimental design (Layout.csv) are set to NA regardless of
 # 		    whether or not counts were recovered for that cell. 
 # 		[3] A ".Rdata" type file containing a counts matrix named
-# 		    "unexpected.counts." This matrix is identical to "counts" except 
+# 		    "counts.unexpected" This matrix is identical to "counts" except 
 # 		    all cells that WERE expected to return counts based on the
-# 		    experimental design (layout.csv) are set to NA regardless of
+# 		    experimental design (Layout.csv) are set to NA regardless of
 # 		    whether or not counts were recovered for that cell. 
 # 		    
 # 		    		*Intermediate fastq-as-dataframe outputs are produced when running this
@@ -53,12 +59,12 @@
 # This block describes exactly how to 
 # format your metadata files. 
 # These files include:
-# 	[1] XXX_layout.csv
-# 	[2] XXX_mobyBCs.csv 
-# 	[3] XXX_primers.csv
+# 	[1] Layout.csv
+# 	[2] MobyBCs.csv 
+# 	[3] Primers.csv
 # -------------------------------------
 
-# layout.csv---------------------------
+# Layout.csv---------------------------
 # Description: experimental layout file. each row is a single experiment. Each
 # 			       column contains the state of a single informative variable for 
 # 			       each experiment. 
@@ -73,13 +79,16 @@
 #		  col[1]: 
 #			  col_name: experiment.id
 #			  col_data: chr values identifying the unique experiment (sample) ID
-#     col[2]: 
+#		  col[2]: 
+#			  col_name: processing.id
+#			  col_data: int values identifying the unique experiment (sample) ID
+#     col[3]: 
 #       col_name: a.primer
 #       col_data: chr values identifying the forward IonTorrent primer (a.primer).
-#     col[3]: 
+#     col[4]: 
 #       col_name: p1.primer
 #       col_data: chr values identifying the reverse IonTorrent primer (p1.primer).
-#     col[4] - col[N]: 
+#     col[5] - col[N]: 
 #       col_name: user specified
 #       col_data: chr or int values identifying information important to 
 #                 the statistical design (i.e. "time.point", "pool", "treatment").
@@ -93,7 +102,7 @@
 #         	      barcode as barcode.1 for experiment 2 and so on.
 # -------------------------------------
 
-# mobyBCs.csv--------------------------
+# MobyBCs.csv--------------------------
 # Description: file containing moby barcode sequences and identities.
 # Format:
 # 	rows: 
@@ -110,16 +119,17 @@
 #       col_name: moby.bc
 #       col_data: chr values identifying the moby barcode id. These 
 #         			  values must match the moby barcode ids used in the 
-#         			  "layout.csv" metadata file.
+#         			  "Layout.csv" metadata file.
 #     col[2]: 
 #       col_name: moby.uptag
 #       col_data: chr values identifying the moby barcode uptag sequences.
 #     col[3]:
 #       col_name: moby.dntag
 #       col_data: chr values identifying the moby barcode dntag sequences.
+#                 *not currently used, but could be populated if desired* 
 # -------------------------------------
 
-# primers.csv--------------------------
+# Primers.csv--------------------------
 # Description: file containing primer ids, full primer sequences, primer uptags,
 # 			and primer downtags used in the experimental design. 
 # Format:
@@ -129,8 +139,8 @@
 # 					      column of the "primers" dataframe. 
 # 		row[2] - row[N]: 
 # 			row_data: Each row contains the infomration for a 
-# 					      single mobyBC. There are as many rows as there 
-# 					      are barcodes included in the entire experimental
+# 					      single sequencing primer. There are as many rows as there 
+# 					      are primers included in the entire experimental
 # 				      	design, considering all experiments in the library. 
 # 	cols:
 #     col[1]: 
@@ -168,12 +178,13 @@ rm(list = ls())
 # Edit these paths for your use before
 # proceeding.
 # -------------------------------------
-dir_home <- getwd()
-dir_source <- "1_FastQtoCounts/R_Source"
-dir_metadata <- "1_FastQtoCounts/Fitness_Assays/Library_2/Metadata"
-dir_it_fastq <- "1_FastQtoCounts/Fitness_Assays/Library_2/IonTorrent_Files/IonTorrent_FastQ"
-dir_it_df <- "1_FastQtoCounts/Fitness_Assays/Library_2/IonTorrent_Files/IonTorrent_DF"
-dir_counts <-"1_FastQtoCounts/Fitness_Assays/Library_2/Counts"
+dir_home <- # enter the path to your "FS_Code_Supplement" directory here. 
+  dir_source <- "/1_FastQtoCounts/R_Source"
+dir_metadata <- "/1_FastQtoCounts/Library_2/Metadata"
+dir_it_fastq <- "/1_FastQtoCounts/Library_2/IonTorrent_Files/IonTorrent_FastQ"
+dir_it_df <- "/1_FastQtoCounts/Library_2/IonTorrent_Files/IonTorrent_DF"
+dir_counts <-"/1_FastQtoCounts/Library_2/Counts"
+dir_counts2 <- "/2_CountstoAnalysis/Counts_Data/Library_2"
 # ------------------------------------------------------------------------------
 
 
@@ -183,8 +194,7 @@ dir_counts <-"1_FastQtoCounts/Fitness_Assays/Library_2/Counts"
 # This block loads all R Source files 
 # for the script.				   
 # -------------------------------------
-setwd(dir_home)
-setwd(dir_source)
+setwd(paste0(dir_home,dir_source))
 source("FastqtoCounts-SOURCE.R")
 # ------------------------------------------------------------------------------
 
@@ -195,8 +205,7 @@ source("FastqtoCounts-SOURCE.R")
 # This block loads all metadata files 
 # used throughout the script.
 # -------------------------------------
-setwd(dir_home)
-setwd(dir_metadata) # set appropriate working directory
+setwd(paste0(dir_home,dir_metadata)) # set appropriate working directory
 
 # Load layout csv and store as an object
 layout <- read.csv(file = "Layout.csv", header = TRUE, stringsAsFactors = FALSE)
@@ -225,11 +234,10 @@ primers <- read.csv(file = "Primers.csv", header = TRUE, stringsAsFactors = FALS
 # of a.primers (each .fastq file should
 # correspond to a single a.primer).
 # -------------------------------------
-setwd(dir_home)
-setwd(dir_it_fastq) # set appropriate working directory
+setwd(paste0(dir_home,dir_it_fastq)) # set appropriate working directory
 
-fastq.filenames <- list.files() 	# generate a list of fastq filenames based on the
-# content of the dir_it_fastq directory
+fastq.filenames <- list.files() 	# generate a list of fastq filenames based on the content of the dir_it_fastq directory
+fastq.filenames <- fastq.filenames[1:(length(fastq.filenames) - 1)] # remove nomatch entry.
 fastq.a.primers <- c() # generate an emtpy list to store forward primer names
 
 # Populate the list of forward primer names based on the names of the fastq files
@@ -238,11 +246,10 @@ fastq.a.primers <- c() # generate an emtpy list to store forward primer names
 # not "Ion_017" -- The names must match those entered in the a.primer column of the
 # layout control file.
 for (i in 1:length(fastq.filenames)) {
-  fastq.a.primers[i] <- paste(substr(fastq.filenames[i], 15, 17), "_", 
-                              substr(fastq.filenames[i], 40, 41), sep = "")
+  fastq.a.primers[i] <- paste(substr(fastq.filenames[i], 9, 11), "_", 
+                              substr(fastq.filenames[i], 34, 35), sep = "")
 }
 rm(i)
-# fastq.a.primers[length(fastq.a.primers)] <- "none"
 # ------------------------------------------------------------------------------
 
 
@@ -254,15 +261,13 @@ rm(i)
 # generated by this block are saved in
 # the XXX_IonTorrent_DF directory.
 # -------------------------------------
-for (i in 1:length(fastq.filenames)) { 		# for each of the fastq files in the fastq directory...
-  setwd(dir_home)
-  setwd(dir_it_fastq)					# Set the working directory appropriately 
+for (i in 1:length(fastq.filenames)) { 	# for each of the fastq files in the fastq directory...
+  setwd(paste0(dir_home,dir_it_fastq))	# Set the working directory appropriately 
   fastq.filename <- fastq.filenames[i]	# Store the fastq filename in an object
   fastq <- ReadFastq(x = fastq.filename)	# Run the "ReadFastq" function on that fastq file
   fastq <- ConvertFastq(x = fastq)		# Run the "ConvertFastq" function on that fastq file
   fastq.seq <- as.matrix(fastq$string2)	# Store the lines from the fastq file containing sequence information in a new variable
-  setwd(dir_home)
-  setwd(dir_it_df)					# Change the working directory to the location that fastq dataframes are stored
+  setwd(paste0(dir_home,dir_it_df))	# Change the working directory to the location that fastq dataframes are stored
   save(fastq, fastq.seq, file = paste(fastq.filename, ".Rdata", sep = ""))	# save the full fastq dataframe and the fastq.seq matrix in a single object
 }
 rm(fastq, fastq.seq, i) # remove unnecessary variables
@@ -283,9 +288,6 @@ rm(fastq, fastq.seq, i) # remove unnecessary variables
 counts <- GenerateEmptyCountsTable(layout = layout, mobyBCs = mobyBCs)
 colnames(counts) <- layout$exp.id
 
-#fastq.filenames <- fastq.filenames[1:19]	# truncate the fastq.filenames object to omit the nomatch file
-#fastq.a.primers <- fastq.a.primers[1:19]	# (Forward primers) truncate the fastq.a.primers object to omit the "none" entry
-
 p1.primer.ids <- primers$primer.id[25:33]		# Store the names of the reverse primers in an object
 p1.primer.bcs <- primers$primer.barcode.r[25:33]	# stores the sequence of the reverse primers in an object
 
@@ -298,8 +300,7 @@ for (i in 1:length(fastq.filenames)) {	# for each fastq filename....
   a.primer.id <- fastq.a.primers[i]  # Set the forward primer id that is associated with the fastq filename used in this iteration of the loop
   
   print(paste("starting fastq file:", fastq.filename, sep = " ")) # print some information to keep track of what is being run
-  setwd(dir_home)
-  setwd(dir_it_df)	# set the working directory
+  setwd(paste0(dir_home,dir_it_df))	# set the working directory
   load(paste(fastq.filename, ".Rdata", sep = "")) # load the fastq dataframe and matrix containing sequence information
   rm(fastq) # remove the full dataframe, only the matrix is needed here. 
   
@@ -329,12 +330,7 @@ for (i in 1:length(fastq.filenames)) {	# for each fastq filename....
   
 }
 rm(i,j,k)  # remove unnecessary variables
-setwd(dir_home)
-setwd(dir_counts) # set the working directory
-
-# counts.agrep <- counts  # <-- uncomment this line if using agrep rather than grep
-# save(counts.agrep, file = "counts.agrep.Rdata")  # <-- uncomment this line if using agrep rather than grep
-
+setwd(paste0(dir_home,dir_counts)) # set the working directory
 save(counts, file = "counts.Rdata")  # <-- save the counts matrix for future reference
 # row N1 is the full number of counts for the experiment. subtract all other
 # cells from the column to figure out the number of exotic counts. 
@@ -359,33 +355,26 @@ save(counts, file = "counts.Rdata")  # <-- save the counts matrix for future ref
 # were expected based on the
 # experimental design. 
 # -------------------------------------
-setwd(dir_home)
-setwd(dir_counts)	# set the working directory
+setwd(paste0(dir_home,dir_counts)) # set the working directory
 load(file = "counts.Rdata") # load the counts matrix if not yet loaded
-# load(file = "counts.agrep.Rdata")  # <-- uncomment this line if using agrep rather than grep
 
 # counts.expected: generate a counts.expected matrix
 counts.expected <- CleanCountsTable(counts = counts, layout = layout, 
                                     mobyBCs = mobyBCs, output.type = "E")	# generate the counts.expected matrix using the "CleanCountsTable" function
 save(counts.expected, file = "counts.expected.Rdata")	# save the counts.expected matrix
 
-# ---uncomment this block if using agrep rather than grep---
-# counts.agrep.expected <- CleanCountsTable(counts = counts.agrep, layout = layout,
-# 							 mobyBCs = mobyBCs, output.type = "E")
-# save(counts.agrep.expected, file = "counts.agrep.expected.Rdata")
-# ----------------------------------------------------------
 
 # counts.unexpected: generate a counts.unexpected matrix
 counts.unexpected <- CleanCountsTable(counts = counts, layout = layout, 
                                       mobyBCs = mobyBCs, output.type = "U")  # generate the counts.unexpected matrix using the "CleanCountsTable" function
 save(counts.unexpected, file = "counts.unexpected.Rdata")  # save ethe counts.unexpected matrix
 
-# ---uncomment this block if using agrep rather than grep---
-# counts.agrep.unexpected <- CleanCountsTable(counts = counts.agrep, layout = layout,
-# 						   mobyBCs = mobyBCs, output.type = "U")
-# save(counts.agrep.unexpected, file = "counts.agrep.unexpected.Rdata")
-# ----------------------------------------------------------
+
+# save to CountstoAnalysis frame as well to avoid drag-drop
+setwd(paste0(dir_home,dir_counts2)) # set the working directory
+save(counts.expected, file = "counts.expected.Rdata")	# save the counts.expected matrix
+save(counts.unexpected, file = "counts.unexpected.Rdata")  # save the counts.unexpected matrix
+
 
 rm(counts, counts.expected, counts.unexpected) # remove all counts objects 
-# rm(counts.agrep, counts.agrep.expected, counts.agrep.unexpected)  # <-- uncomment this line if running agrep rather than grep
 # ------------------------------------------------------------------------------
