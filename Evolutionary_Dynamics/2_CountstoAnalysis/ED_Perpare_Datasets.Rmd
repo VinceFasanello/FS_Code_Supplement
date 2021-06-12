@@ -1,0 +1,147 @@
+---
+title: "ED_Prepare_Datasets"
+output: html_notebook
+---
+# Author: Vince Fasanello
+# Date: June 2021
+# Project: Fluctuating selection project, Evolutionary Dynamics Data Preparation
+
+
+# File Description:-------------------------------------------------------------
+#   
+#   |-----------------------------------------------------------------------|
+#   | This script, run in it's entirety, converts the raw counts data       |
+#   | generated in step: 1_FastQtoCounts to as set of dataframes formatted  |
+#   | for analysis in step: 3_Analysis                                      | 
+#   |-----------------------------------------------------------------------|
+# 
+# Inputs-&-Outputs: -------------------
+# 	Inputs:
+# 		[1] A layout file specifying important aspects of the project design.
+#         * LAYOUT FILE IS IDENTICAL TO LAYOUT FILE IN 1_FastQtoCounts DIRECTORY *
+#         
+# 		[2] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.expected" countaining counts mapping to expected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created in step: 1_FastQtoCounts. *
+#
+# 		[3] A ".Rdata" type file containing a counts matrix named
+# 		    "counts.unexpected" countaining counts mapping to unexpected barcodes for
+#         each experiment based on the experimental design (Layout.csv).
+#         * this file is created in step: 1_FastQtoCounts. *
+# 			
+# 	Outputs:
+# 		[1] "swref.rdata" : A ".Rdata" type file containing data for single-well reference samples
+#                          used  downstream to assess barcode contamination during evolution.
+#
+# 		[2] "dnablnk.rdata" : A ".Rdata" type file containing data for dna blank samples
+#                           used downstream to assess barcode contamination during dna sample prep.
+#
+# 		[3] "pcrblnk.rdata" : A ".Rdata" type file containing data for dna blank samples
+#                           used downstream to assess barcode contamination during pcr.
+# ------------------------------------------------------------------------------ 		 
+
+***
+# Setup Script
+Prepare the workspace set global options, load packages, set directories, etc..
+```{r}
+rm(list=ls()) # clear workspace
+knitr::opts_chunk$set(tidy = TRUE) # set global knitr options.
+options(scipen = 999) # turn off scientific notation
+require(plyr, quietly = T) # load required packages
+dir_in_1 <- paste0(getwd(),"/Counts_Data") # input: data
+dir_in_m <- paste0(getwd(),"/Metadata") # input: metadata
+dir_out_f <- paste0(getwd(),"/Formatted_Data") # output: dataframe formatted for analysis
+```
+<br/><br/>
+
+Load and prepare the metadata file
+```{r}
+setwd("..")
+setwd(dir_in_m)
+lay <- read.csv("Layout.csv", header = T, stringsAsFactors = F)
+```
+<br/><br/>
+
+Load and prepare the counts data
+```{r}
+setwd("..")
+setwd(dir_in_1)
+load(file = "Counts_Expected.Rdata") # expected counts
+ec <- counts.expected; rm(counts.expected)
+ec <- t(ec) # transpose to match metadata format: experiments are rows
+ec <- ec[,1:(ncol(ec) - 1)]
+
+load(file = "Counts_Unexpected.Rdata") # unexpected counts (barcode cross contamination)
+uc <- counts.unexpected; rm(counts.unexpected)
+uc <- t(uc) # transpose to match metadata format: experiments are rows
+uc <- uc[,1:(ncol(uc) - 1)]
+```
+<br/><br/>
+
+Fix A's and B's assignment for COPR timepointws 43 and 49.
+```{r}
+# plates COPR A and COPR B LABELS were switched for day 43 and day 49 data collection (relative to other timepoints). This block updates formatting to reflect this.
+#time 43
+tmpa <- ec[81,]
+tmpb <- ec[90,]
+ec[81,] <- tmpb; rownames(ec)[81] 
+ec[90,] <- tmpa; rownames(ec)[90]
+
+tmpa <- uc[22:24,]; rownames(tmpa) <- rownames(uc[25:27,])
+tmpb <- uc[25:27,]; rownames(tmpb) <- rownames(uc[22:24,])
+uc[22:24,] <- tmpb 
+uc[25:27,] <- tmpa
+
+
+#time 49
+tmpa <- ec[22:24,]; rownames(tmpa) <- rownames(ec[25:27,])
+tmpb <- ec[25:27,]; rownames(tmpb) <- rownames(ec[22:24,])
+ec[22:24,] <- tmpb 
+ec[25:27,] <- tmpa
+
+tmpa <- uc[22:24,]; rownames(tmpa) <- rownames(uc[25:27,])
+tmpb <- uc[25:27,]; rownames(tmpb) <- rownames(uc[22:24,])
+uc[22:24,] <- tmpb 
+uc[25:27,] <- tmpa
+```
+<br/><br/>
+
+Combine metadata with counts data
+```{r}
+myd <- cbind(lay, ec)
+myd$ppects <- rowSums(ec, na.rm = T) # primer pair expected counts  *BLANKS WILL BE ZERO HERE!!!!*
+myd$ppccts <- rowSums(uc, na.rm = T) # primer pair cross-contam counts *THESE ONLY MAKE SENSE FOR SINGLE WELL CONTROLS!!!*
+rm(lay, ec, uc)
+```
+<br/><br/>
+
+Calculate primer pair summary statistics for the only 5 available samples.
+```{r}
+myd$cc <- (myd$ppccts / (myd$ppects + myd$ppccts)) 
+myd$cc[myd$sample.type %in% c("plate", "dna_blank", "pcr_blank")] <- NA
+```
+<br/><br/>
+
+Split out datasets of interest and save.
+```{r}
+setwd("..")
+setwd(dir_out_f)
+
+# read on cross contam
+swref <- myd[myd$sample.type == "sw",] # sequence of wells containing only the reference strain run through the fitness assay, for cross contamination estimation. 
+swref$ppcctsm <- swref$ppccts/110  # counts per contaminant
+swref$ccm <- swref$cc/110 # cc rate per contaminant
+save(swref, file = "swref.Rdata")
+
+# controls...
+dnablnk <- myd[myd$sample.type == "dna_blank",] # dna blank -- samples processed through full processing with DNA free water added instead of resuspended yeast
+save(dnablnk, file = "dnablnk.Rdata")
+pcrblnk <- myd[myd$sample.type == "pcr_blank",] # pcr blanks -- samples from every round of pcr -- included all components necessary for replication other than yeast DNA 
+save(pcrblnk, file = "pcrblnk.Rdata")
+
+rm(swref, dnablnk, pcrblnk)
+# ------------------------------------------------
+myd <-  myd[myd$sample.type == "plate",] # the data for processing
+```
+<br/><br/>
