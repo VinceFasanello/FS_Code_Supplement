@@ -30,13 +30,32 @@ output: html_notebook
 #                                dataframes for analysis. -produced in Fitness_Assays step 2-
 # 			
 # 	Outputs:
-# 		[1] "ec.combined.rdata" : A ".Rdata" type file containing the combined data from the 
-#                               counts.expected dataframes form library 1 and library 2.
+#     Figures and tables for Manuscript...
+# 		    [1]  000_Figure_1.pdf
+#         [2]  000_Figure_1.png
+#         [3]  000_Figure_2.pdf
+#         [4]  000_Figure_2.png
+#         [5]  000_Figure_3.pdf
+#         [6]  000_Figure_3.png
+#         [7]  000_Figure_4.pdf
+#         [8]  000_Figure_4.png
+#         [9]  000_Figure_S1.pdf
+#         [10] 000_Figure_S1.png
+#         [11] 000_Figure_S2.pdf
+#         [12] 000_Figure_S2.png
+#         [13] 000_Figure_S3.pdf
+#         [14] 000_Figure_S3.png
+#         [15] 000_Table_S3.csv
+#         [16] 000_Table_S4.csv
+#         [17] 000_Table_S6.html
+#         [18] 000_Table_S7.html
+#         ***Note: there are additional outputs that can be turned on throughout
+#                  the script if desired.
 # ------------------------------------------------------------------------------ 		    
 
 
   
-```{R Setup}
+```{R Setup, warning = FALSE}
 # Environment & Notebook Setup -------------------------------------------------
 rm(list = ls())
 options(scipen = 999)
@@ -211,8 +230,8 @@ rm(myd, temp, temp2, lowcut, pAA, pBB, pCC ,pDD, reportvals, DIR_counts_in, coun
 <br/><br/>
 
 
-```{R CC, warning=FALSE}
-# NOTE: replace ccpt with ccpm in all reportvals[n] lines to report mean contaminatn rather than total cc (IF DESIRED)
+```{R Barcode Cross-Contamination, warning=FALSE}
+# NOTE: replace ccpt with ccpm in all reportvals[n] lines to report mean contamination rather than total barcode cross-contamination (IF DESIRED)
 
 # Reference purity. ------------------------------------------------------------
 setwd(DIR_fit_formatted); load("swref.rdata")
@@ -263,7 +282,7 @@ reportvals[11] <- paste0("Mean Total ALL CC = ", round(mean(mycc[mycc$group %in%
 reportvals[12] <- paste0("SD Total ALL CC = ", round(sd(mycc[mycc$group %in% c("SALT","COPR", "ancestral"),]$ccpt_mean)*100, 5), "%")
 
 # # Save outputs to file -------------------------------------------------------
-# setwd(DIR_out); write.csv(mycc, file = "000_Table_Sx_cc.csv")
+# setwd(DIR_out); write.csv(mycc, file = "000_Table_cc.csv") # output table behind reported if desired.
 
 # report -----------------------------------------------------------------------
 for (i in 1:12){print(reportvals[i])}
@@ -272,7 +291,7 @@ rm(mycc, reportvals, i, DIR_evo_formatted) # tidy
 <br/><br/>
 
 
-```{R Power}
+```{R Power Analysis, warning = FALSE}
 setwd(DIR_fit_formatted); load("FitAssayData.rdata") # load fitness assay data, we will use it from here forward.
 
 # Calculate power to detect indiv BC fitness increase / decrease (t-tests) -----
@@ -374,10 +393,11 @@ pBB<-ggplot(powerTR, aes(x=f2, y=power, group=n)) +
 
 # Save outputs to file ---------------------------------------------------------
 setwd(DIR_out); write.csv(powerBC, file="000_Table_S4.csv")
+
 setwd(DIR_out); write.csv(powerTR, file="000_Table_S3.csv")
+
 setwd(DIR_out); pdf(file="000_Figure_S2.pdf", width=3.345, height=6.69)
 cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
-
 
 png("000_Figure_S2.png", width=3.345, height=6.69, units = "in", res = 300)
 cowplot::plot_grid(pAA, pBB, nrow=2); dev.off()
@@ -389,14 +409,14 @@ rm(pAA, pBB, powerBC, powerTR, myeffectsize, myrmse, psd, i, reportvals) # tidy
 <br/><br/>
 
 
-```{R Single Environment Treatment Effects: Models}
+```{R Single Environment Treatment Effects: Models, warning = FALSE}
 # setup ------------------------------------------------------------------------
 setwd(DIR_out)
 chems <- list(c("SALT_A", "SALT_B"), c("COPR_A", "COPR_B"))
 envs <- c(0.0, 0.8) # can add 0.4, 1.2 as well if desired. 
 
 # among treatment effects X chemical X environment -----------------------------
-#   Note: these data are used for plotting below!
+#   Note: these data are used for plotting below
 treatlist <- c("EH0","EH0_40","EH40","EH20_60","EH0_80","EH40_80","EH80")
 treattreatlist <- paste0("treat", treatlist)
 myres <- matrix(nrow=7, ncol=7)
@@ -409,7 +429,7 @@ for (g in 1:length(chems)){
       m$treat <- relevel(m$treat, ref=treatlist[i])
       mod <- lmer(dw ~ treat + (1|bcpID), data=m)
       # print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
-      #                 file=paste0("000_Table_Sn_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html"))) # save individual models if desired
+      #                 file=paste0("000_Table_treatVtreat_",strsplit(chems[[g]][1], "_")[[1]][1],"_",envs[h], ".html"))) # save individual models if desired
       for(j in 1:length(treattreatlist)){
         if(treatlist[j] !=treatlist[i]){
           myres_est[treattreatlist[i],treattreatlist[j]] <- summary(mod)$coefficients[treattreatlist[j], "Estimate"]
@@ -430,8 +450,8 @@ for (i in 1:length(chems)){
   for (j in 1:length(envs)){
       m <- my[my$mpasp==envs[j] & my$epo %in% chems[[i]] & !is.na(my$dw),]
       mod <- lmer(dw ~ treat + 0 + (1|bcpID), data=m)
-      print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
-                      file=paste0("000_Table_INTERMEDIATE_",strsplit(chems[[i]][1], "_")[[1]][1],"_",envs[j], ".html")))  # save individual models if desired
+      # print(tab_model(mod, digits=5, digits.p=8, show.stat=T, wrap.labels=100,
+      #                 file=paste0("000_Table_treatV0",strsplit(chems[[i]][1], "_")[[1]][1],"_",envs[j], ".html")))  # save individual models if desired
   }
 }; rm(chems, m, mod, i, j, envs)
 ```
@@ -538,12 +558,11 @@ viopanel <- function(dwdata, statsdata, backerdata=melt_myres_backer, dcol="dw",
 # Visualization ----------------------------------------------------------------
 pAA <- viopanel(dwdata=mAA, statsdata=melt_myres_est_AA, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabCM, tag="A")
 pAA <- pAA + 
-  annotate("text", x=1,y=16,label = "***", size = 6, fontface = "bold") +  
+  annotate("text", x=1,y=16,label = "***", size = 6, fontface = "bold") +  # these significance values and those below are manually added -- if you change the data you must change these!
   annotate("text", x=2,y=11,label = "*", size = 6, fontface = "bold") +
   annotate("text", x=5,y=-12,label = "*", size = 6, fontface = "bold") +
   annotate("text", x=6,y=-9.5,label = "*", size = 6, fontface = "bold") +
   annotate("text", x=7,y=-16,label = "**", size = 6, fontface = "bold")
-pAA
   
 pCC <- viopanel(dwdata=mCC, statsdata=melt_myres_est_CC, fitlims=fitaxdatlimSALT, insetlims=boxSALT, treatlab=treatlabSALT, fitlab=fitnesslabSALT, tag="C")
 pCC <- pCC +
@@ -552,7 +571,6 @@ pCC <- pCC +
   annotate("text", x=5,y=45,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=6,y=40,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=7,y=42,label = "***", size = 6, fontface = "bold")
-pCC
 
 pBB <- viopanel(dwdata=mBB, statsdata=melt_myres_est_BB, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCM, tag="B")
 pBB <- pBB  + 
@@ -560,7 +578,6 @@ pBB <- pBB  +
   annotate("text", x=2,y=15,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=3,y=14.5,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=4,y=15,label = "***", size = 6, fontface = "bold")
-pBB
 
 pDD <- viopanel(dwdata=mDD, statsdata=melt_myres_est_DD, fitlims=fitaxdatlimCOPR, insetlims=boxCOPR, treatlab=treatlabCOPR, fitlab=fitnesslabCOPR, tag="D")
 pDD <- pDD  + 
@@ -570,7 +587,6 @@ pDD <- pDD  +
   annotate("text", x=5,y=48,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=6,y=37,label = "***", size = 6, fontface = "bold") +
   annotate("text", x=7,y=56,label = "***", size = 6, fontface = "bold")
-pDD
 
 # Save outputs to file ---------------------------------------------------------
 setwd(DIR_out); pdf(file="000_Figure_1.pdf", width=11, height=8.5)
@@ -586,7 +602,7 @@ rm(mAA, mBB, mCC, mDD, melt_myres_est_AA, melt_myres_est_BB, melt_myres_est_CC, 
 <br/><br/>
 
 
-```{R Kassen Plot}
+```{R Cross-environment genetic correlation in fitness, warning = FALSE}
 # prep plotting data -----------------------------------------------------------
 # NaCl -----------------------------------------------------
 # values -------------------------------
@@ -696,6 +712,7 @@ p3 <- ggplot()+
   geom_point(aes(x = zcc[1], y = zcc[2]), color = "red", size = 5, pch = 17)+
   theme_VJF()+xlab("Fitness Change (%) in \n 40% Chemical Stress")+ylab("Fitness Change (%) in \n 80% Chemical Stress")+ labs(tag="C")
 
+# Save outputs to file ---------------------------------------------------------
 setwd(DIR_out); pdf(file="000_Figure_2.pdf", width=8.5, height=5)
 cowplot::plot_grid(p1, p2, p3, nrow=1); dev.off()
 
@@ -707,7 +724,7 @@ rm(p1, p2, p3, a, aa, b, bb, c, cc, za, zaa, zb, zbb, zc, zcc)
 <br/><br/>
 
 
-```{R Table 1 and Table S4 Data}
+```{R Adaptation and fitness costs: Tables, warning = FALSE}
 # table 1 ----------------------------------------------------------------------
 mymat <- matrix(nrow = 4, ncol = 2)
 m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0"),]
@@ -733,7 +750,7 @@ m <- m[!is.na(m$dw_80),]
 m <- m[m$dw_80 >= 0.0216,]
 mymat[4,2] <- nrow(m)
 mymat[4,1] <- nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),]); rm(m)
-mymat; rm(mymat)
+mymat; rm(mymat) # Just treatments EH0 and EH80
 
 
 
@@ -801,7 +818,7 @@ m <- m[m$dw_80 >= 0.0216,]
 mymat[9,3] <- nrow(m)
 mymat[9,1] <- nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
 mymat[9,2] <- nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),]); rm(m)
-mymat; rm(mymat)
+mymat; rm(mymat) # All treatments
 
 
 # table S4 COPR HALF -----------------------------------------------------------
@@ -868,22 +885,25 @@ m <- m[m$dw_80 >= 0.0216,]
 mymat[9,3] <- nrow(m)
 mymat[9,1] <- nrow(m[which(m$dw_00 <= -0.0216),]) + nrow(m[is.na(m$dw_00),])
 mymat[9,2] <- nrow(m[which(m$dw_40 <= -0.0216),]) + nrow(m[is.na(m$dw_40),]); rm(m)
-mymat; rm(mymat)
+mymat; rm(mymat) # all treatments
 ```
 <br/><br/>
 
 
-```{R Figure 3 legend}
+```{R Adaptation and fitness costs: Figure Legend, warning = FALSE}
 m <- myrcw[myrcw$treat %in% c("EH0", "EH40", "EH80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
   geom_point(size = 2) + theme_VJF() + scale_color_manual(values = mypalette[c(1,3,7)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
   theme(legend.title = element_text(size = 7), 
           legend.text = element_text(size = 7))
-legp
 legp <- get_legend(legp); rm(m)
 ```
+<br/><br/>
 
-```{R Figure 3}
+
+```{R Adaptation and fitness costs: Figure, warning = FALSE}
+# NaCl -------------------------------------------------------------------------
+# Prep plot data -------------------------------------------
 m <- myrcw[myrcw$epo %in% c("SALT_A", "SALT_B") & myrcw$treat %in% c("EH0", "EH40", "EH80"),]
 mm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
 colnames(mm) <- c("treat", "0%", "40%", "80%")
@@ -894,6 +914,7 @@ limmin <- min(c(mm$"0%", mm$"40%", mm$"80%"), na.rm = T) - 0.01
 limmax <- max(c(mm$"0%", mm$"40%", mm$"80%"), na.rm = T) + 0.01
 mm <- melt(mm, id = c("treat", "indiv"))
 
+# Create plot Panels ---------------------------------------
 p1 <- ggplot(mm[mm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
@@ -928,9 +949,9 @@ p3 <- ggplot(mm[mm$treat == "EH80",], aes(x = variable, y = value, color = treat
   theme(legend.position = "none")+
   xlab("") + ylab("") + labs(tag = "C")
 p3 <- p3 + annotation_custom(legp, xmin = -0.8, ymin = 0.28)
-p3
 
-
+# CuSO4 ------------------------------------------------------------------------
+# Prep plot data -------------------------------------------
 m <- myrcw[myrcw$epo %in% c("COPR_A", "COPR_B") & myrcw$treat %in% c("EH0", "EH40", "EH80"),]
 zmm <- m[,c("treat", "dw_00", "dw_40", "dw_80")]
 colnames(zmm) <- c("treat", "0%", "40%", "80%")
@@ -941,6 +962,7 @@ lizmmin <- min(c(zmm$"0%", zmm$"40%", zmm$"80%"), na.rm = T) - 0.01
 lizmmax <- max(c(zmm$"0%", zmm$"40%", zmm$"80%"), na.rm = T) + 0.01
 zmm <- melt(zmm, id = c("treat", "indiv"))
 
+# Create plot Panels ---------------------------------------
 p4 <- ggplot(zmm[zmm$treat == "EH0",], aes(x = variable, y = value, color = treat, group = indiv))+
   geom_abline(slope=0)+
   geom_point(alpha = 0.35)+
@@ -975,6 +997,7 @@ p6 <- ggplot(zmm[zmm$treat == "EH80",], aes(x = variable, y = value, color = tre
   theme(legend.position = "none")+
   xlab("") + ylab("") + labs(tag = "F")
 
+# Save outputs to file ---------------------------------------------------------
 setwd(DIR_out); png("000_Figure_3.png", width = 6*1.25, height = 5*1.25, units = "in", res = 300)
 grid.arrange(p1,p2,p3, 
              p4,p5,p6,
@@ -990,7 +1013,7 @@ dev.off()
 <br/><br/>
 
 
-```{R Figure 4 legend}
+```{R Costs of Generalization 0,80: legend, warning = FALSE}
 m <- myrcw[myrcw$treat %in% c("EH0_40", "EH20_60", "EH0_80", "EH40_80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
   geom_point(size = 1.5) + theme_VJF() + scale_color_manual(values = mypalette[c(2,4,5,6)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
@@ -1001,7 +1024,7 @@ legp <- get_legend(legp); rm(m)
 <br/><br/>
 
 
-```{R Figure 4 panel A and C}
+```{R Costs of Generalization 0,80: Figure panels A and C, warning = FALSE}
 # get value data ---------------------------------------------------------------
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
@@ -1170,7 +1193,7 @@ rm(tempdata)
 <br/><br/>
 
 
-```{R Figure 4 panel B and D}
+```{R Costs of Generalization 0,80: Figure panels B and D, warning = FALSE}
 # get value data ---------------------------------------------------------------
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
@@ -1354,7 +1377,7 @@ rm(tempdata, aaa, zaaa, nnn, znnn, ppp, zppp, qqq, zqqq, zzz, zzzz,
 <br/><br/>
 
 
-```{R Figure S3 legend}
+```{R Costs of Generalization 0,40: legend, warning = FALSE}
 m <- myrcw[myrcw$treat %in% c("EH0_40", "EH0_80"),]
 legp <- ggplot(data = m, aes( x = dw_00, y = dw_80, color = treat))+
   geom_point(size = 2) + theme_VJF() + scale_color_manual(values = mypalette[c(2,5)]) + labs(color = "Treatment") + guides(color = guide_legend(reverse = T))+
@@ -1366,7 +1389,7 @@ rm(m)
 <br/><br/>
 
 
-```{r}
+```{R Costs of Generalization 0,40: Figure panels A and C, warning = FALSE}
 # get values -------------------------------------------------------------------
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("SALT_A", "SALT_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$dw_00_40),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
@@ -1459,7 +1482,7 @@ rm(EH0_40in00, EH0_40in40, EH0_40in80,
 <br/><br/>
 
 
-```{r}
+```{R Costs of Generalization 0,40: Figure panels B and D, warning = FALSE}
 # get values -------------------------------------------------------------------
 m <- myrcw[myrcw$treat == "EH0" & myrcw$epo %in% c("COPR_A", "COPR_B") & !is.na(myrcw$dw_00_80) & !is.na(myrcw$dw_00_40),]
 EH0in00 <- mean(m$dw_00, na.rm = T)
