@@ -1,4 +1,4 @@
-This directory contains all code required to reproduce the results from the manuscript: MANUSCRIPT TITLE
+This directory contains all code required to reproduce the results from the manuscript: MANUSCRIPT TITLE...test edit
 
 Evolutionary_Dynamics:
 	1_FastQtoCounts -- the ED_FastqtoCounts.R script in the R_Workflow directory converts FastQ files from the evolution experiment into counts matrices used in the following step. 
