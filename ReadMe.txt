@@ -1,32 +1,7 @@
-This repository contains code and data sufficient to reproduce the analyses & results within the manuscript 
-"Fluctuating selection facilitates the discovery of broadly effective but difficult to reach adaptive 
-outcomes in yeast."
+This repository contains code and data sufficient to reproduce the analyses & results within the manuscript "Fluctuating selection facilitates the discovery of broadly effective but difficult to reach adaptive outcomes in yeast."
 
-This project consisted of (1) a 500 generation experimental evolution experiment within which the proportions
-of evolving barcoded yeast strains were monitored over 50 days (Subdirectory: Evoluitonary_Dynamics), and (2) 
+This project consisted of (1) a 500 generation experimental evolution experiment within which the proportions of evolving barcoded yeast strains were monitored over 50 days (Subdirectory: Evoluitonary_Dynamics), and (2) a series of competition based fitness assays designed to measure the fitness of ancestral and evolved yeast strains relative to a common ancestor (Subdirectory: Fitness_Assays). The manuscript referenced above focuses on the data and analyses associated with the Fitness_Assays portion of this repository. Details follow. 
 
+Data parsing, processing, and analyses were conducted in three steps: (1) convert raw fastq files to counts matrices, (2) join counts data with experiment and methodological metadata, and (3) conduct analyses, produce figures & tables. Each step has a corresponding subdirectory within the Fitness_Assays subdirectory. R notebooks within are fully commented and include headers describing the file purpose, inputs, and outputs. 
 
-Evolutionary_Dynamics:
-	1_FastQtoCounts -- the ED_FastqtoCounts.R script in the R_Workflow directory converts FastQ files from the evolution experiment into counts matrices used in the following step. 
-		***FastQ files are not provided (large file size), but are available on demand from Vince Fasanello, vincefasanello@gmail.com.
-	2_CountstoAnalysis -- the ED_Prepare_Datasets.rmd script in this directory converts raw counts matrices to dataframes formatted for analysis.
-
-
-Fitness_Assays:
-	1_FastQtoCounts -- the FA_Lib1_FastQtoCounts.R script in the Library_1/R_Workflow directory converts FastQ files from the Fitness Assays sequencing library 1 into counts matrices used in the following step.
-			   the FA_Lib2_FastQtoCounts.R script in the Library_2/R_Workflow directory converts FastQ files from the Fitness Assays sequencing library 2 into counts matrices used in the following step.
-		***FastQ files are not provided (large file size), but are available on demand from Vince Fasanello, vincefasanello@gmail.com.
-	2_CountstoAnalysis -- the FA_Prepare_Datasets.rmd script in this directory combines the raw counts matrices and converts the combined data to dataframes formatted for analysis.
-	3_Analysis -- The FS_Analysis.rmd script in this directory conducts all analyses, produces all figures, and provides all data necessary to reproduce the tables included in the manuscript. 
-
-
-Manually_Modified_Publication_Tables:
-	Contains all tables and supplemental tables referenced throughout the manuscript. Tables are produced from 3_Analysis data and outputs with formatting modification. 
-
-
-Manuscript:
-	Contains the manuscript as submitted to BioArchive.
-
-
-Submitted_Data_&_Metadata:
-	Contains the raw counts matrices and required metadata for analysis as submitted to Open Source Foundation (OSF).
+Final dataframes for main analyses are found within the file Fitness_Assays/2_CountstoAnalysis/Formatted_Data/FitAssayData.Rdata. Upon loading this file three tables will be available for exploration and analysis "my", "myrc", and "myrcw". Each table contains metadata and fitness information with the same source but different formats for summarization. Table "my" has 1 row per [assay environment]X[replicate]X[barcode ID], table "myrc" is further summarized to 1 row per [assay environment]X[barcode ID] and table "myrcw" is the most summarized to  row per [barcode ID]. These three levels of data summarization are provided for convienience of analysis and plotting. Raw counts tables (converted directly from FastQ originals) are available at the following location: Outputs/Collected_Data_&_Metadata/Fitness_Assays/...
