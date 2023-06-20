@@ -1,4 +1,10 @@
-This directory contains all code required to reproduce the results from the manuscript: MANUSCRIPT TITLE...test edit
+This repository contains code and data sufficient to reproduce the analyses & results within the manuscript 
+"Fluctuating selection facilitates the discovery of broadly effective but difficult to reach adaptive 
+outcomes in yeast."
+
+This project consisted of (1) a 500 generation experimental evolution experiment within which the proportions
+of evolving barcoded yeast strains were monitored over 50 days (Subdirectory: Evoluitonary_Dynamics), and (2) 
+
 
 Evolutionary_Dynamics:
 	1_FastQtoCounts -- the ED_FastqtoCounts.R script in the R_Workflow directory converts FastQ files from the evolution experiment into counts matrices used in the following step. 
